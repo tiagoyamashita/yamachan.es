@@ -21,7 +21,8 @@ type FeedResponse = {
 }
 
 const STAR_GLYPHS = '★★★★★'
-const SKELETON_KEYS = ['r1', 'r2', 'r3', 'r4'] as const
+const MIN_REVIEWS = 5
+const SKELETON_KEYS = ['r1', 'r2', 'r3', 'r4', 'r5'] as const
 
 function StarRating({ value, max }: { value: number; max: number }) {
   const percent = Math.max(0, Math.min(value / max, 1)) * 100
@@ -44,6 +45,28 @@ function fromFallback(fallback: FallbackReview[]): GoogleReview[] {
   }))
 }
 
+function fillReviews(
+  fetched: GoogleReview[],
+  fallback: FallbackReview[],
+): GoogleReview[] {
+  const seen = new Set(
+    fetched.map((review) => review.author.trim().toLowerCase()),
+  )
+  const reviews = [...fetched]
+  for (const review of fromFallback(fallback)) {
+    if (reviews.length >= MIN_REVIEWS) {
+      break
+    }
+    const key = review.author.trim().toLowerCase()
+    if (seen.has(key)) {
+      continue
+    }
+    seen.add(key)
+    reviews.push(review)
+  }
+  return reviews
+}
+
 export function GoogleReviews({
   outOf,
   openLabel,
@@ -62,17 +85,15 @@ export function GoogleReviews({
       try {
         const response = await fetch('/api/google-reviews')
         if (!response.ok) {
-          if (!cancelled) setReviews(fromFallback(fallback))
+          if (!cancelled) setReviews(fillReviews([], fallback))
           return
         }
         const data = (await response.json()) as FeedResponse
         if (!cancelled) {
-          setReviews(
-            data.reviews.length > 0 ? data.reviews : fromFallback(fallback),
-          )
+          setReviews(fillReviews(data.reviews, fallback))
         }
       } catch {
-        if (!cancelled) setReviews(fromFallback(fallback))
+        if (!cancelled) setReviews(fillReviews([], fallback))
       }
     }
 

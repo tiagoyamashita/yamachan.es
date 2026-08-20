@@ -3,7 +3,7 @@ export type GoogleReview = {
   author: string
   quote: string
   stars: number
-  photoUrl: string
+  photoUrl?: string
   mapsUrl?: string
 }
 
@@ -42,7 +42,7 @@ type PhotoMedia = {
 }
 
 const SEARCH_QUERY = 'Yama-Chan C/ Pardo Gimeno 10 Alicante'
-const MAX_REVIEWS = 6
+const MAX_REVIEWS = 5
 
 function authorKey(name: string | undefined): string {
   return (name ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -188,9 +188,6 @@ export async function loadGoogleReviews(
         photoUrl = uri
         break
       }
-    }
-    if (!photoUrl) {
-      continue
     }
 
     reviews.push({
