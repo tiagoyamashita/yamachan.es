@@ -11,9 +11,14 @@ export const restaurant = {
       'Hola, me gustaría reservar mesa en Yama-Chan.',
     ),
   mapsUrl:
-    'https://www.google.com/maps/search/?api=1&query=Carrer+Pardo+Gimeno+10+03007+Alicante',
+    'https://www.google.com/maps/place/Yama-Chan/@38.3418399,-0.4968258,17z/data=!4m6!3m5!1s0xd6237f702073887:0x8d2f887ef88b335!8m2!3d38.3418399!4d-0.4968258!16s%2Fg%2F11svlwdj4w',
+  googleReviewsUrl:
+    'https://www.google.com/maps/place/Yama-Chan/@38.3418399,-0.4968258,17z/data=!4m8!3m7!1s0xd6237f702073887:0x8d2f887ef88b335!8m2!3d38.3418399!4d-0.4968258!9m1!1b1!16s%2Fg%2F11svlwdj4w',
   mapsEmbed:
-    'https://maps.google.com/maps?q=Carrer%20Pardo%20Gimeno%2010%2C%2003007%20Alicante&z=16&output=embed',
+    'https://maps.google.com/maps?cid=635843760135648053&z=16&hl=es&output=embed',
+  googleRating: 4.9,
+  googleReviewCount: 118,
+  googleMaxStars: 5,
 } as const
 
 export type Locale = 'es' | 'en'
@@ -25,15 +30,6 @@ export type DishId =
   | 'takoyaki'
   | 'okonomiyaki'
   | 'yakisoba'
-
-export const dishImages: Record<DishId, string> = {
-  katsudon: '/images/dish-katsudon.jpg',
-  sushi: '/images/dish-sushi.jpg',
-  gyoza: '/images/dish-gyoza.jpg',
-  takoyaki: '/images/dish-takoyaki.jpg',
-  okonomiyaki: '/images/dish-okonomiyaki.jpg',
-  yakisoba: '/images/dish-yakisoba.jpg',
-}
 
 export const dishOrder: DishId[] = [
   'katsudon',
@@ -50,6 +46,8 @@ type Copy = {
   nav: {
     carta: string
     historia: string
+    fotos: string
+    opiniones: string
     visitas: string
     reservar: string
   }
@@ -79,7 +77,12 @@ type Copy = {
   vegNote: string
   reviewsEyebrow: string
   reviewsTitle: string
-  reviews: { quote: string; author: string }[]
+  reviewsRating: string
+  reviewsCta: string
+  reviewsOutOf: string
+  reviewsCountSuffix: string
+  reviewsOpenLabel: string
+  reviews: { quote: string; author: string; stars: 1 | 2 | 3 | 4 | 5 }[]
   visitEyebrow: string
   visitTitle: string
   visitLead: string
@@ -110,6 +113,8 @@ export const copy: Record<Locale, Copy> = {
     nav: {
       carta: 'Carta',
       historia: 'La casa',
+      fotos: 'Fotos',
+      opiniones: 'Opiniones',
       visitas: 'Visítanos',
       reservar: 'Reservar',
     },
@@ -119,7 +124,7 @@ export const copy: Record<Locale, Copy> = {
       'Yama-Chan es el restaurante de sus dueños: el chef Yamashita en cocina y un trato de casa. Sin fusionar, sin atajos. Recetas que saben a Japón.',
     heroReserve: 'Reservar mesa',
     heroCarta: 'Ver la carta',
-    heroRating: '4,9 en Google · conviene reservar',
+    heroRating: '4,9 en Google · 118 opiniones · conviene reservar',
     aboutEyebrow: 'La casa',
     aboutTitle: 'Un japonés de barrio, no una imitación.',
     aboutBody: [
@@ -177,26 +182,35 @@ export const copy: Record<Locale, Copy> = {
       'Hay opciones vegetarianas: setas, gyoza de verduras y tofu frito relleno de arroz.',
     reviewsEyebrow: 'Opiniones',
     reviewsTitle: '“Como volver a estar en Japón.”',
+    reviewsRating: '4,9 de 5 estrellas · 118 opiniones en Google',
+    reviewsCta: 'Leer en Google',
+    reviewsOutOf: 'de 5',
+    reviewsCountSuffix: 'opiniones en Google',
+    reviewsOpenLabel: 'Abrir en Google Maps',
     reviews: [
       {
         quote:
-          'Sabores muy de Japón, ha sido como volver a estar allí. Hay que reservar con tiempo.',
+          'Hemos ido a comer y sinceramente solo me he acordado de hacerle foto a los takoyakis. Ha sido empezar a comer y nos hemos olvidado por completo de las fotos de lo bueno que estaba todo. Hemos pedido gyozas, okonomiyaki, katsudon y yakisoba. Todo espectacular. Repetiremos.',
+        author: 'Esperanza',
+        stars: 5,
+      },
+      {
+        quote:
+          'Fresquito, acogedor, agradable. Buen servicio, vicio de comida, cada plato desprende un olor y unos colores que resultan difíciles encontrar en estos tiempos.',
+        author: 'Ygnomir',
+        stars: 5,
+      },
+      {
+        quote:
+          'Todo muy bueno, sabores muy de Japón, ha sido como volver a estar allí. Un poco de espera para pedir, pero luego todo muy fluido. Hay que reservar con tiempo. Recomendado y volveremos.',
         author: 'Ana',
+        stars: 5,
       },
       {
         quote:
-          'Lejos de las adaptaciones asiáticas de otros sitios: aquí la cocina es auténticamente japonesa. Los dueños son encantadores.',
+          'Nuestro restaurante japonés favorito de Alicante. Lejos de las adaptaciones asiáticas de la comida japonesa que ofrecen otros restaurantes, en Yama-Chan puedes disfrutar de una cocina auténticamente japonesa. Los propietarios son encantadores.',
         author: 'Luca',
-      },
-      {
-        quote:
-          'El curry katsudon es obligatorio. Local tranquilo y trato cercano.',
-        author: 'Verónica',
-      },
-      {
-        quote:
-          'Pequeño, tradicional, sin florituras. Calidad y amabilidad. Mi preferido de Alicante.',
-        author: 'Carolina',
+        stars: 5,
       },
     ],
     visitEyebrow: 'Visítanos',
@@ -222,9 +236,9 @@ export const copy: Record<Locale, Copy> = {
     whatsapp: 'WhatsApp',
     instagram: 'Instagram',
     directions: 'Cómo llegar',
-    instagramCtaTitle: 'Lo que se cocina hoy, en Instagram.',
+    instagramCtaTitle: 'Las fotos de la casa, en Instagram.',
     instagramCtaBody:
-      'Carta, horarios y platos del día los publicamos en @yamachan.es.',
+      'Platos del día, la carta y el local tal como los publicamos en @yamachan.es.',
     instagramCtaButton: 'Seguir @yamachan.es',
     footerTag: 'Cocina japonesa en Alicante',
     langLabel: 'EN',
@@ -238,6 +252,8 @@ export const copy: Record<Locale, Copy> = {
     nav: {
       carta: 'Menu',
       historia: 'The house',
+      fotos: 'Photos',
+      opiniones: 'Reviews',
       visitas: 'Visit',
       reservar: 'Book',
     },
@@ -247,7 +263,7 @@ export const copy: Record<Locale, Copy> = {
       'Yama-Chan is run by its owners: chef Yamashita in the kitchen and a welcome that feels like home. No fusion, no shortcuts. Recipes that taste like Japan.',
     heroReserve: 'Book a table',
     heroCarta: 'See the menu',
-    heroRating: '4.9 on Google · reservations recommended',
+    heroRating: '4.9 on Google · 118 reviews · reservations recommended',
     aboutEyebrow: 'The house',
     aboutTitle: 'A neighborhood Japanese kitchen — not an imitation.',
     aboutBody: [
@@ -305,25 +321,35 @@ export const copy: Record<Locale, Copy> = {
       'Vegetarian plates include mushrooms, vegetable gyoza, and fried tofu stuffed with rice.',
     reviewsEyebrow: 'Guests',
     reviewsTitle: '“Like being back in Japan.”',
+    reviewsRating: '4.9 out of 5 stars · 118 Google reviews',
+    reviewsCta: 'Read on Google',
+    reviewsOutOf: 'out of 5',
+    reviewsCountSuffix: 'Google reviews',
+    reviewsOpenLabel: 'Open in Google Maps',
     reviews: [
       {
         quote:
-          'Flavours that are very much Japan — it felt like going back. Book ahead.',
+          'We went for lunch and I only remembered to photograph the takoyaki. Once we started eating we forgot the photos entirely because everything was so good. We ordered gyoza, okonomiyaki, katsudon and yakisoba. Spectacular. We’ll be back.',
+        author: 'Esperanza',
+        stars: 5,
+      },
+      {
+        quote:
+          'Cool, welcoming, pleasant. Good service, food you could get hooked on — each plate has a smell and colour that’s hard to find these days.',
+        author: 'Ygnomir',
+        stars: 5,
+      },
+      {
+        quote:
+          'All very good, flavours that are very much Japan — it felt like going back. A little wait to order, then everything flowed. Book ahead. Recommended, and we’ll return.',
         author: 'Ana',
+        stars: 5,
       },
       {
         quote:
-          'Far from the Asian adaptations elsewhere: here the cooking is genuinely Japanese. The owners are lovely.',
+          'Our favourite Japanese restaurant in Alicante. Far from the Asian adaptations elsewhere: at Yama-Chan the cooking is genuinely Japanese. The owners are lovely.',
         author: 'Luca',
-      },
-      {
-        quote: 'The katsu curry is essential. Quiet room, warm service.',
-        author: 'Verónica',
-      },
-      {
-        quote:
-          'Small, traditional, no fuss. Quality and kindness. My favourite in Alicante.',
-        author: 'Carolina',
+        stars: 5,
       },
     ],
     visitEyebrow: 'Visit',
@@ -348,9 +374,9 @@ export const copy: Record<Locale, Copy> = {
     whatsapp: 'WhatsApp',
     instagram: 'Instagram',
     directions: 'Directions',
-    instagramCtaTitle: 'What we are cooking today, on Instagram.',
+    instagramCtaTitle: 'Photos from the house, on Instagram.',
     instagramCtaBody:
-      'Menu, hours and plates of the day go up on @yamachan.es.',
+      'Plates of the day, the menu and the room as we post them on @yamachan.es.',
     instagramCtaButton: 'Follow @yamachan.es',
     footerTag: 'Japanese cooking in Alicante',
     langLabel: 'ES',

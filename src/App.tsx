@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   copy,
-  dishImages,
   dishOrder,
   otherLocale,
   restaurant,
   type Locale,
 } from './content.ts'
+import { InstagramFeed } from './InstagramFeed.tsx'
 import './App.css'
 
 function InstagramIcon() {
@@ -28,25 +28,49 @@ function InstagramIcon() {
   )
 }
 
+const STAR_GLYPHS = '★★★★★'
+
+function StarRating({
+  value,
+  max,
+}: {
+  value: number
+  max: number
+}) {
+  const percent = Math.max(0, Math.min(value / max, 1)) * 100
+  return (
+    <span className="star-rating" aria-hidden="true">
+      <span className="star-rating-bg">{STAR_GLYPHS}</span>
+      <span className="star-rating-fill" style={{ width: `${percent}%` }}>
+        {STAR_GLYPHS}
+      </span>
+    </span>
+  )
+}
+
+function formatRating(value: number, locale: Locale): string {
+  const formatted = value.toFixed(1)
+  switch (locale) {
+    case 'es':
+      return formatted.replace('.', ',')
+    case 'en':
+      return formatted
+    default: {
+      const _exhaustive: never = locale
+      return _exhaustive
+    }
+  }
+}
+
 function Mark() {
   return (
-    <svg className="mark" viewBox="0 0 64 64" aria-hidden="true">
-      <path
-        d="M8 42 L32 14 L56 42"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3.2"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M20 42 L32 28 L44 42"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinejoin="round"
-      />
-      <circle cx="32" cy="50" r="2.2" fill="#b42318" />
-    </svg>
+    <img
+      className="mark"
+      src="/images/logo.jpg"
+      alt=""
+      width={40}
+      height={40}
+    />
   )
 }
 
@@ -104,7 +128,9 @@ export default function App() {
 
           <nav className="desktop-nav" aria-label={locale === 'es' ? 'Principal' : 'Primary'}>
             <a href="#carta">{t.nav.carta}</a>
+            <a href="#fotos">{t.nav.fotos}</a>
             <a href="#casa">{t.nav.historia}</a>
+            <a href="#opiniones">{t.nav.opiniones}</a>
             <a href="#visita">{t.nav.visitas}</a>
             <button type="button" className="lang-btn" onClick={toggleLocale}>
               {t.langLabel}
@@ -130,8 +156,14 @@ export default function App() {
             <a href="#carta" onClick={closeMenu}>
               {t.nav.carta}
             </a>
+            <a href="#fotos" onClick={closeMenu}>
+              {t.nav.fotos}
+            </a>
             <a href="#casa" onClick={closeMenu}>
               {t.nav.historia}
+            </a>
+            <a href="#opiniones" onClick={closeMenu}>
+              {t.nav.opiniones}
             </a>
             <a href="#visita" onClick={closeMenu}>
               {t.nav.visitas}
@@ -149,28 +181,22 @@ export default function App() {
       <main id="contenido">
         <section className="hero" id="inicio">
           <img
-            className="hero-photo"
-            src="/images/hero-interior.jpg"
+            className="hero-banner"
+            src="/images/banner.png"
             alt={
               locale === 'es'
-                ? 'Interior cálido del restaurante Yama-Chan en Alicante'
-                : 'Warm interior of Yama-Chan restaurant in Alicante'
+                ? 'Yamachan, auténtico restaurante japonés en Alicante'
+                : 'Yamachan, authentic Japanese restaurant in Alicante'
             }
             fetchPriority="high"
           />
-          <div className="hero-shade" />
-          <p className="hero-vert" aria-hidden="true">
-            本物の日本料理
-          </p>
+          <h1 className="visually-hidden">{t.heroTitle}</h1>
           <div className="hero-copy">
-            <p className="kicker gold">{t.heroKicker}</p>
-            <h1>{t.heroTitle}</h1>
-            <p className="lead">{t.heroLead}</p>
             <div className="hero-actions">
               <a className="btn" href={restaurant.whatsapp}>
                 {t.heroReserve}
               </a>
-              <a className="btn btn-ghost" href="#carta">
+              <a className="btn btn-outline" href="#carta">
                 {t.heroCarta}
               </a>
             </div>
@@ -218,7 +244,6 @@ export default function App() {
                 const dish = t.dishes[id]
                 return (
                   <li key={id} className="dish-card">
-                    <img src={dishImages[id]} alt={dish.name} loading="lazy" />
                     <div className="dish-meta">
                       <p className="dish-ja">{dish.nameJa}</p>
                       <h3>{dish.name}</h3>
@@ -241,22 +266,87 @@ export default function App() {
           </div>
         </section>
 
-        <section className="reviews">
+        <section className="instagram-feed" id="fotos">
+          <div className="section-inner">
+            <header className="section-head">
+              <p className="kicker">{t.instagram}</p>
+              <h2>{t.instagramCtaTitle}</h2>
+              <p className="lead muted">{t.instagramCtaBody}</p>
+            </header>
+            <InstagramFeed title={restaurant.instagramHandle} />
+            <p className="ig-follow">
+              <a className="btn" href={restaurant.instagramUrl}>
+                <InstagramIcon />
+                {t.instagramCtaButton}
+              </a>
+            </p>
+          </div>
+        </section>
+
+        <section className="reviews" id="opiniones">
           <div className="section-inner">
             <header className="section-head">
               <p className="kicker">{t.reviewsEyebrow}</p>
               <h2>{t.reviewsTitle}</h2>
+              <a
+                className="google-rating"
+                href={restaurant.googleReviewsUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={t.reviewsRating}
+              >
+                <StarRating
+                  value={restaurant.googleRating}
+                  max={restaurant.googleMaxStars}
+                />
+                <span>
+                  <b>{formatRating(restaurant.googleRating, locale)}</b>{' '}
+                  {t.reviewsOutOf}
+                  {' · '}
+                  {restaurant.googleReviewCount} {t.reviewsCountSuffix}
+                </span>
+              </a>
             </header>
             <ul className="review-grid">
               {t.reviews.map((review) => (
                 <li key={review.author}>
-                  <blockquote>
-                    <p>{review.quote}</p>
-                    <footer>— {review.author}</footer>
-                  </blockquote>
+                  <a
+                    className="review-card"
+                    href={restaurant.googleReviewsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`${review.author}: ${review.stars} ${t.reviewsOutOf}. ${t.reviewsOpenLabel}`}
+                  >
+                    <blockquote>
+                      <p className="review-stars-row">
+                        <StarRating
+                          value={review.stars}
+                          max={restaurant.googleMaxStars}
+                        />
+                        <span>
+                          {review.stars} {t.reviewsOutOf}
+                        </span>
+                      </p>
+                      <p className="review-quote">{review.quote}</p>
+                      <footer>
+                        — {review.author}
+                        <cite>Google</cite>
+                      </footer>
+                    </blockquote>
+                  </a>
                 </li>
               ))}
             </ul>
+            <p className="reviews-cta">
+              <a
+                className="btn btn-ghost"
+                href={restaurant.googleReviewsUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t.reviewsCta}
+              </a>
+            </p>
           </div>
         </section>
 
@@ -317,19 +407,6 @@ export default function App() {
                 />
               </div>
             </div>
-          </div>
-        </section>
-
-        <section className="instagram-band">
-          <div className="section-inner band-inner">
-            <div>
-              <h2>{t.instagramCtaTitle}</h2>
-              <p>{t.instagramCtaBody}</p>
-            </div>
-            <a className="btn" href={restaurant.instagramUrl}>
-              <InstagramIcon />
-              {t.instagramCtaButton}
-            </a>
           </div>
         </section>
       </main>
