@@ -23,24 +23,87 @@ export const restaurant = {
 
 export type Locale = 'es' | 'en'
 
-export type DishId =
-  | 'katsudon'
-  | 'sushi'
-  | 'gyoza'
+export type MenuCategoryId = 'starters' | 'sushi' | 'mains' | 'dessert' | 'drinks'
+
+export type MenuItemId =
+  | 'edamame'
+  | 'gyozaPork'
+  | 'gyozaVeg'
   | 'takoyaki'
+  | 'mushrooms'
+  | 'sushi'
+  | 'hotPhilly'
+  | 'katsudon'
+  | 'katsuCurry'
+  | 'yakinikuDon'
+  | 'karaageCurry'
   | 'okonomiyaki'
   | 'yakisoba'
+  | 'tempuraUdon'
+  | 'friedTofu'
+  | 'appleGyoza'
+  | 'mochi'
+  | 'sashimi'
+  | 'japaneseBeer'
 
-export const dishOrder: DishId[] = [
-  'katsudon',
-  'sushi',
-  'gyoza',
-  'takoyaki',
-  'okonomiyaki',
-  'yakisoba',
+export type MenuItem = {
+  id: MenuItemId
+  nameJa: string
+  vegetarian?: boolean
+  image?: string
+}
+
+export type MenuCategory = {
+  id: MenuCategoryId
+  items: MenuItem[]
+}
+
+export const menuCategories: MenuCategory[] = [
+  {
+    id: 'starters',
+    items: [
+      { id: 'edamame', nameJa: '枝豆', vegetarian: true },
+      { id: 'gyozaPork', nameJa: '餃子', image: '/images/dish-gyoza.png' },
+      { id: 'gyozaVeg', nameJa: '野菜餃子', vegetarian: true },
+      { id: 'takoyaki', nameJa: 'たこ焼き', image: '/images/dish-takoyaki.png' },
+      { id: 'mushrooms', nameJa: 'バター醤油きのこ', vegetarian: true },
+    ],
+  },
+  {
+    id: 'sushi',
+    items: [
+      { id: 'sushi', nameJa: '寿司', image: '/images/dish-sushi.png' },
+      { id: 'sashimi', nameJa: '刺身' },
+      { id: 'hotPhilly', nameJa: 'ホットフィラデルフィア' },
+    ],
+  },
+  {
+    id: 'mains',
+    items: [
+      { id: 'katsudon', nameJa: 'カツ丼', image: '/images/dish-katsudon.png' },
+      { id: 'katsuCurry', nameJa: 'カツカレー' },
+      { id: 'yakinikuDon', nameJa: '焼肉丼' },
+      { id: 'karaageCurry', nameJa: '唐揚げカレー' },
+      { id: 'okonomiyaki', nameJa: 'お好み焼き', image: '/images/dish-okonomiyaki.png' },
+      { id: 'yakisoba', nameJa: '焼きそば', image: '/images/dish-yakisoba.png' },
+      { id: 'tempuraUdon', nameJa: '天ぷらうどん' },
+      { id: 'friedTofu', nameJa: '稲荷寿司', vegetarian: true },
+    ],
+  },
+  {
+    id: 'dessert',
+    items: [
+      { id: 'appleGyoza', nameJa: 'りんご餃子', vegetarian: true },
+      { id: 'mochi', nameJa: '餅', vegetarian: true },
+    ],
+  },
+  {
+    id: 'drinks',
+    items: [{ id: 'japaneseBeer', nameJa: 'ビール' }],
+  },
 ]
 
-type Copy = {
+export type Copy = {
   metaTitle: string
   metaDescription: string
   nav: {
@@ -65,17 +128,17 @@ type Copy = {
   cartaEyebrow: string
   cartaTitle: string
   cartaLead: string
-  dishes: Record<
-    DishId,
-    {
-      name: string
-      nameJa: string
-      blurb: string
-    }
-  >
-  moreDishesTitle: string
-  moreDishes: string[]
-  vegNote: string
+  cartaCta: string
+  cartaPageTitle: string
+  cartaPageHeading: string
+  cartaPageDescription: string
+  cartaPageLead: string
+  cartaPageNote: string
+  cartaVegLabel: string
+  cartaVegNote: string
+  cartaBackHome: string
+  cartaCategories: Record<MenuCategoryId, string>
+  cartaItems: Record<MenuItemId, { name: string; blurb: string }>
   reviewsEyebrow: string
   reviewsTitle: string
   reviewsRating: string
@@ -132,53 +195,106 @@ export const copy: Record<Locale, Copy> = {
     aboutNote: 'Música japonesa, ambiente sencillo y comida casera. いらっしゃいませ',
     aboutCaption: 'Masashi, chef de Yama-Chan',
     cartaEyebrow: 'La carta',
-    cartaTitle: 'Lo que la gente vuelve a pedir.',
+    cartaTitle: 'Toda la carta, en su página.',
     cartaLead:
-      'Platos calientes y sushi fresco, tal como aparecen en nuestro Instagram. La carta cambia con el mercado; estos son los que más se repiten.',
-    dishes: {
-      katsudon: {
-        name: 'Katsudon / Katsu curry',
-        nameJa: 'カツ丼',
-        blurb:
-          'El plato que más recomiendan. Cerdo empanado sobre arroz, o con curry japonés de verdad.',
+      'Entrantes, sushi, platos calientes y postre. Lo que hay cada día se pide en mesa; la carta sigue el mercado.',
+    cartaCta: 'Ver la carta',
+    cartaPageTitle: 'La carta — Yama-Chan',
+    cartaPageHeading: 'La carta',
+    cartaPageDescription:
+      'Carta completa de Yama-Chan en Alicante: gyoza, takoyaki, sushi, katsudon, katsu curry y el resto de platos de casa.',
+    cartaPageLead:
+      'Cocina japonesa de casa. Si un plato no está ese día, te lo decimos al pedir.',
+    cartaPageNote: 'Los precios se confirman en mesa.',
+    cartaVegLabel: 'Vegetariano',
+    cartaVegNote:
+      'Platos vegetarianos: edamame, gyoza de verduras, setas, tofu frito relleno de arroz, gyoza de manzana y mochi.',
+    cartaBackHome: 'Volver al inicio',
+    cartaCategories: {
+      starters: 'Entrantes',
+      sushi: 'Sushi',
+      mains: 'Platos',
+      dessert: 'Postres',
+      drinks: 'Bebidas',
+    },
+    cartaItems: {
+      edamame: {
+        name: 'Edamame',
+        blurb: 'Soja verde con sal. Para abrir mesa.',
       },
-      sushi: {
-        name: 'Sushi fresco',
-        nameJa: '寿司',
-        blurb:
-          'Pescado de calidad, arroz en su punto. Nigiri y rolls, sin el teatro de un sushi-bar.',
+      gyozaPork: {
+        name: 'Gyoza de cerdo',
+        blurb: 'A la plancha, crujientes por debajo.',
       },
-      gyoza: {
-        name: 'Gyoza',
-        nameJa: '餃子',
-        blurb: 'A la plancha, crujientes por debajo. De cerdo o de verduras.',
+      gyozaVeg: {
+        name: 'Gyoza de verduras',
+        blurb: 'La versión de verduras, también a la plancha.',
       },
       takoyaki: {
         name: 'Takoyaki',
-        nameJa: 'たこ焼き',
-        blurb: 'Bolas de pulpo con salsa, mayonesa y katsuobushi. El aperitivo que se acaba primero.',
+        blurb: 'Bolas de pulpo con salsa, mayonesa y katsuobushi.',
+      },
+      mushrooms: {
+        name: 'Setas con mantequilla',
+        blurb: 'Setas a la mantequilla y soja. Plato de verdura de la casa.',
+      },
+      sushi: {
+        name: 'Sushi fresco',
+        blurb: 'Pescado de calidad, arroz en su punto. Nigiri y rolls.',
+      },
+      sashimi: {
+        name: 'Sashimi',
+        blurb: 'Cortes de pescado fresco, sin arroz. Lo que el mercado deje ese día.',
+      },
+      hotPhilly: {
+        name: 'Hot Philadelphia',
+        blurb: 'Roll caliente, de los que más se piden.',
+      },
+      katsudon: {
+        name: 'Katsudon',
+        blurb: 'Cerdo empanado sobre arroz, con huevo. El plato que más recomiendan.',
+      },
+      katsuCurry: {
+        name: 'Katsu curry',
+        blurb: 'El mismo cerdo empanado, con curry japonés de verdad.',
+      },
+      yakinikuDon: {
+        name: 'Yakiniku don',
+        blurb: 'Carne a la plancha sobre arroz.',
+      },
+      karaageCurry: {
+        name: 'Karaage curry',
+        blurb: 'Pollo frito japonés con curry de la casa.',
       },
       okonomiyaki: {
         name: 'Okonomiyaki',
-        nameJa: 'お好み焼き',
-        blurb: 'Tortilla japonesa salada, con salsa, aonori y bonito. Poco habitual en Alicante.',
+        blurb: 'Tortilla japonesa salada, con salsa, aonori y bonito.',
       },
       yakisoba: {
         name: 'Yakisoba',
-        nameJa: '焼きそば',
-        blurb: 'Fideos salteados al estilo de casa. También hay udon con tempura.',
+        blurb: 'Fideos salteados al estilo de casa.',
+      },
+      tempuraUdon: {
+        name: 'Tempura udon',
+        blurb: 'Udon en caldo, con tempura.',
+      },
+      friedTofu: {
+        name: 'Tofu frito relleno de arroz',
+        blurb: 'Tofu frito relleno de arroz. Plato vegetariano de la casa.',
+      },
+      appleGyoza: {
+        name: 'Gyoza de manzana',
+        blurb: 'El postre: gyoza dulce de manzana.',
+      },
+      mochi: {
+        name: 'Mochi',
+        blurb: 'Postre de arroz glutinoso, dulce y suave.',
+      },
+      japaneseBeer: {
+        name: 'Cervezas japonesas',
+        blurb: 'Cerveza japonesa de nevera. Pregunta cuáles hay ese día.',
       },
     },
-    moreDishesTitle: 'También en mesa',
-    moreDishes: [
-      'Yakiniku don',
-      'Karaage curry',
-      'Tempura udon',
-      'Edamame',
-      'Tofu frito con arroz',
-    ],
-    vegNote:
-      'Hay opciones vegetarianas: setas, gyoza de verduras y tofu frito relleno de arroz.',
     reviewsEyebrow: 'Opiniones',
     reviewsTitle: '“Como volver a estar en Japón.”',
     reviewsRating: '4,9 de 5 estrellas · 118 opiniones en Google',
@@ -267,53 +383,106 @@ export const copy: Record<Locale, Copy> = {
     aboutNote: 'Japanese music, a simple room, home cooking. いらっしゃいませ',
     aboutCaption: 'Masashi, chef of Yama-Chan',
     cartaEyebrow: 'The menu',
-    cartaTitle: 'What people come back for.',
+    cartaTitle: 'The full menu, on its own page.',
     cartaLead:
-      'Hot dishes and fresh sushi, the same plates we share on Instagram. The menu follows the market; these are the ones guests order again.',
-    dishes: {
-      katsudon: {
-        name: 'Katsudon / Katsu curry',
-        nameJa: 'カツ丼',
-        blurb:
-          'The dish most people recommend. Breaded pork over rice, or with proper Japanese curry.',
+      'Starters, sushi, hot dishes and dessert. What is on that day is ordered at the table; the menu follows the market.',
+    cartaCta: 'See the menu',
+    cartaPageTitle: 'Menu — Yama-Chan',
+    cartaPageHeading: 'The menu',
+    cartaPageDescription:
+      'Full Yama-Chan menu in Alicante: gyoza, takoyaki, sushi, katsudon, katsu curry and the rest of the house plates.',
+    cartaPageLead:
+      'Home-style Japanese cooking. If a dish is not on that day, we will tell you when you order.',
+    cartaPageNote: 'Prices are confirmed at the table.',
+    cartaVegLabel: 'Vegetarian',
+    cartaVegNote:
+      'Vegetarian plates: edamame, vegetable gyoza, mushrooms, fried tofu stuffed with rice, apple gyoza, and mochi.',
+    cartaBackHome: 'Back to home',
+    cartaCategories: {
+      starters: 'Starters',
+      sushi: 'Sushi',
+      mains: 'Mains',
+      dessert: 'Desserts',
+      drinks: 'Drinks',
+    },
+    cartaItems: {
+      edamame: {
+        name: 'Edamame',
+        blurb: 'Salted green soybeans. To start the table.',
       },
-      sushi: {
-        name: 'Fresh sushi',
-        nameJa: '寿司',
-        blurb:
-          'Good fish, rice done right. Nigiri and rolls — without sushi-bar theatre.',
+      gyozaPork: {
+        name: 'Pork gyoza',
+        blurb: 'Pan-fried, crisp on the bottom.',
       },
-      gyoza: {
-        name: 'Gyoza',
-        nameJa: '餃子',
-        blurb: 'Pan-fried, crisp on the bottom. Pork or vegetable.',
+      gyozaVeg: {
+        name: 'Vegetable gyoza',
+        blurb: 'The vegetable version, also pan-fried.',
       },
       takoyaki: {
         name: 'Takoyaki',
-        nameJa: 'たこ焼き',
-        blurb: 'Octopus balls with sauce, mayo and katsuobushi. They go first.',
+        blurb: 'Octopus balls with sauce, mayo and katsuobushi.',
+      },
+      mushrooms: {
+        name: 'Butter mushrooms',
+        blurb: 'Mushrooms with butter and soy. The house vegetable plate.',
+      },
+      sushi: {
+        name: 'Fresh sushi',
+        blurb: 'Good fish, rice done right. Nigiri and rolls.',
+      },
+      sashimi: {
+        name: 'Sashimi',
+        blurb: 'Fresh sliced fish, no rice. Whatever the market brings that day.',
+      },
+      hotPhilly: {
+        name: 'Hot Philadelphia',
+        blurb: 'A hot roll, one of the ones people ask for most.',
+      },
+      katsudon: {
+        name: 'Katsudon',
+        blurb: 'Breaded pork over rice, with egg. The dish most people recommend.',
+      },
+      katsuCurry: {
+        name: 'Katsu curry',
+        blurb: 'The same breaded pork, with proper Japanese curry.',
+      },
+      yakinikuDon: {
+        name: 'Yakiniku don',
+        blurb: 'Grilled meat over rice.',
+      },
+      karaageCurry: {
+        name: 'Karaage curry',
+        blurb: 'Japanese fried chicken with the house curry.',
       },
       okonomiyaki: {
         name: 'Okonomiyaki',
-        nameJa: 'お好み焼き',
-        blurb: 'Savoury Japanese pancake with sauce, aonori and bonito. Rare in Alicante.',
+        blurb: 'Savoury Japanese pancake with sauce, aonori and bonito.',
       },
       yakisoba: {
         name: 'Yakisoba',
-        nameJa: '焼きそば',
-        blurb: 'House-style fried noodles. Tempura udon as well.',
+        blurb: 'House-style fried noodles.',
+      },
+      tempuraUdon: {
+        name: 'Tempura udon',
+        blurb: 'Udon in broth, with tempura.',
+      },
+      friedTofu: {
+        name: 'Fried tofu stuffed with rice',
+        blurb: 'Fried tofu pouches filled with rice. A house vegetarian plate.',
+      },
+      appleGyoza: {
+        name: 'Apple gyoza',
+        blurb: 'Dessert: a sweet apple gyoza.',
+      },
+      mochi: {
+        name: 'Mochi',
+        blurb: 'A sweet, soft glutinous-rice dessert.',
+      },
+      japaneseBeer: {
+        name: 'Japanese beers',
+        blurb: 'Japanese beer from the fridge. Ask which ones we have that day.',
       },
     },
-    moreDishesTitle: 'Also on the table',
-    moreDishes: [
-      'Yakiniku don',
-      'Karaage curry',
-      'Tempura udon',
-      'Edamame',
-      'Fried tofu with rice',
-    ],
-    vegNote:
-      'Vegetarian plates include mushrooms, vegetable gyoza, and fried tofu stuffed with rice.',
     reviewsEyebrow: 'Guests',
     reviewsTitle: '“Like being back in Japan.”',
     reviewsRating: '4.9 out of 5 stars · 118 Google reviews',
