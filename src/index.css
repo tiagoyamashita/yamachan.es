@@ -18,6 +18,12 @@
   --header-h: 4.75rem;
 }
 
+@media (max-width: 799px) {
+  :root {
+    --header-h: calc(4.75rem + 10px);
+  }
+}
+
 *,
 *::before,
 *::after {

@@ -645,6 +645,16 @@ h3 {
   color: var(--gold);
 }
 
+@media (max-width: 799px) {
+  .header-inner {
+    padding-bottom: 10px;
+  }
+
+  .nav-logo {
+    height: calc(var(--header-h) - 0.5rem - 10px);
+  }
+}
+
 @media (min-width: 800px) {
   .header-actions {
     display: none;
