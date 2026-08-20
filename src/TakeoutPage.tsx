@@ -324,77 +324,83 @@ export function TakeoutPage({
                       </a>
                     </p>
                   ) : (
-                    <ul className="takeout-order-list">
-                      {lines.map((line) => (
-                        <li key={line.item.id} className="takeout-order-line">
-                          <div>
-                            <h3>{line.copy.name}</h3>
-                            <p className="dish-ja">{line.item.nameJa}</p>
-                          </div>
-                          <QuantityControls
-                            name={line.copy.name}
-                            qty={line.qty}
-                            addLabel={t.takeoutAdd}
-                            onChange={(next) => setQty(line.item.id, next)}
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                    <>
+                      <ul className="takeout-order-list">
+                        {lines.map((line) => (
+                          <li key={line.item.id} className="takeout-order-line">
+                            <div>
+                              <h3>{line.copy.name}</h3>
+                              <p className="dish-ja">{line.item.nameJa}</p>
+                            </div>
+                            <QuantityControls
+                              name={line.copy.name}
+                              qty={line.qty}
+                              addLabel={t.takeoutAdd}
+                              onChange={(next) => setQty(line.item.id, next)}
+                            />
+                          </li>
+                        ))}
+                      </ul>
 
-                  <form className="takeout-form" onSubmit={sendOrder}>
-                    <label className="takeout-field">
-                      <span>{t.takeoutNameLabel}</span>
-                      <input
-                        type="text"
-                        name="name"
-                        autoComplete="name"
-                        value={name}
-                        onChange={(event) => {
-                          setName(event.target.value)
-                          setError(null)
-                        }}
-                      />
-                    </label>
-                    <label className="takeout-field">
-                      <span>{t.takeoutPhoneLabel}</span>
-                      <input
-                        type="tel"
-                        name="phone"
-                        autoComplete="tel"
-                        value={phone}
-                        onChange={(event) => {
-                          setPhone(event.target.value)
-                          setError(null)
-                        }}
-                      />
-                    </label>
-                    <label className="takeout-field">
-                      <span>{t.takeoutTimeLabel}</span>
-                    <input
-                      type="text"
-                      name="pickupTime"
-                      placeholder={t.takeoutTimePlaceholder}
-                      value={pickupTime}
-                      onChange={(event) => setPickupTime(event.target.value)}
-                    />
-                    </label>
-                    <label className="takeout-field">
-                      <span>{t.takeoutNotesLabel}</span>
-                      <textarea
-                        name="notes"
-                        rows={3}
-                        placeholder={t.takeoutNotesPlaceholder}
-                        value={notes}
-                        onChange={(event) => setNotes(event.target.value)}
-                      />
-                    </label>
-                    {error ? <p className="takeout-error">{error}</p> : null}
-                    <p className="takeout-pickup-note">{t.takeoutPickupNote}</p>
-                    <button className="btn" type="submit">
-                      {t.takeoutSendWhatsapp}
-                    </button>
-                  </form>
+                      <form className="takeout-form" onSubmit={sendOrder}>
+                        <label className="takeout-field">
+                          <span>{t.takeoutNameLabel}</span>
+                          <input
+                            type="text"
+                            name="name"
+                            autoComplete="name"
+                            value={name}
+                            onChange={(event) => {
+                              setName(event.target.value)
+                              setError(null)
+                            }}
+                          />
+                        </label>
+                        <label className="takeout-field">
+                          <span>{t.takeoutPhoneLabel}</span>
+                          <input
+                            type="tel"
+                            name="phone"
+                            autoComplete="tel"
+                            value={phone}
+                            onChange={(event) => {
+                              setPhone(event.target.value)
+                              setError(null)
+                            }}
+                          />
+                        </label>
+                        <label className="takeout-field">
+                          <span>{t.takeoutTimeLabel}</span>
+                          <input
+                            type="text"
+                            name="pickupTime"
+                            placeholder={t.takeoutTimePlaceholder}
+                            value={pickupTime}
+                            onChange={(event) =>
+                              setPickupTime(event.target.value)
+                            }
+                          />
+                        </label>
+                        <label className="takeout-field">
+                          <span>{t.takeoutNotesLabel}</span>
+                          <textarea
+                            name="notes"
+                            rows={3}
+                            placeholder={t.takeoutNotesPlaceholder}
+                            value={notes}
+                            onChange={(event) => setNotes(event.target.value)}
+                          />
+                        </label>
+                        {error ? <p className="takeout-error">{error}</p> : null}
+                        <p className="takeout-pickup-note">
+                          {t.takeoutPickupNote}
+                        </p>
+                        <button className="btn" type="submit">
+                          {t.takeoutSendWhatsapp}
+                        </button>
+                      </form>
+                    </>
+                  )}
                 </div>
               )
             default: {
