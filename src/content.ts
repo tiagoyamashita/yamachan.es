@@ -26,15 +26,6 @@ export type DishId =
   | 'okonomiyaki'
   | 'yakisoba'
 
-export const dishImages: Record<DishId, string> = {
-  katsudon: '/images/dish-katsudon.jpg',
-  sushi: '/images/dish-sushi.jpg',
-  gyoza: '/images/dish-gyoza.jpg',
-  takoyaki: '/images/dish-takoyaki.jpg',
-  okonomiyaki: '/images/dish-okonomiyaki.jpg',
-  yakisoba: '/images/dish-yakisoba.jpg',
-}
-
 export const dishOrder: DishId[] = [
   'katsudon',
   'sushi',
@@ -50,6 +41,7 @@ type Copy = {
   nav: {
     carta: string
     historia: string
+    fotos: string
     visitas: string
     reservar: string
   }
@@ -110,6 +102,7 @@ export const copy: Record<Locale, Copy> = {
     nav: {
       carta: 'Carta',
       historia: 'La casa',
+      fotos: 'Fotos',
       visitas: 'Visítanos',
       reservar: 'Reservar',
     },
@@ -222,9 +215,9 @@ export const copy: Record<Locale, Copy> = {
     whatsapp: 'WhatsApp',
     instagram: 'Instagram',
     directions: 'Cómo llegar',
-    instagramCtaTitle: 'Lo que se cocina hoy, en Instagram.',
+    instagramCtaTitle: 'Las fotos de la casa, en Instagram.',
     instagramCtaBody:
-      'Carta, horarios y platos del día los publicamos en @yamachan.es.',
+      'Platos del día, la carta y el local tal como los publicamos en @yamachan.es.',
     instagramCtaButton: 'Seguir @yamachan.es',
     footerTag: 'Cocina japonesa en Alicante',
     langLabel: 'EN',
@@ -238,6 +231,7 @@ export const copy: Record<Locale, Copy> = {
     nav: {
       carta: 'Menu',
       historia: 'The house',
+      fotos: 'Photos',
       visitas: 'Visit',
       reservar: 'Book',
     },
@@ -348,9 +342,9 @@ export const copy: Record<Locale, Copy> = {
     whatsapp: 'WhatsApp',
     instagram: 'Instagram',
     directions: 'Directions',
-    instagramCtaTitle: 'What we are cooking today, on Instagram.',
+    instagramCtaTitle: 'Photos from the house, on Instagram.',
     instagramCtaBody:
-      'Menu, hours and plates of the day go up on @yamachan.es.',
+      'Plates of the day, the menu and the room as we post them on @yamachan.es.',
     instagramCtaButton: 'Follow @yamachan.es',
     footerTag: 'Japanese cooking in Alicante',
     langLabel: 'ES',

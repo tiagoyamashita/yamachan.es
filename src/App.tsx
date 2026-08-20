@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   copy,
-  dishImages,
   dishOrder,
   otherLocale,
   restaurant,
   type Locale,
 } from './content.ts'
+import { InstagramFeed } from './InstagramFeed.tsx'
 import './App.css'
 
 function InstagramIcon() {
@@ -104,6 +104,7 @@ export default function App() {
 
           <nav className="desktop-nav" aria-label={locale === 'es' ? 'Principal' : 'Primary'}>
             <a href="#carta">{t.nav.carta}</a>
+            <a href="#fotos">{t.nav.fotos}</a>
             <a href="#casa">{t.nav.historia}</a>
             <a href="#visita">{t.nav.visitas}</a>
             <button type="button" className="lang-btn" onClick={toggleLocale}>
@@ -129,6 +130,9 @@ export default function App() {
           <nav id="mobile-nav" className="mobile-nav" aria-label={locale === 'es' ? 'Móvil' : 'Mobile'}>
             <a href="#carta" onClick={closeMenu}>
               {t.nav.carta}
+            </a>
+            <a href="#fotos" onClick={closeMenu}>
+              {t.nav.fotos}
             </a>
             <a href="#casa" onClick={closeMenu}>
               {t.nav.historia}
@@ -218,7 +222,6 @@ export default function App() {
                 const dish = t.dishes[id]
                 return (
                   <li key={id} className="dish-card">
-                    <img src={dishImages[id]} alt={dish.name} loading="lazy" />
                     <div className="dish-meta">
                       <p className="dish-ja">{dish.nameJa}</p>
                       <h3>{dish.name}</h3>
@@ -238,6 +241,23 @@ export default function App() {
               </ul>
               <p className="veg-note">{t.vegNote}</p>
             </div>
+          </div>
+        </section>
+
+        <section className="instagram-feed" id="fotos">
+          <div className="section-inner">
+            <header className="section-head">
+              <p className="kicker">{t.instagram}</p>
+              <h2>{t.instagramCtaTitle}</h2>
+              <p className="lead muted">{t.instagramCtaBody}</p>
+            </header>
+            <InstagramFeed title={restaurant.instagramHandle} />
+            <p className="ig-follow">
+              <a className="btn" href={restaurant.instagramUrl}>
+                <InstagramIcon />
+                {t.instagramCtaButton}
+              </a>
+            </p>
           </div>
         </section>
 
@@ -317,19 +337,6 @@ export default function App() {
                 />
               </div>
             </div>
-          </div>
-        </section>
-
-        <section className="instagram-band">
-          <div className="section-inner band-inner">
-            <div>
-              <h2>{t.instagramCtaTitle}</h2>
-              <p>{t.instagramCtaBody}</p>
-            </div>
-            <a className="btn" href={restaurant.instagramUrl}>
-              <InstagramIcon />
-              {t.instagramCtaButton}
-            </a>
           </div>
         </section>
       </main>
