@@ -76,8 +76,6 @@ function Mark() {
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>('es')
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const t = copy[locale]
 
   useEffect(() => {
@@ -89,25 +87,8 @@ export default function App() {
     }
   }, [locale, t.metaDescription, t.metaTitle])
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [menuOpen])
-
-  const closeMenu = () => setMenuOpen(false)
-
   const toggleLocale = () => {
     setLocale(otherLocale(locale))
-    closeMenu()
   }
 
   return (
@@ -116,9 +97,9 @@ export default function App() {
         {locale === 'es' ? 'Saltar al contenido' : 'Skip to content'}
       </a>
 
-      <header className={scrolled ? 'site-header is-solid' : 'site-header'}>
+      <header className="site-header">
         <div className="header-inner">
-          <a className="brand" href="#inicio" onClick={closeMenu}>
+          <a className="brand" href="#inicio">
             <Mark />
             <span>
               <strong>{restaurant.name}</strong>
@@ -135,47 +116,20 @@ export default function App() {
             <button type="button" className="lang-btn" onClick={toggleLocale}>
               {t.langLabel}
             </button>
-            <a className="btn btn-small" href={restaurant.whatsapp}>
+            <a className="btn btn-small" href="#visita">
               {t.nav.reservar}
             </a>
           </nav>
 
-          <button
-            type="button"
-            className="menu-toggle"
-            aria-expanded={menuOpen}
-            aria-controls="mobile-nav"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {menuOpen ? t.closeMenu : t.openMenu}
-          </button>
-        </div>
-
-        {menuOpen ? (
-          <nav id="mobile-nav" className="mobile-nav" aria-label={locale === 'es' ? 'Móvil' : 'Mobile'}>
-            <a href="#carta" onClick={closeMenu}>
-              {t.nav.carta}
-            </a>
-            <a href="#fotos" onClick={closeMenu}>
-              {t.nav.fotos}
-            </a>
-            <a href="#casa" onClick={closeMenu}>
-              {t.nav.historia}
-            </a>
-            <a href="#opiniones" onClick={closeMenu}>
-              {t.nav.opiniones}
-            </a>
-            <a href="#visita" onClick={closeMenu}>
-              {t.nav.visitas}
-            </a>
+          <div className="header-actions">
             <button type="button" className="lang-btn" onClick={toggleLocale}>
               {t.langLabel}
             </button>
-            <a className="btn" href={restaurant.whatsapp} onClick={closeMenu}>
+            <a className="btn btn-small" href="#visita">
               {t.nav.reservar}
             </a>
-          </nav>
-        ) : null}
+          </div>
+        </div>
       </header>
 
       <main id="contenido">
@@ -193,7 +147,7 @@ export default function App() {
           <h1 className="visually-hidden">{t.heroTitle}</h1>
           <div className="hero-copy">
             <div className="hero-actions">
-              <a className="btn" href={restaurant.whatsapp}>
+              <a className="btn" href="#visita">
                 {t.heroReserve}
               </a>
               <a className="btn btn-outline" href="#carta">
@@ -428,10 +382,6 @@ export default function App() {
           </p>
         </div>
       </footer>
-
-      <a className="sticky-reserve" href={restaurant.whatsapp}>
-        {t.nav.reservar}
-      </a>
     </>
   )
 }
