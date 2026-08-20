@@ -7,6 +7,7 @@ import {
   type Locale,
 } from './content.ts'
 import { InstagramFeed } from './InstagramFeed.tsx'
+import { GoogleReviews } from './GoogleReviews.tsx'
 import './App.css'
 
 function InstagramIcon() {
@@ -267,36 +268,11 @@ export default function App() {
                 </span>
               </a>
             </header>
-            <ul className="review-grid">
-              {t.reviews.map((review) => (
-                <li key={review.author}>
-                  <a
-                    className="review-card"
-                    href={restaurant.googleReviewsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`${review.author}: ${review.stars} ${t.reviewsOutOf}. ${t.reviewsOpenLabel}`}
-                  >
-                    <blockquote>
-                      <p className="review-stars-row">
-                        <StarRating
-                          value={review.stars}
-                          max={restaurant.googleMaxStars}
-                        />
-                        <span>
-                          {review.stars} {t.reviewsOutOf}
-                        </span>
-                      </p>
-                      <p className="review-quote">{review.quote}</p>
-                      <footer>
-                        — {review.author}
-                        <cite>Google</cite>
-                      </footer>
-                    </blockquote>
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <GoogleReviews
+              outOf={t.reviewsOutOf}
+              openLabel={t.reviewsOpenLabel}
+              fallback={t.reviews}
+            />
             <p className="reviews-cta">
               <a
                 className="btn btn-ghost"
