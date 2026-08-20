@@ -6,18 +6,24 @@ import {
   type Locale,
 } from './content.ts'
 import { CartaPage } from './CartaPage.tsx'
+import { FeaturedDishes } from './FeaturedDishes.tsx'
+import { TakeoutPage } from './TakeoutPage.tsx'
 import { InstagramFeed } from './InstagramFeed.tsx'
 import { GoogleReviews } from './GoogleReviews.tsx'
 import './App.css'
 
-type Route = '/' | '/carta'
+type Route = '/' | '/carta' | '/para-llevar'
 
 function routeFromLocation(): Route {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
-  if (path === '/carta') {
-    return '/carta'
+  switch (path) {
+    case '/carta':
+      return '/carta'
+    case '/para-llevar':
+      return '/para-llevar'
+    default:
+      return '/'
   }
-  return '/'
 }
 
 function isModifiedClick(event: MouseEvent<HTMLElement>): boolean {
@@ -123,6 +129,7 @@ export default function App() {
   const [hash, setHash] = useState(() => window.location.hash)
   const t = copy[locale]
   const onCarta = route === '/carta'
+  const onTakeout = route === '/para-llevar'
 
   useEffect(() => {
     const syncRoute = () => {
@@ -141,7 +148,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (onCarta) {
+    if (onCarta || onTakeout) {
       window.scrollTo(0, 0)
       return
     }
@@ -153,25 +160,44 @@ export default function App() {
     }
 
     document.getElementById(id)?.scrollIntoView()
-  }, [onCarta, route, hash])
+  }, [onCarta, onTakeout, route, hash])
 
   useEffect(() => {
     document.documentElement.lang = locale
-    document.title = onCarta ? t.cartaPageTitle : t.metaTitle
+    const meta = (() => {
+      switch (route) {
+        case '/carta':
+          return {
+            title: t.cartaPageTitle,
+            description: t.cartaPageDescription,
+          }
+        case '/para-llevar':
+          return {
+            title: t.takeoutPageTitle,
+            description: t.takeoutPageDescription,
+          }
+        case '/':
+          return { title: t.metaTitle, description: t.metaDescription }
+        default: {
+          const _exhaustive: never = route
+          return _exhaustive
+        }
+      }
+    })()
+    document.title = meta.title
     const description = document.querySelector('meta[name="description"]')
     if (description) {
-      description.setAttribute(
-        'content',
-        onCarta ? t.cartaPageDescription : t.metaDescription,
-      )
+      description.setAttribute('content', meta.description)
     }
   }, [
     locale,
-    onCarta,
+    route,
     t.cartaPageDescription,
     t.cartaPageTitle,
     t.metaDescription,
     t.metaTitle,
+    t.takeoutPageDescription,
+    t.takeoutPageTitle,
   ])
 
   const toggleLocale = () => {
@@ -218,6 +244,13 @@ export default function App() {
             <a href="/#visita" onClick={(event) => go(event, '/#visita')}>
               {t.nav.visitas}
             </a>
+            <a
+              href="/para-llevar"
+              aria-current={onTakeout ? 'page' : undefined}
+              onClick={(event) => go(event, '/para-llevar')}
+            >
+              {t.nav.takeout}
+            </a>
             <button type="button" className="lang-btn" onClick={toggleLocale}>
               {t.langLabel}
             </button>
@@ -239,6 +272,14 @@ export default function App() {
             >
               {t.nav.carta}
             </a>
+            <a
+              className="header-carta"
+              href="/para-llevar"
+              aria-current={onTakeout ? 'page' : undefined}
+              onClick={(event) => go(event, '/para-llevar')}
+            >
+              {t.nav.takeout}
+            </a>
             <button type="button" className="lang-btn" onClick={toggleLocale}>
               {t.langLabel}
             </button>
@@ -256,6 +297,13 @@ export default function App() {
       <main id="contenido">
         {onCarta ? (
           <CartaPage t={t} onHome={(event) => go(event, '/')} />
+        ) : onTakeout ? (
+          <TakeoutPage
+            t={t}
+            hash={hash}
+            onHome={(event) => go(event, '/')}
+            onNavigate={go}
+          />
         ) : (
           <>
             <section className="hero" id="inicio">
@@ -323,7 +371,8 @@ export default function App() {
                   <h2>{t.cartaTitle}</h2>
                   <p className="lead muted">{t.cartaLead}</p>
                 </header>
-                <p>
+                <FeaturedDishes locale={locale} />
+                <p className="carta-teaser-cta">
                   <a
                     className="btn"
                     href="/carta"
@@ -465,6 +514,13 @@ export default function App() {
           <p>
             <a href="/carta" onClick={(event) => go(event, '/carta')}>
               {t.nav.carta}
+            </a>
+            {' · '}
+            <a
+              href="/para-llevar"
+              onClick={(event) => go(event, '/para-llevar')}
+            >
+              {t.nav.takeout}
             </a>
             {' · '}
             <a href={`tel:${restaurant.phone}`}>{restaurant.phoneDisplay}</a>
