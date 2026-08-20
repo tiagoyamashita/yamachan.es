@@ -3,14 +3,13 @@
   top: 0;
   z-index: 40;
   height: var(--header-h);
-  color: var(--white);
-  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  transition: box-shadow 0.25s ease;
 }
 
 .site-header.is-solid {
-  background: rgba(244, 239, 228, 0.94);
-  color: var(--ink);
-  backdrop-filter: blur(14px);
   box-shadow: 0 1px 0 var(--line);
 }
 
@@ -33,6 +32,7 @@
   display: flex;
   align-items: center;
   gap: 0.7rem;
+  color: inherit;
   text-decoration: none;
 }
 
@@ -53,9 +53,20 @@
 }
 
 .mark {
-  width: 34px;
-  height: 34px;
-  color: var(--gold);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.site-header .mark {
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.footer-brand .mark {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
 .desktop-nav {
@@ -65,6 +76,7 @@
 }
 
 .desktop-nav a:not(.btn) {
+  color: inherit;
   text-decoration: none;
   font-size: 0.92rem;
   letter-spacing: 0.06em;
@@ -108,11 +120,6 @@
   text-decoration: none;
   font-family: var(--font-display);
   font-size: 1.6rem;
-}
-
-.site-header:not(.is-solid) .menu-toggle,
-.site-header:not(.is-solid) .desktop-nav {
-  color: var(--white);
 }
 
 .btn {
@@ -161,54 +168,23 @@
 }
 
 .hero {
-  position: relative;
-  min-height: 100dvh;
-  display: grid;
-  align-items: end;
-  color: var(--white);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  color: var(--ink);
+  padding: clamp(2.5rem, 7vw, 4.5rem) var(--space) clamp(2.5rem, 6vw, 3.75rem);
 }
 
-.hero-photo,
-.hero-shade {
-  position: absolute;
-  inset: 0;
-}
-
-.hero-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 40%;
-}
-
-.hero-shade {
-  background:
-    linear-gradient(180deg, rgba(22, 18, 14, 0.55) 0%, rgba(22, 18, 14, 0.22) 38%, rgba(22, 18, 14, 0.82) 100%),
-    linear-gradient(90deg, rgba(22, 18, 14, 0.45), transparent 55%);
-}
-
-.hero-vert {
-  display: none;
-  position: absolute;
-  right: clamp(1rem, 5vw, 3rem);
-  top: 50%;
-  writing-mode: vertical-rl;
-  letter-spacing: 0.45em;
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  opacity: 0.72;
-  transform: translateY(-40%);
+.hero-banner {
+  width: min(52rem, 100%);
+  height: auto;
 }
 
 .hero-copy {
-  position: relative;
-  z-index: 1;
-  width: min(var(--max), calc(100% - 2 * var(--space)));
-  margin: 0 auto 4.5rem;
-  max-width: 38rem;
-  justify-self: start;
-  padding-left: var(--space);
+  width: min(var(--max), 100%);
+  margin: 0.5rem auto 0;
+  text-align: center;
 }
 
 .kicker {
@@ -260,6 +236,7 @@ h3 {
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.75rem;
   margin: 1.6rem 0 1rem;
 }
@@ -267,7 +244,7 @@ h3 {
 .rating {
   font-size: 0.84rem;
   letter-spacing: 0.08em;
-  opacity: 0.82;
+  color: var(--muted);
 }
 
 .about,
@@ -407,6 +384,46 @@ h3 {
   color: var(--gold);
 }
 
+.google-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+  margin: 0.85rem 0 0;
+  width: fit-content;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.google-rating:hover,
+.google-rating:focus-visible {
+  color: var(--paper);
+}
+
+.google-rating b {
+  font-weight: 600;
+}
+
+.star-rating {
+  position: relative;
+  display: inline-block;
+  color: rgba(255, 250, 243, 0.28);
+  letter-spacing: 0.12em;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.star-rating-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--gold);
+}
+
 .review-grid {
   list-style: none;
   margin: 0;
@@ -415,15 +432,40 @@ h3 {
   gap: 1.25rem;
 }
 
+.review-card {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
 .review-grid blockquote {
   margin: 0;
   padding: 1.4rem 1.3rem 1.2rem;
   border-top: 2px solid var(--vermillion);
   background: rgba(255, 250, 243, 0.04);
   height: 100%;
+  transition: background 0.2s ease;
 }
 
-.review-grid p {
+.review-card:hover blockquote,
+.review-card:focus-visible blockquote {
+  background: rgba(255, 250, 243, 0.09);
+}
+
+.review-stars-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.7rem;
+  margin: 0 0 0.85rem;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.review-quote {
   font-family: var(--font-display);
   font-size: 1.12rem;
   line-height: 1.5;
@@ -435,6 +477,16 @@ h3 {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   opacity: 0.7;
+}
+
+.review-grid cite {
+  font-style: normal;
+  margin-left: 0.55rem;
+  opacity: 0.75;
+}
+
+.reviews-cta {
+  margin: 1.75rem 0 0;
 }
 
 .visit-actions {
@@ -515,6 +567,60 @@ h3 {
   background: var(--paper-deep);
 }
 
+.ig-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.55rem;
+}
+
+.ig-post {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--ink);
+}
+
+.ig-post a {
+  display: block;
+  height: 100%;
+  color: inherit;
+}
+
+.ig-post img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.ig-post:hover img {
+  transform: scale(1.04);
+}
+
+.ig-post iframe {
+  position: absolute;
+  inset: 0 auto auto 50%;
+  width: 340px;
+  height: 620px;
+  border: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.ig-post-skeleton {
+  background: color-mix(in srgb, var(--ink) 10%, var(--paper-deep));
+  animation: ig-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ig-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
 .ig-embed-frame {
   display: flex;
   justify-content: center;
@@ -589,10 +695,6 @@ h3 {
     display: flex;
   }
 
-  .hero-vert {
-    display: block;
-  }
-
   .site-footer {
     padding-bottom: 2.5rem;
   }
@@ -606,6 +708,10 @@ h3 {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .ig-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
   .review-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -614,9 +720,5 @@ h3 {
 @media (min-width: 1100px) {
   .dish-grid {
     grid-template-columns: repeat(3, 1fr);
-  }
-
-  .hero-copy {
-    margin-bottom: 6rem;
   }
 }
