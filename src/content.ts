@@ -101,8 +101,6 @@ type Copy = {
   instagramCtaButton: string
   footerTag: string
   langLabel: string
-  openMenu: string
-  closeMenu: string
 }
 
 export const copy: Record<Locale, Copy> = {
@@ -241,8 +239,6 @@ export const copy: Record<Locale, Copy> = {
     instagramCtaButton: 'Seguir @yamachan.es',
     footerTag: 'Cocina japonesa en Alicante',
     langLabel: 'EN',
-    openMenu: 'Abrir menú',
-    closeMenu: 'Cerrar menú',
   },
   en: {
     metaTitle: 'Yama-Chan — Authentic Japanese cooking in Alicante',
@@ -378,8 +374,6 @@ export const copy: Record<Locale, Copy> = {
     instagramCtaButton: 'Follow @yamachan.es',
     footerTag: 'Japanese cooking in Alicante',
     langLabel: 'ES',
-    openMenu: 'Open menu',
-    closeMenu: 'Close menu',
   },
 }
 
