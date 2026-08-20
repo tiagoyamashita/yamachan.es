@@ -123,9 +123,7 @@ export function InstagramFeed({ title }: { title: string }) {
           className="instagram-media"
           data-instgrm-permalink={restaurant.instagramUrl}
           data-instgrm-version="14"
-        >
-          <a href={restaurant.instagramUrl}>{title}</a>
-        </blockquote>
+        />
       </div>
     )
   }

@@ -97,7 +97,6 @@ type Copy = {
   instagram: string
   directions: string
   instagramCtaTitle: string
-  instagramCtaBody: string
   instagramCtaButton: string
   footerTag: string
   langLabel: string
@@ -234,9 +233,7 @@ export const copy: Record<Locale, Copy> = {
     instagram: 'Instagram',
     directions: 'Cómo llegar',
     instagramCtaTitle: 'Las fotos de la casa, en Instagram.',
-    instagramCtaBody:
-      'Platos del día, la carta y el local tal como los publicamos en @yamachan.es.',
-    instagramCtaButton: 'Seguir @yamachan.es',
+    instagramCtaButton: 'Seguir',
     footerTag: 'Cocina japonesa en Alicante',
     langLabel: 'EN',
   },
@@ -369,9 +366,7 @@ export const copy: Record<Locale, Copy> = {
     instagram: 'Instagram',
     directions: 'Directions',
     instagramCtaTitle: 'Photos from the house, on Instagram.',
-    instagramCtaBody:
-      'Plates of the day, the menu and the room as we post them on @yamachan.es.',
-    instagramCtaButton: 'Follow @yamachan.es',
+    instagramCtaButton: 'Follow',
     footerTag: 'Japanese cooking in Alicante',
     langLabel: 'ES',
   },
