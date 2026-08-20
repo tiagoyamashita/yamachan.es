@@ -36,6 +36,14 @@
   text-decoration: none;
 }
 
+.nav-logo {
+  display: block;
+  height: calc(var(--header-h) - 0.5rem);
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .brand strong {
   display: block;
   font-family: var(--font-display);
@@ -59,10 +67,6 @@
   object-fit: cover;
   background: #fff;
   flex-shrink: 0;
-}
-
-.site-header .mark {
-  box-shadow: 0 0 0 1px var(--line);
 }
 
 .footer-brand .mark {
@@ -682,6 +686,22 @@ h3 {
   font-size: 0.82rem;
   padding: 0.95rem 1rem;
   box-shadow: var(--shadow);
+}
+
+@media (max-width: 799px) {
+  .site-header,
+  .header-inner {
+    height: calc(var(--header-h) + 10px);
+  }
+
+  .header-inner {
+    padding-bottom: 10px;
+  }
+
+  .mobile-nav {
+    inset: calc(var(--header-h) + 10px) 0 0 0;
+    min-height: calc(100dvh - var(--header-h) - 10px);
+  }
 }
 
 @media (min-width: 800px) {

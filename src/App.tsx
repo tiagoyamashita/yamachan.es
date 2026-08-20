@@ -74,6 +74,18 @@ function Mark() {
   )
 }
 
+function NavLogo() {
+  return (
+    <img
+      className="nav-logo"
+      src="/images/nav-logo.png"
+      alt={restaurant.name}
+      width={72}
+      height={72}
+    />
+  )
+}
+
 export default function App() {
   const [locale, setLocale] = useState<Locale>('es')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -119,11 +131,7 @@ export default function App() {
       <header className={scrolled ? 'site-header is-solid' : 'site-header'}>
         <div className="header-inner">
           <a className="brand" href="#inicio" onClick={closeMenu}>
-            <Mark />
-            <span>
-              <strong>{restaurant.name}</strong>
-              <em>{restaurant.nameJa}</em>
-            </span>
+            <NavLogo />
           </a>
 
           <nav className="desktop-nav" aria-label={locale === 'es' ? 'Principal' : 'Primary'}>
