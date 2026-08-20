@@ -76,7 +76,6 @@ function Mark() {
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>('es')
-  const [scrolled, setScrolled] = useState(false)
   const t = copy[locale]
 
   useEffect(() => {
@@ -88,13 +87,6 @@ export default function App() {
     }
   }, [locale, t.metaDescription, t.metaTitle])
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   const toggleLocale = () => {
     setLocale(otherLocale(locale))
   }
@@ -105,7 +97,7 @@ export default function App() {
         {locale === 'es' ? 'Saltar al contenido' : 'Skip to content'}
       </a>
 
-      <header className={scrolled ? 'site-header is-solid' : 'site-header'}>
+      <header className="site-header">
         <div className="header-inner">
           <a className="brand" href="#inicio">
             <Mark />
@@ -390,10 +382,6 @@ export default function App() {
           </p>
         </div>
       </footer>
-
-      <a className="sticky-reserve" href="#visita">
-        {t.nav.reservar}
-      </a>
     </>
   )
 }
