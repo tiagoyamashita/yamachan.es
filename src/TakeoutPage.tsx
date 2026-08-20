@@ -1,38 +1,17 @@
 import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
+import { restaurant, type Copy, type Locale } from './content.ts'
 import {
-  menuCategories,
-  restaurant,
-  type Copy,
-  type MenuCategoryId,
-  type MenuItemId,
-} from './content.ts'
+  categoryHeading,
+  displayMenuItem,
+  groupMenuByCategory,
+} from './menu.ts'
+import { usePublishedMenu } from './usePublishedMenu.ts'
 
 const CART_KEY = 'yamachan-takeout-cart'
 
-type Cart = Partial<Record<MenuItemId, number>>
+type Cart = Record<string, number>
 
 type TakeoutTab = 'menu' | 'order'
-
-function categoryHeading(id: MenuCategoryId, label: string): string {
-  switch (id) {
-    case 'starters':
-    case 'sushi':
-    case 'mains':
-    case 'dessert':
-    case 'drinks':
-      return label
-    default: {
-      const _exhaustive: never = id
-      return _exhaustive
-    }
-  }
-}
-
-function isMenuItemId(value: string): value is MenuItemId {
-  return menuCategories.some((category) =>
-    category.items.some((item) => item.id === value),
-  )
-}
 
 function readCart(): Cart {
   try {
@@ -46,7 +25,7 @@ function readCart(): Cart {
     }
     const next: Cart = {}
     for (const [key, value] of Object.entries(parsed)) {
-      if (isMenuItemId(key) && typeof value === 'number' && value > 0) {
+      if (typeof value === 'number' && value > 0) {
         next[key] = Math.floor(value)
       }
     }
@@ -106,16 +85,20 @@ function QuantityControls({
 
 export function TakeoutPage({
   t,
+  locale,
   hash,
   onHome,
   onNavigate,
 }: {
   t: Copy
+  locale: Locale
   hash: string
   onHome: (event: MouseEvent<HTMLAnchorElement>) => void
   onNavigate: (event: MouseEvent<HTMLAnchorElement>, href: string) => void
 }) {
   const tab = tabFromHash(hash)
+  const menuItems = usePublishedMenu()
+  const categories = menuItems ? groupMenuByCategory(menuItems) : []
   const [cart, setCart] = useState<Cart>(readCart)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -127,7 +110,7 @@ export function TakeoutPage({
     sessionStorage.setItem(CART_KEY, JSON.stringify(cart))
   }, [cart])
 
-  const setQty = (id: MenuItemId, qty: number) => {
+  const setQty = (id: string, qty: number) => {
     setCart((prev) => {
       const next = { ...prev }
       if (qty <= 0) {
@@ -141,16 +124,17 @@ export function TakeoutPage({
   }
 
   const lines = useMemo(() => {
-    return menuCategories.flatMap((category) =>
-      category.items.flatMap((item) => {
-        const qty = cart[item.id] ?? 0
-        if (qty <= 0) {
-          return []
-        }
-        return [{ item, qty, copy: t.cartaItems[item.id] }]
-      }),
-    )
-  }, [cart, t.cartaItems])
+    if (!menuItems) {
+      return []
+    }
+    return menuItems.flatMap((item) => {
+      const qty = cart[item.slug] ?? 0
+      if (qty <= 0) {
+        return []
+      }
+      return [{ item, qty, copy: displayMenuItem(item, locale) }]
+    })
+  }, [cart, locale, menuItems])
 
   const itemCount = lines.reduce((sum, line) => sum + line.qty, 0)
 
@@ -165,9 +149,7 @@ export function TakeoutPage({
       return
     }
 
-    const dishLines = lines.map(
-      (line) => `- ${line.qty}× ${line.copy.name}`,
-    )
+    const dishLines = lines.map((line) => `- ${line.qty}× ${line.copy.name}`)
     const extra: string[] = [
       '',
       `${t.takeoutWhatsappName}: ${name.trim()}`,
@@ -232,63 +214,71 @@ export function TakeoutPage({
                   id="takeout-panel-menu"
                   aria-labelledby="takeout-tab-menu"
                 >
-                  {menuCategories.map((category) => (
-                    <section
-                      className="carta-section"
-                      key={category.id}
-                      aria-labelledby={`takeout-${category.id}`}
-                    >
-                      <h2 id={`takeout-${category.id}`}>
-                        {categoryHeading(
-                          category.id,
-                          t.cartaCategories[category.id],
-                        )}
-                      </h2>
-                      <ul className="carta-list">
-                        {category.items.map((item) => {
-                          const copy = t.cartaItems[item.id]
-                          const qty = cart[item.id] ?? 0
-                          return (
-                            <li
-                              key={item.id}
-                              className={
-                                item.image
-                                  ? 'carta-item carta-item-photo'
-                                  : 'carta-item'
-                              }
-                            >
-                              {item.image ? (
-                                <img
-                                  className="carta-item-img"
-                                  src={item.image}
-                                  alt=""
-                                  loading="lazy"
-                                />
-                              ) : null}
-                              <div className="carta-item-body">
-                                <div className="carta-item-head">
-                                  <div>
-                                    <h3>{copy.name}</h3>
-                                    <p className="dish-ja">{item.nameJa}</p>
-                                  </div>
-                                  <QuantityControls
-                                    name={copy.name}
-                                    qty={qty}
-                                    addLabel={t.takeoutAdd}
-                                    onChange={(next) => setQty(item.id, next)}
+                  {menuItems === null ? (
+                    <p className="muted">{t.cartaLoading}</p>
+                  ) : (
+                    categories.map((category) => (
+                      <section
+                        className="carta-section"
+                        key={category.id}
+                        aria-labelledby={`takeout-${category.id}`}
+                      >
+                        <h2 id={`takeout-${category.id}`}>
+                          {categoryHeading(
+                            category.id,
+                            t.cartaCategories[category.id],
+                          )}
+                        </h2>
+                        <ul className="carta-list">
+                          {category.items.map((item) => {
+                            const shown = displayMenuItem(item, locale)
+                            const qty = cart[item.slug] ?? 0
+                            return (
+                              <li
+                                key={item.id}
+                                className={
+                                  item.image_url
+                                    ? 'carta-item carta-item-photo'
+                                    : 'carta-item'
+                                }
+                              >
+                                {item.image_url ? (
+                                  <img
+                                    className="carta-item-img"
+                                    src={item.image_url}
+                                    alt=""
+                                    loading="lazy"
                                   />
-                                </div>
-                                <p>{copy.blurb}</p>
-                                {item.vegetarian ? (
-                                  <p className="carta-veg">{t.cartaVegLabel}</p>
                                 ) : null}
-                              </div>
-                            </li>
-                          )
-                        })}
-                      </ul>
-                    </section>
-                  ))}
+                                <div className="carta-item-body">
+                                  <div className="carta-item-head">
+                                    <div>
+                                      <h3>{shown.name}</h3>
+                                      <p className="dish-ja">{item.name_ja}</p>
+                                    </div>
+                                    <QuantityControls
+                                      name={shown.name}
+                                      qty={qty}
+                                      addLabel={t.takeoutAdd}
+                                      onChange={(next) =>
+                                        setQty(item.slug, next)
+                                      }
+                                    />
+                                  </div>
+                                  <p>{shown.blurb}</p>
+                                  {item.vegetarian ? (
+                                    <p className="carta-veg">
+                                      {t.cartaVegLabel}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </section>
+                    ))
+                  )}
                   {itemCount > 0 ? (
                     <p className="takeout-menu-cta">
                       <a
@@ -330,13 +320,15 @@ export function TakeoutPage({
                           <li key={line.item.id} className="takeout-order-line">
                             <div>
                               <h3>{line.copy.name}</h3>
-                              <p className="dish-ja">{line.item.nameJa}</p>
+                              <p className="dish-ja">{line.item.name_ja}</p>
                             </div>
                             <QuantityControls
                               name={line.copy.name}
                               qty={line.qty}
                               addLabel={t.takeoutAdd}
-                              onChange={(next) => setQty(line.item.id, next)}
+                              onChange={(next) =>
+                                setQty(line.item.slug, next)
+                              }
                             />
                           </li>
                         ))}

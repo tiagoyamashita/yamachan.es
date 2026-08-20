@@ -666,6 +666,109 @@ h3 {
   font: inherit;
 }
 
+.admin-header .header-actions {
+  display: flex;
+}
+
+.admin-main {
+  min-height: calc(100vh - var(--header-h));
+}
+
+.admin-login {
+  margin-top: 1rem;
+}
+
+.admin-message {
+  margin-bottom: 1.25rem;
+  color: var(--vermillion);
+}
+
+.admin-dish {
+  display: grid;
+  gap: 1rem;
+  margin: 1.2rem 0 2rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-dish-photo img,
+.admin-dish-photo-empty {
+  width: 100%;
+  max-width: 12rem;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--paper-deep);
+}
+
+.admin-dish-photo-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.admin-upload {
+  display: inline-block;
+  margin-top: 0.65rem;
+  color: var(--vermillion);
+  cursor: pointer;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.admin-dish-row {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0.7rem;
+}
+
+.admin-dish-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+.takeout-field select {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--white);
+  border: 1px solid var(--line);
+  padding: 0.65rem 0.75rem;
+}
+
+@media (min-width: 800px) {
+  .admin-header .header-actions {
+    display: flex;
+  }
+
+  .admin-dish {
+    grid-template-columns: 12rem 1fr;
+    align-items: start;
+  }
+
+  .admin-dish-row {
+    grid-template-columns: 1fr 8rem;
+  }
+}
+
 .reviews {
   background: var(--ink);
   color: var(--paper);

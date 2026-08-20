@@ -3,9 +3,67 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { loadInstagramPosts } from './server/loadInstagramPosts.ts'
 import { loadGoogleReviews } from './server/loadGoogleReviews.ts'
+import { handleAdminRequest } from './server/adminHttp.ts'
+
+async function nodeToWebRequest(req: IncomingMessage): Promise<Request> {
+  const host = req.headers.host ?? 'localhost'
+  const url = `http://${host}${req.url ?? '/'}`
+  const method = req.method ?? 'GET'
+  const headers = new Headers()
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (!value) {
+      continue
+    }
+    if (Array.isArray(value)) {
+      for (const part of value) {
+        headers.append(key, part)
+      }
+    } else {
+      headers.set(key, value)
+    }
+  }
+
+  if (method === 'GET' || method === 'HEAD') {
+    return new Request(url, { method, headers })
+  }
+
+  const chunks: Buffer[] = []
+  for await (const chunk of req) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+  }
+  const body = Buffer.concat(chunks)
+  return new Request(url, {
+    method,
+    headers,
+    body: body.length > 0 ? body : undefined,
+  })
+}
+
+async function sendWebResponse(
+  res: ServerResponse,
+  response: Response,
+) {
+  res.statusCode = response.status
+  response.headers.forEach((value, key) => {
+    const current = res.getHeader(key)
+    if (current === undefined) {
+      res.setHeader(key, value)
+      return
+    }
+    const list = Array.isArray(current) ? current : [String(current)]
+    res.setHeader(key, [...list, value])
+  })
+  const buf = Buffer.from(await response.arrayBuffer())
+  res.end(buf)
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  for (const [key, value] of Object.entries(env)) {
+    if (process.env[key] === undefined) {
+      process.env[key] = value
+    }
+  }
 
   return {
     plugins: [
@@ -54,6 +112,24 @@ export default defineConfig(({ mode }) => {
                 .catch(() => {
                   res.setHeader('Content-Type', 'application/json')
                   res.end(JSON.stringify({ reviews: [] }))
+                })
+            },
+          )
+          server.middlewares.use(
+            (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+              const path = req.url?.split('?')[0] ?? ''
+              if (!path.startsWith('/api/admin')) {
+                next()
+                return
+              }
+
+              void nodeToWebRequest(req)
+                .then((request) => handleAdminRequest(request))
+                .then((response) => sendWebResponse(res, response))
+                .catch(() => {
+                  res.statusCode = 500
+                  res.setHeader('Content-Type', 'application/json')
+                  res.end(JSON.stringify({ error: 'error' }))
                 })
             },
           )
