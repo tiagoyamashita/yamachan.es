@@ -195,7 +195,7 @@ export const copy: Record<Locale, Copy> = {
     aboutNote: 'Música japonesa, ambiente sencillo y comida casera. いらっしゃいませ',
     aboutCaption: 'Masashi, chef de Yama-Chan',
     cartaEyebrow: 'La carta',
-    cartaTitle: 'Toda la carta, en su página.',
+    cartaTitle: 'Lo que la gente vuelve a pedir.',
     cartaLead:
       'Entrantes, sushi, platos calientes y postre. Lo que hay cada día se pide en mesa; la carta sigue el mercado.',
     cartaCta: 'Ver la carta',
@@ -383,7 +383,7 @@ export const copy: Record<Locale, Copy> = {
     aboutNote: 'Japanese music, a simple room, home cooking. いらっしゃいませ',
     aboutCaption: 'Masashi, chef of Yama-Chan',
     cartaEyebrow: 'The menu',
-    cartaTitle: 'The full menu, on its own page.',
+    cartaTitle: 'What people come back for.',
     cartaLead:
       'Starters, sushi, hot dishes and dessert. What is on that day is ordered at the table; the menu follows the market.',
     cartaCta: 'See the menu',

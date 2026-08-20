@@ -199,11 +199,11 @@ export default function App() {
           </a>
 
           <nav className="desktop-nav" aria-label={locale === 'es' ? 'Principal' : 'Primary'}>
-            <a href="/#fotos" onClick={(event) => go(event, '/#fotos')}>
-              {t.nav.fotos}
-            </a>
             <a href="/#casa" onClick={(event) => go(event, '/#casa')}>
               {t.nav.historia}
+            </a>
+            <a href="/#fotos" onClick={(event) => go(event, '/#fotos')}>
+              {t.nav.fotos}
             </a>
             <a
               href="/carta"
