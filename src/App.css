@@ -1,0 +1,630 @@
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: var(--header-h);
+  color: var(--white);
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.site-header.is-solid {
+  background: rgba(244, 239, 228, 0.94);
+  color: var(--ink);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.header-inner,
+.section-inner,
+.footer-inner,
+.band-inner {
+  width: min(var(--max), calc(100% - 2 * var(--space)));
+  margin-inline: auto;
+}
+
+.header-inner {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  text-decoration: none;
+}
+
+.brand strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.brand em {
+  display: block;
+  font-style: normal;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  opacity: 0.7;
+}
+
+.mark {
+  width: 34px;
+  height: 34px;
+  color: var(--gold);
+}
+
+.desktop-nav {
+  display: none;
+  align-items: center;
+  gap: 1.4rem;
+}
+
+.desktop-nav a:not(.btn) {
+  text-decoration: none;
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+}
+
+.lang-btn {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  font: inherit;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  padding: 0.28rem 0.55rem;
+  cursor: pointer;
+}
+
+.menu-toggle {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  font: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+}
+
+.mobile-nav {
+  position: absolute;
+  inset: var(--header-h) 0 0 0;
+  min-height: calc(100dvh - var(--header-h));
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 2rem var(--space) 6rem;
+}
+
+.mobile-nav a {
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+}
+
+.site-header:not(.is-solid) .menu-toggle,
+.site-header:not(.is-solid) .desktop-nav {
+  color: var(--white);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: var(--vermillion);
+  color: var(--white);
+  text-decoration: none;
+  border: 1px solid var(--vermillion);
+  padding: 0.85rem 1.25rem;
+  font-size: 0.86rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--vermillion-deep);
+}
+
+.btn-small {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.75rem;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: rgba(255, 250, 243, 0.45);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 250, 243, 0.1);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.btn-outline:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.hero {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  align-items: end;
+  color: var(--white);
+  overflow: hidden;
+}
+
+.hero-photo,
+.hero-shade {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+}
+
+.hero-shade {
+  background:
+    linear-gradient(180deg, rgba(22, 18, 14, 0.55) 0%, rgba(22, 18, 14, 0.22) 38%, rgba(22, 18, 14, 0.82) 100%),
+    linear-gradient(90deg, rgba(22, 18, 14, 0.45), transparent 55%);
+}
+
+.hero-vert {
+  display: none;
+  position: absolute;
+  right: clamp(1rem, 5vw, 3rem);
+  top: 50%;
+  writing-mode: vertical-rl;
+  letter-spacing: 0.45em;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  opacity: 0.72;
+  transform: translateY(-40%);
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 1;
+  width: min(var(--max), calc(100% - 2 * var(--space)));
+  margin: 0 auto 4.5rem;
+  max-width: 38rem;
+  justify-self: start;
+  padding-left: var(--space);
+}
+
+.kicker {
+  font-size: 0.74rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+  margin-bottom: 0.85rem;
+}
+
+.kicker.gold {
+  color: var(--gold);
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: 0.01em;
+}
+
+h1 {
+  font-size: clamp(2.15rem, 6vw, 3.6rem);
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: clamp(1.85rem, 4.2vw, 2.7rem);
+  margin-bottom: 1rem;
+}
+
+h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.lead {
+  font-size: 1.05rem;
+  max-width: 38rem;
+}
+
+.lead.muted,
+.muted {
+  color: var(--muted);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.6rem 0 1rem;
+}
+
+.rating {
+  font-size: 0.84rem;
+  letter-spacing: 0.08em;
+  opacity: 0.82;
+}
+
+.about,
+.carta,
+.reviews,
+.visit {
+  padding: clamp(4rem, 9vw, 7rem) 0;
+}
+
+.about-grid,
+.visit-grid {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.about p + p,
+.visit .lead {
+  margin-top: 1rem;
+}
+
+.about-note {
+  margin-top: 1.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.about-frame {
+  margin: 0;
+  background: var(--paper-deep);
+  padding: 0.7rem 0.7rem 1.1rem;
+  box-shadow: var(--shadow);
+}
+
+.about-frame img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.about-frame figcaption {
+  margin-top: 0.7rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.section-head {
+  max-width: 38rem;
+  margin-bottom: 2.4rem;
+}
+
+.dish-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.dish-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.dish-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+}
+
+.dish-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.dish-meta {
+  padding: 1.1rem 1.15rem 1.3rem;
+}
+
+.dish-ja {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  color: var(--gold-dim);
+  margin-bottom: 0.25rem;
+}
+
+.dish-meta h3 {
+  margin-bottom: 0.45rem;
+}
+
+.dish-meta p:last-child {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.more-dishes {
+  margin-top: 2.4rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--line);
+}
+
+.more-title {
+  font-size: 0.74rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+  margin-bottom: 0.9rem;
+}
+
+.more-dishes ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.more-dishes li {
+  border: 1px solid var(--line);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.92rem;
+  background: var(--white);
+}
+
+.veg-note {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.reviews {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.reviews .kicker {
+  color: var(--gold);
+}
+
+.review-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.review-grid blockquote {
+  margin: 0;
+  padding: 1.4rem 1.3rem 1.2rem;
+  border-top: 2px solid var(--vermillion);
+  background: rgba(255, 250, 243, 0.04);
+  height: 100%;
+}
+
+.review-grid p {
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  line-height: 1.5;
+}
+
+.review-grid footer {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.visit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.hours h3,
+.place h3 {
+  margin-bottom: 0.9rem;
+}
+
+.hours ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hours li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.98rem;
+}
+
+.hours b {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.hours-note,
+.neighborhood {
+  margin-top: 0.9rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.place address {
+  font-style: normal;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 1.45;
+}
+
+.place-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin: 1rem 0 1.2rem;
+}
+
+.place-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--vermillion);
+}
+
+.map-wrap {
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.map-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  filter: grayscale(0.35) contrast(1.05);
+}
+
+.instagram-band {
+  background:
+    linear-gradient(180deg, rgba(22, 18, 14, 0.72), rgba(22, 18, 14, 0.82)),
+    url('/images/dish-katsudon.jpg') center / cover;
+  color: var(--white);
+  padding: 4.5rem 0;
+}
+
+.band-inner {
+  display: grid;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.band-inner h2 {
+  max-width: 18ch;
+}
+
+.band-inner p {
+  opacity: 0.86;
+  max-width: 36rem;
+}
+
+.icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.site-footer {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 2.5rem 0 6.5rem;
+  font-size: 0.92rem;
+}
+
+.footer-inner {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.footer-brand {
+  color: var(--paper);
+  margin-bottom: 0.4rem;
+}
+
+.footer-inner a {
+  color: var(--gold);
+}
+
+.sticky-reserve {
+  position: fixed;
+  left: var(--space);
+  right: var(--space);
+  bottom: 1rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vermillion);
+  color: var(--white);
+  text-decoration: none;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  padding: 0.95rem 1rem;
+  box-shadow: var(--shadow);
+}
+
+@media (min-width: 800px) {
+  .menu-toggle,
+  .mobile-nav,
+  .sticky-reserve {
+    display: none;
+  }
+
+  .desktop-nav {
+    display: flex;
+  }
+
+  .hero-vert {
+    display: block;
+  }
+
+  .site-footer {
+    padding-bottom: 2.5rem;
+  }
+
+  .about-grid,
+  .visit-grid,
+  .band-inner {
+    grid-template-columns: 1.05fr 0.95fr;
+  }
+
+  .dish-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .review-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .dish-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .hero-copy {
+    margin-bottom: 6rem;
+  }
+}
