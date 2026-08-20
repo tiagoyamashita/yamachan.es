@@ -73,7 +73,7 @@
 .desktop-nav {
   display: none;
   align-items: center;
-  gap: 1.4rem;
+  gap: 1.15rem;
 }
 
 .desktop-nav a:not(.btn) {
@@ -325,13 +325,59 @@ h3 {
   margin-bottom: 0.25rem;
 }
 
+.carta-item-head .dish-ja {
+  margin-bottom: 0;
+}
+
 .dish-meta h3 {
   margin-bottom: 0.45rem;
 }
 
-.dish-meta p:last-child {
+.dish-meta > p:not(.dish-ja) {
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+.dish-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--paper-deep);
+}
+
+.dish-card-skeleton {
+  min-height: 16rem;
+  background: color-mix(in srgb, var(--ink) 8%, var(--paper));
+  animation: ig-pulse 1.2s ease-in-out infinite;
+}
+
+.dish-quote {
+  margin: 0.75rem 0 0;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--line);
+}
+
+.dish-quote p {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.dish-quote footer {
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dish-quote cite {
+  font-style: normal;
+}
+
+.carta-teaser-cta {
+  margin-top: 1.75rem;
 }
 
 .more-dishes {
@@ -453,6 +499,171 @@ h3 {
 
 .carta-back a {
   color: var(--vermillion);
+}
+
+.takeout-tabs {
+  display: flex;
+  gap: 0.15rem;
+  margin: 0 0 2rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.takeout-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.05rem;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.86rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.takeout-tab[aria-selected='true'] {
+  color: var(--vermillion);
+  border-bottom-color: var(--vermillion);
+}
+
+.takeout-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  background: var(--vermillion);
+  color: var(--white);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.takeout-add,
+.takeout-qty button {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.takeout-add {
+  padding: 0.28rem 0.65rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.takeout-add:hover,
+.takeout-qty button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.takeout-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.takeout-qty button {
+  width: 1.85rem;
+  height: 1.85rem;
+  line-height: 1;
+}
+
+.takeout-qty span {
+  min-width: 1.2rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.takeout-menu-cta {
+  margin-top: 2rem;
+}
+
+.takeout-empty {
+  max-width: 40rem;
+  color: var(--muted);
+}
+
+.takeout-empty a {
+  color: var(--vermillion);
+}
+
+.takeout-order-list {
+  list-style: none;
+  margin: 0 0 2rem;
+  padding: 0;
+  max-width: 40rem;
+}
+
+.takeout-order-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.takeout-order-line h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.takeout-form {
+  max-width: 40rem;
+}
+
+.takeout-field {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.takeout-field span {
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.takeout-field input,
+.takeout-field textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--white);
+  border: 1px solid var(--line);
+  padding: 0.65rem 0.75rem;
+}
+
+.takeout-field textarea {
+  resize: vertical;
+  min-height: 5.5rem;
+}
+
+.takeout-error {
+  color: var(--vermillion);
+  margin-bottom: 0.85rem;
+}
+
+.takeout-pickup-note {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 1.25rem;
+}
+
+.takeout-form .btn {
+  appearance: none;
+  font: inherit;
 }
 
 .reviews {
@@ -813,6 +1024,16 @@ h3 {
 
   .nav-logo {
     height: calc(var(--header-h) - 0.5rem - 10px);
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: min(22rem, 72%);
+  }
+
+  .header-carta {
+    font-size: 0.8rem;
   }
 }
 

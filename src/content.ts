@@ -10,6 +10,7 @@ export const restaurant = {
     encodeURIComponent(
       'Hola, me gustaría reservar mesa en Yama-Chan.',
     ),
+  whatsappNumber: '34604949252',
   mapsUrl:
     'https://www.google.com/maps/place/Yama-Chan/@38.3418399,-0.4968258,17z/data=!4m6!3m5!1s0xd6237f702073887:0x8d2f887ef88b335!8m2!3d38.3418399!4d-0.4968258!16s%2Fg%2F11svlwdj4w',
   googleReviewsUrl:
@@ -112,6 +113,7 @@ export type Copy = {
     fotos: string
     opiniones: string
     visitas: string
+    takeout: string
     reservar: string
   }
   heroKicker: string
@@ -137,6 +139,30 @@ export type Copy = {
   cartaVegLabel: string
   cartaVegNote: string
   cartaBackHome: string
+  takeoutPageTitle: string
+  takeoutPageHeading: string
+  takeoutPageDescription: string
+  takeoutPageLead: string
+  takeoutTabMenu: string
+  takeoutTabOrder: string
+  takeoutAdd: string
+  takeoutEmptyOrder: string
+  takeoutSeeMenu: string
+  takeoutNameLabel: string
+  takeoutPhoneLabel: string
+  takeoutTimeLabel: string
+  takeoutTimePlaceholder: string
+  takeoutNotesLabel: string
+  takeoutNotesPlaceholder: string
+  takeoutSendWhatsapp: string
+  takeoutNeedDetails: string
+  takeoutNeedItems: string
+  takeoutPickupNote: string
+  takeoutWhatsappGreeting: string
+  takeoutWhatsappName: string
+  takeoutWhatsappPhone: string
+  takeoutWhatsappTime: string
+  takeoutWhatsappNotes: string
   cartaCategories: Record<MenuCategoryId, string>
   cartaItems: Record<MenuItemId, { name: string; blurb: string }>
   reviewsEyebrow: string
@@ -177,6 +203,7 @@ export const copy: Record<Locale, Copy> = {
       fotos: 'Fotos',
       opiniones: 'Opiniones',
       visitas: 'Visítanos',
+      takeout: 'Para llevar',
       reservar: 'Reservar',
     },
     heroKicker: 'Benalúa · Alicante',
@@ -197,7 +224,7 @@ export const copy: Record<Locale, Copy> = {
     cartaEyebrow: 'La carta',
     cartaTitle: 'Lo que la gente vuelve a pedir.',
     cartaLead:
-      'Entrantes, sushi, platos calientes y postre. Lo que hay cada día se pide en mesa; la carta sigue el mercado.',
+      'Los platos que más salen en las opiniones de Google. Toda la carta está en su página.',
     cartaCta: 'Ver la carta',
     cartaPageTitle: 'La carta — Yama-Chan',
     cartaPageHeading: 'La carta',
@@ -210,6 +237,34 @@ export const copy: Record<Locale, Copy> = {
     cartaVegNote:
       'Platos vegetarianos: edamame, gyoza de verduras, setas, tofu frito relleno de arroz, gyoza de manzana y mochi.',
     cartaBackHome: 'Volver al inicio',
+    takeoutPageTitle: 'Para llevar — Yama-Chan',
+    takeoutPageHeading: 'Para llevar',
+    takeoutPageDescription:
+      'Pide para llevar en Yama-Chan, Alicante. Elige los platos y envía el pedido por WhatsApp para recoger en el local.',
+    takeoutPageLead:
+      'Elige los platos y envíanos el pedido por WhatsApp. Recoges en el local, en el horario de comida.',
+    takeoutTabMenu: 'Carta',
+    takeoutTabOrder: 'Pedido',
+    takeoutAdd: 'Añadir',
+    takeoutEmptyOrder:
+      'Todavía no hay platos en el pedido. Mira la carta y añade lo que quieras recoger.',
+    takeoutSeeMenu: 'Ver la carta',
+    takeoutNameLabel: 'Nombre',
+    takeoutPhoneLabel: 'Teléfono',
+    takeoutTimeLabel: 'Hora de recogida',
+    takeoutTimePlaceholder: '13:30',
+    takeoutNotesLabel: 'Notas',
+    takeoutNotesPlaceholder: 'Alergias, sin cebolla, etc.',
+    takeoutSendWhatsapp: 'Enviar por WhatsApp',
+    takeoutNeedDetails: 'Pon tu nombre y teléfono para enviar el pedido.',
+    takeoutNeedItems: 'Añade al menos un plato antes de enviar.',
+    takeoutPickupNote:
+      'Recogida en C/ Pardo Gimeno, 10. Confirmamos disponibilidad y hora por WhatsApp.',
+    takeoutWhatsappGreeting: 'Hola, quiero hacer un pedido para llevar:',
+    takeoutWhatsappName: 'Nombre',
+    takeoutWhatsappPhone: 'Teléfono',
+    takeoutWhatsappTime: 'Hora de recogida',
+    takeoutWhatsappNotes: 'Notas',
     cartaCategories: {
       starters: 'Entrantes',
       sushi: 'Sushi',
@@ -365,6 +420,7 @@ export const copy: Record<Locale, Copy> = {
       fotos: 'Photos',
       opiniones: 'Reviews',
       visitas: 'Visit',
+      takeout: 'Takeaway',
       reservar: 'Book',
     },
     heroKicker: 'Benalúa · Alicante',
@@ -385,7 +441,7 @@ export const copy: Record<Locale, Copy> = {
     cartaEyebrow: 'The menu',
     cartaTitle: 'What people come back for.',
     cartaLead:
-      'Starters, sushi, hot dishes and dessert. What is on that day is ordered at the table; the menu follows the market.',
+      'The plates that come up most in the Google reviews. The full menu is on its own page.',
     cartaCta: 'See the menu',
     cartaPageTitle: 'Menu — Yama-Chan',
     cartaPageHeading: 'The menu',
@@ -398,6 +454,34 @@ export const copy: Record<Locale, Copy> = {
     cartaVegNote:
       'Vegetarian plates: edamame, vegetable gyoza, mushrooms, fried tofu stuffed with rice, apple gyoza, and mochi.',
     cartaBackHome: 'Back to home',
+    takeoutPageTitle: 'Takeaway — Yama-Chan',
+    takeoutPageHeading: 'Takeaway',
+    takeoutPageDescription:
+      'Order takeaway from Yama-Chan in Alicante. Choose your dishes and send the order on WhatsApp for pickup at the restaurant.',
+    takeoutPageLead:
+      'Choose your dishes and send us the order on WhatsApp. Pickup is at the restaurant, during lunch hours.',
+    takeoutTabMenu: 'Menu',
+    takeoutTabOrder: 'Order',
+    takeoutAdd: 'Add',
+    takeoutEmptyOrder:
+      'There are no dishes in the order yet. Open the menu and add what you want to pick up.',
+    takeoutSeeMenu: 'See the menu',
+    takeoutNameLabel: 'Name',
+    takeoutPhoneLabel: 'Phone',
+    takeoutTimeLabel: 'Pickup time',
+    takeoutTimePlaceholder: '13:30',
+    takeoutNotesLabel: 'Notes',
+    takeoutNotesPlaceholder: 'Allergies, no onion, etc.',
+    takeoutSendWhatsapp: 'Send on WhatsApp',
+    takeoutNeedDetails: 'Add your name and phone number to send the order.',
+    takeoutNeedItems: 'Add at least one dish before sending.',
+    takeoutPickupNote:
+      'Pickup at C/ Pardo Gimeno, 10. We confirm availability and time on WhatsApp.',
+    takeoutWhatsappGreeting: 'Hello, I would like to place a takeaway order:',
+    takeoutWhatsappName: 'Name',
+    takeoutWhatsappPhone: 'Phone',
+    takeoutWhatsappTime: 'Pickup time',
+    takeoutWhatsappNotes: 'Notes',
     cartaCategories: {
       starters: 'Starters',
       sushi: 'Sushi',
