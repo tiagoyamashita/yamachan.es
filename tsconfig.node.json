@@ -19,5 +19,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "server/loadInstagramPosts.ts"]
+  "include": ["vite.config.ts", "server/**/*.ts", "src/menu.ts", "src/content.ts"]
 }

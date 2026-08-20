@@ -138,6 +138,8 @@ export type Copy = {
   cartaPageNote: string
   cartaVegLabel: string
   cartaVegNote: string
+  cartaVegNotePrefix: string
+  cartaLoading: string
   cartaBackHome: string
   takeoutPageTitle: string
   takeoutPageHeading: string
@@ -163,6 +165,35 @@ export type Copy = {
   takeoutWhatsappPhone: string
   takeoutWhatsappTime: string
   takeoutWhatsappNotes: string
+  adminPageTitle: string
+  adminTitle: string
+  adminHeading: string
+  adminLead: string
+  adminUser: string
+  adminPassword: string
+  adminSignIn: string
+  adminLoginError: string
+  adminLogout: string
+  adminLoading: string
+  adminSave: string
+  adminSaved: string
+  adminSaveError: string
+  adminDelete: string
+  adminDeleted: string
+  adminDeleteConfirm: string
+  adminNewDish: string
+  adminUploadPhoto: string
+  adminNoPhoto: string
+  adminPhotoError: string
+  adminNameEs: string
+  adminNameEn: string
+  adminNameJa: string
+  adminBlurbEs: string
+  adminBlurbEn: string
+  adminCategory: string
+  adminSort: string
+  adminPublished: string
+  adminEmptyCategory: string
   cartaCategories: Record<MenuCategoryId, string>
   cartaItems: Record<MenuItemId, { name: string; blurb: string }>
   reviewsEyebrow: string
@@ -236,6 +267,8 @@ export const copy: Record<Locale, Copy> = {
     cartaVegLabel: 'Vegetariano',
     cartaVegNote:
       'Platos vegetarianos: edamame, gyoza de verduras, setas, tofu frito relleno de arroz, gyoza de manzana y mochi.',
+    cartaVegNotePrefix: 'Platos vegetarianos:',
+    cartaLoading: 'Cargando la carta…',
     cartaBackHome: 'Volver al inicio',
     takeoutPageTitle: 'Para llevar — Yama-Chan',
     takeoutPageHeading: 'Para llevar',
@@ -265,6 +298,35 @@ export const copy: Record<Locale, Copy> = {
     takeoutWhatsappPhone: 'Teléfono',
     takeoutWhatsappTime: 'Hora de recogida',
     takeoutWhatsappNotes: 'Notas',
+    adminPageTitle: 'Admin — Yama-Chan',
+    adminTitle: 'Admin',
+    adminHeading: 'La carta',
+    adminLead: 'Edita platos, textos y fotos. Los cambios salen en la carta y en para llevar.',
+    adminUser: 'Usuario',
+    adminPassword: 'Contraseña',
+    adminSignIn: 'Entrar',
+    adminLoginError: 'Usuario o contraseña incorrectos.',
+    adminLogout: 'Salir',
+    adminLoading: 'Cargando…',
+    adminSave: 'Guardar',
+    adminSaved: 'Guardado.',
+    adminSaveError: 'No se ha podido guardar. Prueba otra vez.',
+    adminDelete: 'Quitar',
+    adminDeleted: 'Plato quitado.',
+    adminDeleteConfirm: '¿Quitar este plato de la carta?',
+    adminNewDish: 'Plato nuevo',
+    adminUploadPhoto: 'Subir foto',
+    adminNoPhoto: 'Sin foto',
+    adminPhotoError: 'No se ha podido subir la foto.',
+    adminNameEs: 'Nombre (ES)',
+    adminNameEn: 'Nombre (EN)',
+    adminNameJa: 'Nombre (JA)',
+    adminBlurbEs: 'Texto (ES)',
+    adminBlurbEn: 'Texto (EN)',
+    adminCategory: 'Sección',
+    adminSort: 'Orden',
+    adminPublished: 'Visible en la carta',
+    adminEmptyCategory: 'No hay platos en esta sección.',
     cartaCategories: {
       starters: 'Entrantes',
       sushi: 'Sushi',
@@ -453,6 +515,8 @@ export const copy: Record<Locale, Copy> = {
     cartaVegLabel: 'Vegetarian',
     cartaVegNote:
       'Vegetarian plates: edamame, vegetable gyoza, mushrooms, fried tofu stuffed with rice, apple gyoza, and mochi.',
+    cartaVegNotePrefix: 'Vegetarian plates:',
+    cartaLoading: 'Loading the menu…',
     cartaBackHome: 'Back to home',
     takeoutPageTitle: 'Takeaway — Yama-Chan',
     takeoutPageHeading: 'Takeaway',
@@ -482,6 +546,35 @@ export const copy: Record<Locale, Copy> = {
     takeoutWhatsappPhone: 'Phone',
     takeoutWhatsappTime: 'Pickup time',
     takeoutWhatsappNotes: 'Notes',
+    adminPageTitle: 'Admin — Yama-Chan',
+    adminTitle: 'Admin',
+    adminHeading: 'The menu',
+    adminLead: 'Edit dishes, copy and photos. Changes show on the menu and takeaway pages.',
+    adminUser: 'Username',
+    adminPassword: 'Password',
+    adminSignIn: 'Sign in',
+    adminLoginError: 'Wrong username or password.',
+    adminLogout: 'Sign out',
+    adminLoading: 'Loading…',
+    adminSave: 'Save',
+    adminSaved: 'Saved.',
+    adminSaveError: 'Could not save. Try again.',
+    adminDelete: 'Remove',
+    adminDeleted: 'Dish removed.',
+    adminDeleteConfirm: 'Remove this dish from the menu?',
+    adminNewDish: 'New dish',
+    adminUploadPhoto: 'Upload photo',
+    adminNoPhoto: 'No photo',
+    adminPhotoError: 'Could not upload the photo.',
+    adminNameEs: 'Name (ES)',
+    adminNameEn: 'Name (EN)',
+    adminNameJa: 'Name (JA)',
+    adminBlurbEs: 'Text (ES)',
+    adminBlurbEn: 'Text (EN)',
+    adminCategory: 'Section',
+    adminSort: 'Order',
+    adminPublished: 'Visible on the menu',
+    adminEmptyCategory: 'No dishes in this section.',
     cartaCategories: {
       starters: 'Starters',
       sushi: 'Sushi',

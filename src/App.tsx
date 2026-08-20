@@ -8,11 +8,12 @@ import {
 import { CartaPage } from './CartaPage.tsx'
 import { FeaturedDishes } from './FeaturedDishes.tsx'
 import { TakeoutPage } from './TakeoutPage.tsx'
+import { AdminPage } from './AdminPage.tsx'
 import { InstagramFeed } from './InstagramFeed.tsx'
 import { GoogleReviews } from './GoogleReviews.tsx'
 import './App.css'
 
-type Route = '/' | '/carta' | '/para-llevar'
+type Route = '/' | '/carta' | '/para-llevar' | '/admin'
 
 function routeFromLocation(): Route {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
@@ -21,6 +22,8 @@ function routeFromLocation(): Route {
       return '/carta'
     case '/para-llevar':
       return '/para-llevar'
+    case '/admin':
+      return '/admin'
     default:
       return '/'
   }
@@ -130,6 +133,7 @@ export default function App() {
   const t = copy[locale]
   const onCarta = route === '/carta'
   const onTakeout = route === '/para-llevar'
+  const onAdmin = route === '/admin'
 
   useEffect(() => {
     const syncRoute = () => {
@@ -148,7 +152,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (onCarta || onTakeout) {
+    if (onCarta || onTakeout || onAdmin) {
       window.scrollTo(0, 0)
       return
     }
@@ -160,7 +164,7 @@ export default function App() {
     }
 
     document.getElementById(id)?.scrollIntoView()
-  }, [onCarta, onTakeout, route, hash])
+  }, [onAdmin, onCarta, onTakeout, route, hash])
 
   useEffect(() => {
     document.documentElement.lang = locale
@@ -175,6 +179,11 @@ export default function App() {
           return {
             title: t.takeoutPageTitle,
             description: t.takeoutPageDescription,
+          }
+        case '/admin':
+          return {
+            title: t.adminPageTitle,
+            description: t.adminLead,
           }
         case '/':
           return { title: t.metaTitle, description: t.metaDescription }
@@ -198,6 +207,8 @@ export default function App() {
     t.metaTitle,
     t.takeoutPageDescription,
     t.takeoutPageTitle,
+    t.adminPageTitle,
+    t.adminLead,
   ])
 
   const toggleLocale = () => {
@@ -214,6 +225,14 @@ export default function App() {
 
   return (
     <>
+      {onAdmin ? (
+        <AdminPage
+          t={t}
+          onHome={(event) => go(event, '/')}
+          onToggleLocale={toggleLocale}
+        />
+      ) : (
+        <>
       <a className="skip-link" href="#contenido">
         {locale === 'es' ? 'Saltar al contenido' : 'Skip to content'}
       </a>
@@ -296,10 +315,15 @@ export default function App() {
 
       <main id="contenido">
         {onCarta ? (
-          <CartaPage t={t} onHome={(event) => go(event, '/')} />
+          <CartaPage
+            t={t}
+            locale={locale}
+            onHome={(event) => go(event, '/')}
+          />
         ) : onTakeout ? (
           <TakeoutPage
             t={t}
+            locale={locale}
             hash={hash}
             onHome={(event) => go(event, '/')}
             onNavigate={go}
@@ -527,6 +551,8 @@ export default function App() {
           </p>
         </div>
       </footer>
+        </>
+      )}
     </>
   )
 }
