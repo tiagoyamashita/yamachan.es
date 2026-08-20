@@ -222,7 +222,6 @@ export const copy: Record<Locale, Copy> = {
       'El horario puede cambiar. Confírmalo en Instagram o al reservar.',
     hours: [
       { days: 'Miércoles – sábado', time: '13:00 – 16:30' },
-      { days: 'Viernes noche', time: '20:00 – 22:30' },
       { days: 'Domingo – martes', time: 'Cerrado' },
     ],
     addressTitle: 'Dónde estamos',
@@ -360,7 +359,6 @@ export const copy: Record<Locale, Copy> = {
     hoursNote: 'Hours can change. Confirm on Instagram or when you book.',
     hours: [
       { days: 'Wednesday – Saturday', time: '13:00 – 16:30' },
-      { days: 'Friday evening', time: '20:00 – 22:30' },
       { days: 'Sunday – Tuesday', time: 'Closed' },
     ],
     addressTitle: 'Find us',
