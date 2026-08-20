@@ -271,7 +271,6 @@ export default function App() {
             <GoogleReviews
               outOf={t.reviewsOutOf}
               openLabel={t.reviewsOpenLabel}
-              fallback={t.reviews}
             />
             <p className="reviews-cta">
               <a

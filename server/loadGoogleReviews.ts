@@ -3,7 +3,7 @@ export type GoogleReview = {
   author: string
   quote: string
   stars: number
-  photoUrl: string
+  photoUrl?: string
   mapsUrl?: string
 }
 
@@ -42,7 +42,7 @@ type PhotoMedia = {
 }
 
 const SEARCH_QUERY = 'Yama-Chan C/ Pardo Gimeno 10 Alicante'
-const MAX_REVIEWS = 6
+const MAX_REVIEWS = 5
 
 function authorKey(name: string | undefined): string {
   return (name ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -149,6 +149,7 @@ export async function loadGoogleReviews(
 
   const photos = (place.photos ?? []).slice(0, 10)
   const photoByAuthor = new Map<string, string>()
+  const photoUris: string[] = []
 
   await Promise.all(
     photos.map(async (photo) => {
@@ -159,6 +160,9 @@ export async function loadGoogleReviews(
       if (!uri) {
         return
       }
+      if (!photoUris.includes(uri)) {
+        photoUris.push(uri)
+      }
       for (const author of photo.authorAttributions ?? []) {
         const key = authorKey(author.displayName)
         if (key && !photoByAuthor.has(key)) {
@@ -168,7 +172,8 @@ export async function loadGoogleReviews(
     }),
   )
 
-  const reviews: GoogleReview[] = []
+  const usedPhotos = new Set<string>()
+  const pending: GoogleReview[] = []
   for (const review of place.reviews ?? []) {
     const author = review.authorAttribution?.displayName?.trim()
     const quote = (
@@ -184,23 +189,42 @@ export async function loadGoogleReviews(
     const key = authorKey(author)
     let photoUrl: string | undefined
     for (const [photoAuthor, uri] of photoByAuthor) {
-      if (authorsMatch(key, photoAuthor)) {
+      if (authorsMatch(key, photoAuthor) && !usedPhotos.has(uri)) {
         photoUrl = uri
+        usedPhotos.add(uri)
         break
       }
     }
-    if (!photoUrl) {
-      continue
-    }
 
-    reviews.push({
-      id: review.name ?? `${key}-${String(reviews.length)}`,
+    pending.push({
+      id: review.name ?? `${key}-${String(pending.length)}`,
       author,
       quote,
       stars,
       photoUrl,
       mapsUrl: review.googleMapsUri,
     })
+  }
+
+  const leftover = photoUris.filter((uri) => !usedPhotos.has(uri))
+  for (const review of pending) {
+    if (review.photoUrl || leftover.length === 0) {
+      continue
+    }
+    const uri = leftover.shift()
+    if (!uri) {
+      continue
+    }
+    review.photoUrl = uri
+    usedPhotos.add(uri)
+  }
+
+  const reviews: GoogleReview[] = []
+  for (const review of pending) {
+    if (!review.photoUrl) {
+      continue
+    }
+    reviews.push(review)
     if (reviews.length >= MAX_REVIEWS) {
       break
     }

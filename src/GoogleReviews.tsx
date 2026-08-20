@@ -6,14 +6,8 @@ export type GoogleReview = {
   author: string
   quote: string
   stars: number
-  photoUrl?: string
+  photoUrl: string
   mapsUrl?: string
-}
-
-type FallbackReview = {
-  author: string
-  quote: string
-  stars: number
 }
 
 type FeedResponse = {
@@ -21,7 +15,7 @@ type FeedResponse = {
 }
 
 const STAR_GLYPHS = '★★★★★'
-const SKELETON_KEYS = ['r1', 'r2', 'r3', 'r4'] as const
+const SKELETON_KEYS = ['r1', 'r2', 'r3', 'r4', 'r5'] as const
 
 function StarRating({ value, max }: { value: number; max: number }) {
   const percent = Math.max(0, Math.min(value / max, 1)) * 100
@@ -35,23 +29,16 @@ function StarRating({ value, max }: { value: number; max: number }) {
   )
 }
 
-function fromFallback(fallback: FallbackReview[]): GoogleReview[] {
-  return fallback.map((review) => ({
-    id: review.author,
-    author: review.author,
-    quote: review.quote,
-    stars: review.stars,
-  }))
+function withPhotos(reviews: GoogleReview[]): GoogleReview[] {
+  return reviews.filter((review) => Boolean(review.photoUrl))
 }
 
 export function GoogleReviews({
   outOf,
   openLabel,
-  fallback,
 }: {
   outOf: string
   openLabel: string
-  fallback: FallbackReview[]
 }) {
   const [reviews, setReviews] = useState<GoogleReview[] | null>(null)
 
@@ -62,17 +49,13 @@ export function GoogleReviews({
       try {
         const response = await fetch('/api/google-reviews')
         if (!response.ok) {
-          if (!cancelled) setReviews(fromFallback(fallback))
+          if (!cancelled) setReviews([])
           return
         }
         const data = (await response.json()) as FeedResponse
-        if (!cancelled) {
-          setReviews(
-            data.reviews.length > 0 ? data.reviews : fromFallback(fallback),
-          )
-        }
+        if (!cancelled) setReviews(withPhotos(data.reviews))
       } catch {
-        if (!cancelled) setReviews(fromFallback(fallback))
+        if (!cancelled) setReviews([])
       }
     }
 
@@ -80,7 +63,7 @@ export function GoogleReviews({
     return () => {
       cancelled = true
     }
-  }, [fallback])
+  }, [])
 
   if (reviews === null) {
     return (
@@ -109,15 +92,13 @@ export function GoogleReviews({
               rel="noreferrer"
               aria-label={`${review.author}: ${review.stars} ${outOf}. ${openLabel}`}
             >
-              {review.photoUrl ? (
-                <img
-                  className="review-photo"
-                  src={review.photoUrl}
-                  alt=""
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                />
-              ) : null}
+              <img
+                className="review-photo"
+                src={review.photoUrl}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+              />
               <blockquote>
                 <p className="review-stars-row">
                   <StarRating
