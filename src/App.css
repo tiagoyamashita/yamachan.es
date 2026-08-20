@@ -619,6 +619,41 @@ h3 {
   margin-top: 1.75rem;
 }
 
+.btn-instagram {
+  background: linear-gradient(
+    45deg,
+    #f09433 0%,
+    #e6683c 25%,
+    #dc2743 50%,
+    #cc2366 75%,
+    #bc1888 100%
+  );
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.7rem 1.4rem;
+}
+
+.btn-instagram:hover {
+  background: linear-gradient(
+    45deg,
+    #f09433 0%,
+    #e6683c 25%,
+    #dc2743 50%,
+    #cc2366 75%,
+    #bc1888 100%
+  );
+  filter: brightness(1.08);
+}
+
+.ig-handle {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
 .icon {
   width: 1.05rem;
   height: 1.05rem;

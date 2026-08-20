@@ -233,13 +233,13 @@ export default function App() {
             <header className="section-head">
               <p className="kicker">{t.instagram}</p>
               <h2>{t.instagramCtaTitle}</h2>
-              <p className="lead muted">{t.instagramCtaBody}</p>
             </header>
             <InstagramFeed title={restaurant.instagramHandle} />
             <p className="ig-follow">
-              <a className="btn" href={restaurant.instagramUrl}>
+              <a className="btn btn-instagram" href={restaurant.instagramUrl}>
                 <InstagramIcon />
-                {t.instagramCtaButton}
+                {t.instagramCtaButton}{' '}
+                <span className="ig-handle">{restaurant.instagramHandle}</span>
               </a>
             </p>
           </div>
@@ -355,10 +355,6 @@ export default function App() {
               <p className="neighborhood">{t.neighborhood}</p>
               <div className="place-links">
                 <a href={restaurant.mapsUrl}>{t.directions}</a>
-                <a href={restaurant.instagramUrl}>
-                  <InstagramIcon />
-                  {restaurant.instagramHandle}
-                </a>
               </div>
               <div className="map-wrap">
                 <iframe
@@ -384,8 +380,6 @@ export default function App() {
           </div>
           <p>{t.footerTag}</p>
           <p>
-            <a href={restaurant.instagramUrl}>{restaurant.instagramHandle}</a>
-            {' · '}
             <a href={`tel:${restaurant.phone}`}>{restaurant.phoneDisplay}</a>
           </p>
         </div>
