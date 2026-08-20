@@ -33,6 +33,14 @@
   text-decoration: none;
 }
 
+.nav-logo {
+  display: block;
+  height: calc(var(--header-h) - 0.5rem);
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .brand strong {
   display: block;
   font-family: var(--font-display);
@@ -56,10 +64,6 @@
   object-fit: cover;
   background: #fff;
   flex-shrink: 0;
-}
-
-.site-header .mark {
-  box-shadow: 0 0 0 1px var(--line);
 }
 
 .footer-brand .mark {
