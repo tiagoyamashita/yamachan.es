@@ -7,8 +7,8 @@ export function getSupabase(): SupabaseClient | null {
     return client
   }
 
-  const url = import.meta.env.VITE_SUPABASE_URL
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+  const url = import.meta.env.VITE_SUPABASE_URL?.trim()
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
   if (!url || !key) {
     client = null
     return client
