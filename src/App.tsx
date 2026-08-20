@@ -178,17 +178,15 @@ export default function App() {
             </div>
             <figure className="about-frame">
               <img
-                src="/images/hero-interior.jpg"
+                src="/images/chef-masashi.png"
                 alt={
                   locale === 'es'
-                    ? 'Sala pequeña de Yama-Chan, con mesas de madera'
-                    : 'Yama-Chan’s small dining room with wooden tables'
+                    ? 'Masashi, chef del restaurante Yama-Chan, saludando en la puerta del local'
+                    : 'Masashi, chef of Yama-Chan, waving at the restaurant door'
                 }
                 loading="lazy"
               />
-              <figcaption>
-                {restaurant.nameJa} · {t.neighborhood}
-              </figcaption>
+              <figcaption>{t.aboutCaption}</figcaption>
             </figure>
           </div>
         </section>

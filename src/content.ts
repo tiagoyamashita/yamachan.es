@@ -61,6 +61,7 @@ type Copy = {
   aboutTitle: string
   aboutBody: string[]
   aboutNote: string
+  aboutCaption: string
   cartaEyebrow: string
   cartaTitle: string
   cartaLead: string
@@ -129,6 +130,7 @@ export const copy: Record<Locale, Copy> = {
       'El comedor es pequeño y tranquilo —unas cinco mesas— y lo atienden sus propios dueños. Por eso el servicio es cercano, y por eso hace falta reservar, sobre todo el fin de semana.',
     ],
     aboutNote: 'Música japonesa, ambiente sencillo y comida casera. いらっしゃいませ',
+    aboutCaption: 'Masashi, chef de Yama-Chan',
     cartaEyebrow: 'La carta',
     cartaTitle: 'Lo que la gente vuelve a pedir.',
     cartaLead:
@@ -263,6 +265,7 @@ export const copy: Record<Locale, Copy> = {
       'The dining room is small and quiet — about five tables — and the owners serve you themselves. That is why the welcome is personal, and why you should book, especially on weekends.',
     ],
     aboutNote: 'Japanese music, a simple room, home cooking. いらっしゃいませ',
+    aboutCaption: 'Masashi, chef of Yama-Chan',
     cartaEyebrow: 'The menu',
     cartaTitle: 'What people come back for.',
     cartaLead:

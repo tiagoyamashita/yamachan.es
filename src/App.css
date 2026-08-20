@@ -254,15 +254,19 @@ h3 {
 
 .about-frame {
   margin: 0;
+  align-self: start;
   background: var(--paper-deep);
   padding: 0.7rem 0.7rem 1.1rem;
   box-shadow: var(--shadow);
 }
 
 .about-frame img {
+  display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: auto;
+  aspect-ratio: 9 / 16;
   object-fit: cover;
+  object-position: center top;
 }
 
 .about-frame figcaption {
