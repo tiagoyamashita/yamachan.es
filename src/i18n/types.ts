@@ -68,28 +68,26 @@ export type Copy = {
   takeoutTotalPending: string
   takeoutTaxNote: string
   takeoutPaymentLabel: string
-  takeoutPaymentCash: string
   takeoutPaymentCard: string
-  takeoutPaymentBizum: string
+  takeoutPaymentCardOnly: string
+  takeoutPayCard: string
+  takeoutPaying: string
+  takeoutPayError: string
+  takeoutCanceled: string
+  takeoutPaidTitle: string
+  takeoutPaidLead: string
+  takeoutPaidNew: string
   takeoutNameLabel: string
   takeoutPhoneLabel: string
   takeoutTimeLabel: string
   takeoutTimePlaceholder: string
   takeoutNotesLabel: string
   takeoutNotesPlaceholder: string
-  takeoutSendWhatsapp: string
   takeoutNeedDetails: string
   takeoutNeedTime: string
   takeoutNeedItems: string
   takeoutNoPickupTimes: string
   takeoutPickupNote: string
-  takeoutWhatsappGreeting: string
-  takeoutWhatsappName: string
-  takeoutWhatsappPhone: string
-  takeoutWhatsappTime: string
-  takeoutWhatsappNotes: string
-  takeoutWhatsappPayment: string
-  takeoutWhatsappTotal: string
   reservePageTitle: string
   reservePageHeading: string
   reservePageDescription: string

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
-import { restaurant } from './content.ts'
 import { AllergenLegend, AllergenMarks } from './AllergenIcon.tsx'
 import { type Copy, formatEuros, type Locale, showJapaneseCaption } from './i18n/index.ts'
 import {
@@ -13,17 +12,26 @@ import { formatPickupLabel } from './openingHours.ts'
 import { usePublishedMenu } from './usePublishedMenu.ts'
 
 const CART_KEY = 'yamachan-takeout-cart'
-const PAYMENT_METHODS = ['cash', 'card', 'bizum'] as const
+const DETAILS_KEY = 'yamachan-takeout-details'
 
 type Cart = Record<string, number>
-type TakeoutTab = 'menu' | 'order' | 'info' | 'send'
-type PaymentMethod = (typeof PAYMENT_METHODS)[number]
-type OrderLine = {
-  item: StoredMenuItem
-  qty: number
-  copy: { name: string; blurb: string }
-  unitCents: number
-  lineTotalCents: number
+type TakeoutTab = 'menu' | 'order' | 'info' | 'send' | 'paid'
+type SavedDetails = {
+  name: string
+  phone: string
+  pickupDate: string | null
+  pickupSlot: string
+  notes: string
+}
+type PaidOrder = {
+  paid: boolean
+  name: string
+  phone: string
+  pickupDate: string
+  pickupSlot: string
+  notes: string
+  amountTotal: number
+  lines: { name: string; qty: number; amount: number }[]
 }
 
 function readCart(): Cart {
@@ -48,6 +56,29 @@ function readCart(): Cart {
   }
 }
 
+function readDetails(): SavedDetails {
+  try {
+    const raw = sessionStorage.getItem(DETAILS_KEY)
+    if (!raw) {
+      return { name: '', phone: '', pickupDate: null, pickupSlot: '', notes: '' }
+    }
+    const parsed: unknown = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') {
+      return { name: '', phone: '', pickupDate: null, pickupSlot: '', notes: '' }
+    }
+    const row = parsed as Record<string, unknown>
+    return {
+      name: typeof row.name === 'string' ? row.name : '',
+      phone: typeof row.phone === 'string' ? row.phone : '',
+      pickupDate: typeof row.pickupDate === 'string' ? row.pickupDate : null,
+      pickupSlot: typeof row.pickupSlot === 'string' ? row.pickupSlot : '',
+      notes: typeof row.notes === 'string' ? row.notes : '',
+    }
+  } catch {
+    return { name: '', phone: '', pickupDate: null, pickupSlot: '', notes: '' }
+  }
+}
+
 function tabFromHash(hash: string): TakeoutTab {
   switch (hash) {
     case '#pedido':
@@ -56,24 +87,31 @@ function tabFromHash(hash: string): TakeoutTab {
       return 'info'
     case '#enviar':
       return 'send'
+    case '#pagado':
+      return 'paid'
     default:
       return 'menu'
   }
 }
 
-function paymentLabel(method: PaymentMethod, t: Copy): string {
-  switch (method) {
-    case 'cash':
-      return t.takeoutPaymentCash
-    case 'card':
-      return t.takeoutPaymentCard
-    case 'bizum':
-      return t.takeoutPaymentBizum
-    default: {
-      const _exhaustive: never = method
-      return _exhaustive
-    }
-  }
+function sessionIdFromSearch(): string {
+  return new URLSearchParams(window.location.search).get('session_id') ?? ''
+}
+
+function checkoutWasCanceled(): boolean {
+  return new URLSearchParams(window.location.search).has('canceled')
+}
+
+function clearCheckoutSearch(hash = window.location.hash) {
+  window.history.replaceState({}, '', `/para-llevar${hash}`)
+}
+
+type OrderLine = {
+  item: StoredMenuItem
+  qty: number
+  copy: { name: string; blurb: string }
+  unitCents: number
+  lineTotalCents: number
 }
 
 function QuantityControls({
@@ -157,17 +195,76 @@ export function TakeoutPage({
   const menuItems = usePublishedMenu()
   const categories = menuItems ? groupMenuByCategory(menuItems) : []
   const [cart, setCart] = useState<Cart>(readCart)
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [pickupDate, setPickupDate] = useState<string | null>(null)
-  const [pickupSlot, setPickupSlot] = useState('')
-  const [notes, setNotes] = useState('')
-  const [payment, setPayment] = useState<PaymentMethod>('cash')
+  const [name, setName] = useState(() => readDetails().name)
+  const [phone, setPhone] = useState(() => readDetails().phone)
+  const [pickupDate, setPickupDate] = useState<string | null>(
+    () => readDetails().pickupDate,
+  )
+  const [pickupSlot, setPickupSlot] = useState(() => readDetails().pickupSlot)
+  const [notes, setNotes] = useState(() => readDetails().notes)
   const [error, setError] = useState<string | null>(null)
+  const [paying, setPaying] = useState(false)
+  const [paidOrder, setPaidOrder] = useState<PaidOrder | null>(null)
+  const [canceledNotice] = useState(() => checkoutWasCanceled())
+  const paidSessionId = tab === 'paid' ? sessionIdFromSearch() : ''
+  const [paidLoading, setPaidLoading] = useState(() => Boolean(paidSessionId))
 
   useEffect(() => {
     sessionStorage.setItem(CART_KEY, JSON.stringify(cart))
   }, [cart])
+
+  useEffect(() => {
+    sessionStorage.setItem(
+      DETAILS_KEY,
+      JSON.stringify({ name, phone, pickupDate, pickupSlot, notes }),
+    )
+  }, [name, notes, phone, pickupDate, pickupSlot])
+
+  useEffect(() => {
+    if (!canceledNotice) {
+      return
+    }
+    clearCheckoutSearch('#enviar')
+  }, [canceledNotice])
+
+  useEffect(() => {
+    if (tab !== 'paid' || !paidSessionId) {
+      return
+    }
+    let cancelled = false
+    void fetch(
+      `/api/takeout/session?session_id=${encodeURIComponent(paidSessionId)}`,
+    )
+      .then(async (response) => {
+        const payload: unknown = await response.json().catch(() => null)
+        if (!response.ok || !payload || typeof payload !== 'object') {
+          throw new Error('session')
+        }
+        return payload as PaidOrder
+      })
+      .then((order) => {
+        if (cancelled) {
+          return
+        }
+        setPaidOrder(order)
+        if (order.paid) {
+          setCart({})
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError(t.takeoutPayError)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPaidLoading(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [paidSessionId, t.takeoutPayError, tab])
 
   const setQty = (id: string, qty: number) => {
     setCart((prev) => {
@@ -214,7 +311,7 @@ export function TakeoutPage({
       ? formatPickupLabel(locale, pickupDate, pickupSlot)
       : ''
 
-  const sendOrder = (event: FormEvent<HTMLFormElement>) => {
+  const payOrder = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (lines.length === 0) {
       setError(t.takeoutNeedItems)
@@ -224,31 +321,46 @@ export function TakeoutPage({
       setError(t.takeoutNeedDetails)
       return
     }
-    if (!pickupLabel) {
+    if (!pickupDate || !pickupSlot || !pickupLabel) {
       setError(t.takeoutNeedTime)
       return
     }
 
-    const dishLines = lines.map(
-      (line) =>
-        `- ${line.qty}× ${line.copy.name} — ${money(line.lineTotalCents)}`,
-    )
-    const extra: string[] = [
-      '',
-      `${t.takeoutWhatsappTotal}: ${money(orderTotalCents)}`,
-      `${t.takeoutWhatsappPayment}: ${paymentLabel(payment, t)}`,
-      `${t.takeoutWhatsappName}: ${name.trim()}`,
-      `${t.takeoutWhatsappPhone}: ${phone.trim()}`,
-    ]
-    extra.push(`${t.takeoutWhatsappTime}: ${pickupLabel}`)
-    if (notes.trim()) {
-      extra.push(`${t.takeoutWhatsappNotes}: ${notes.trim()}`)
+    setPaying(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/takeout/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: lines.map((line) => ({
+            slug: line.item.slug,
+            qty: line.qty,
+          })),
+          name: name.trim(),
+          phone: phone.trim(),
+          pickupDate,
+          pickupSlot,
+          notes: notes.trim(),
+          locale,
+        }),
+      })
+      const payload: unknown = await response.json().catch(() => null)
+      const url =
+        payload &&
+        typeof payload === 'object' &&
+        'url' in payload &&
+        typeof payload.url === 'string'
+          ? payload.url
+          : ''
+      if (!response.ok || !url) {
+        throw new Error('checkout')
+      }
+      window.location.href = url
+    } catch {
+      setError(t.takeoutPayError)
+      setPaying(false)
     }
-
-    const message = [t.takeoutWhatsappGreeting, '', ...dishLines, ...extra].join(
-      '\n',
-    )
-    window.location.href = `https://wa.me/${restaurant.whatsappNumber}?text=${encodeURIComponent(message)}`
   }
 
   return (
@@ -302,7 +414,7 @@ export function TakeoutPage({
             href="/para-llevar#enviar"
             role="tab"
             id="takeout-tab-send"
-            aria-selected={tab === 'send'}
+            aria-selected={tab === 'send' || tab === 'paid'}
             aria-controls="takeout-panel-send"
             onClick={(event) => onNavigate(event, '/para-llevar#enviar')}
           >
@@ -640,31 +752,120 @@ export function TakeoutPage({
                         </ul>
                       </section>
 
-                      <form className="takeout-form" onSubmit={sendOrder}>
+                      <form className="takeout-form" onSubmit={payOrder}>
                         <fieldset className="takeout-payment">
                           <legend>{t.takeoutPaymentLabel}</legend>
-                          {PAYMENT_METHODS.map((method) => (
-                            <label key={method} className="takeout-payment-option">
-                              <input
-                                type="radio"
-                                name="payment"
-                                value={method}
-                                checked={payment === method}
-                                onChange={() => setPayment(method)}
-                              />
-                              <span>{paymentLabel(method, t)}</span>
-                            </label>
-                          ))}
+                          <p className="takeout-payment-option takeout-payment-card">
+                            {t.takeoutPaymentCard}
+                            <span>{t.takeoutPaymentCardOnly}</span>
+                          </p>
                         </fieldset>
-                        {error ? <p className="takeout-error">{error}</p> : null}
+                        {error || (canceledNotice ? t.takeoutCanceled : null) ? (
+                          <p className="takeout-error">
+                            {error ?? t.takeoutCanceled}
+                          </p>
+                        ) : null}
                         <p className="takeout-pickup-note">
                           {t.takeoutPickupNote}
                         </p>
-                        <button className="btn" type="submit">
-                          {t.takeoutSendWhatsapp}
+                        <button className="btn" type="submit" disabled={paying}>
+                          {paying ? t.takeoutPaying : t.takeoutPayCard}
                         </button>
                       </form>
                     </>
+                  )}
+                </div>
+              )
+            case 'paid':
+              return (
+                <div
+                  role="tabpanel"
+                  id="takeout-panel-send"
+                  aria-labelledby="takeout-tab-send"
+                >
+                  {paidLoading ? (
+                    <p className="muted">{t.cartaLoading}</p>
+                  ) : paidOrder?.paid ? (
+                    <>
+                      <header className="section-head">
+                        <h2>{t.takeoutPaidTitle}</h2>
+                        <p className="lead muted">{t.takeoutPaidLead}</p>
+                      </header>
+                      <section className="takeout-send-summary">
+                        <ul className="takeout-summary-list">
+                          {paidOrder.lines.map((line, index) => (
+                            <li key={`${line.name}-${index}`}>
+                              <span>
+                                {line.qty} × {line.name}
+                              </span>
+                              <span className="takeout-line-amount">
+                                {money(line.amount)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="takeout-totals">
+                          <p className="takeout-totals-row">
+                            <span>{t.takeoutTotalLabel}</span>
+                            <strong>{money(paidOrder.amountTotal)}</strong>
+                          </p>
+                        </div>
+                        <ul className="takeout-summary-list">
+                          <li>
+                            <span>{t.takeoutNameLabel}</span>
+                            <span>{paidOrder.name || '—'}</span>
+                          </li>
+                          <li>
+                            <span>{t.takeoutPhoneLabel}</span>
+                            <span>{paidOrder.phone || '—'}</span>
+                          </li>
+                          {paidOrder.pickupDate && paidOrder.pickupSlot ? (
+                            <li>
+                              <span>{t.takeoutTimeLabel}</span>
+                              <span>
+                                {formatPickupLabel(
+                                  locale,
+                                  paidOrder.pickupDate,
+                                  paidOrder.pickupSlot,
+                                )}
+                              </span>
+                            </li>
+                          ) : null}
+                          {paidOrder.notes ? (
+                            <li>
+                              <span>{t.takeoutNotesLabel}</span>
+                              <span>{paidOrder.notes}</span>
+                            </li>
+                          ) : null}
+                          <li>
+                            <span>{t.takeoutPaymentLabel}</span>
+                            <span>{t.takeoutPaymentCard}</span>
+                          </li>
+                        </ul>
+                      </section>
+                      <p className="takeout-menu-cta">
+                        <a
+                          className="btn"
+                          href="/para-llevar"
+                          onClick={(event) => {
+                            setPaidOrder(null)
+                            setName('')
+                            setPhone('')
+                            setPickupDate(null)
+                            setPickupSlot('')
+                            setNotes('')
+                            clearCheckoutSearch('')
+                            onNavigate(event, '/para-llevar')
+                          }}
+                        >
+                          {t.takeoutPaidNew}
+                        </a>
+                      </p>
+                    </>
+                  ) : (
+                    <p className="takeout-error">
+                      {error ?? t.takeoutPayError}
+                    </p>
                   )}
                 </div>
               )

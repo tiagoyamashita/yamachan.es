@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 import { loadInstagramPosts } from './server/loadInstagramPosts.ts'
 import { loadGoogleReviews } from './server/loadGoogleReviews.ts'
 import { handleAdminRequest } from './server/adminHttp.ts'
+import { handleReservationsRequest } from './server/reservationsHttp.ts'
+import { handleTakeoutRequest } from './server/takeoutHttp.ts'
 
 async function nodeToWebRequest(req: IncomingMessage): Promise<Request> {
   const host = req.headers.host ?? 'localhost'
@@ -118,13 +120,24 @@ export default defineConfig(({ mode }) => {
           server.middlewares.use(
             (req: IncomingMessage, res: ServerResponse, next: () => void) => {
               const path = req.url?.split('?')[0] ?? ''
-              if (!path.startsWith('/api/admin')) {
+              if (
+                !path.startsWith('/api/admin') &&
+                !path.startsWith('/api/reservations') &&
+                !path.startsWith('/api/takeout')
+              ) {
                 next()
                 return
               }
 
+              let handle = handleAdminRequest
+              if (path.startsWith('/api/reservations')) {
+                handle = handleReservationsRequest
+              } else if (path.startsWith('/api/takeout')) {
+                handle = handleTakeoutRequest
+              }
+
               void nodeToWebRequest(req)
-                .then((request) => handleAdminRequest(request))
+                .then((request) => handle(request))
                 .then((response) => sendWebResponse(res, response))
                 .catch(() => {
                   res.statusCode = 500
