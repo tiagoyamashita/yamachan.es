@@ -46,6 +46,7 @@ export type MenuItemId =
 export type MenuItem = {
   id: MenuItemId
   nameJa: string
+  nameRomaji: string
   vegetarian?: boolean
   image?: string
 }
@@ -59,44 +60,44 @@ export const menuCategories: MenuCategory[] = [
   {
     id: 'starters',
     items: [
-      { id: 'edamame', nameJa: '枝豆', vegetarian: true, image: '/images/dish-edamame.png' },
-      { id: 'gyozaPork', nameJa: '餃子', image: '/images/dish-gyoza.png' },
-      { id: 'gyozaVeg', nameJa: '野菜餃子', vegetarian: true, image: '/images/dish-gyoza-veg.png' },
-      { id: 'takoyaki', nameJa: 'たこ焼き', image: '/images/dish-takoyaki.jpg' },
-      { id: 'mushrooms', nameJa: 'バター醤油きのこ', vegetarian: true, image: '/images/dish-mushrooms.png' },
+      { id: 'edamame', nameJa: '枝豆', nameRomaji: 'edamame', vegetarian: true, image: '/images/dish-edamame.png' },
+      { id: 'gyozaPork', nameJa: '餃子', nameRomaji: 'gyōza', image: '/images/dish-gyoza.png' },
+      { id: 'gyozaVeg', nameJa: '野菜餃子', nameRomaji: 'yasai gyōza', vegetarian: true, image: '/images/dish-gyoza-veg.png' },
+      { id: 'takoyaki', nameJa: 'たこ焼き', nameRomaji: 'takoyaki', image: '/images/dish-takoyaki.jpg' },
+      { id: 'mushrooms', nameJa: 'バター醤油きのこ', nameRomaji: 'batā shōyu kinoko', vegetarian: true, image: '/images/dish-mushrooms.png' },
     ],
   },
   {
     id: 'sushi',
     items: [
-      { id: 'sushi', nameJa: '寿司', image: '/images/dish-sushi.jpg' },
-      { id: 'sashimi', nameJa: '刺身', image: '/images/dish-sashimi.jpg' },
-      { id: 'hotPhilly', nameJa: 'ホットフィラデルフィア', image: '/images/dish-hot-philly.png' },
+      { id: 'sushi', nameJa: '寿司', nameRomaji: 'sushi', image: '/images/dish-sushi.jpg' },
+      { id: 'sashimi', nameJa: '刺身', nameRomaji: 'sashimi', image: '/images/dish-sashimi.jpg' },
+      { id: 'hotPhilly', nameJa: 'ホットフィラデルフィア', nameRomaji: 'hotto firaderufia', image: '/images/dish-hot-philly.png' },
     ],
   },
   {
     id: 'mains',
     items: [
-      { id: 'katsudon', nameJa: 'カツ丼', image: '/images/dish-katsudon.jpg' },
-      { id: 'katsuCurry', nameJa: 'カツカレー', image: '/images/dish-katsu-curry.png' },
-      { id: 'yakinikuDon', nameJa: '焼肉丼', image: '/images/dish-yakiniku-don.jpg' },
-      { id: 'karaageCurry', nameJa: '唐揚げカレー', image: '/images/dish-karaage-curry.png' },
-      { id: 'okonomiyaki', nameJa: 'お好み焼き', image: '/images/dish-okonomiyaki.png' },
-      { id: 'yakisoba', nameJa: '焼きそば', image: '/images/dish-yakisoba.png' },
-      { id: 'tempuraUdon', nameJa: '天ぷらうどん', image: '/images/dish-tempura.jpg' },
-      { id: 'friedTofu', nameJa: '稲荷寿司', vegetarian: true, image: '/images/dish-fried-tofu.png' },
+      { id: 'katsudon', nameJa: 'カツ丼', nameRomaji: 'katsudon', image: '/images/dish-katsudon.jpg' },
+      { id: 'katsuCurry', nameJa: 'カツカレー', nameRomaji: 'katsu karē', image: '/images/dish-katsu-curry.png' },
+      { id: 'yakinikuDon', nameJa: '焼肉丼', nameRomaji: 'yakiniku don', image: '/images/dish-yakiniku-don.jpg' },
+      { id: 'karaageCurry', nameJa: '唐揚げカレー', nameRomaji: 'karaage karē', image: '/images/dish-karaage-curry.png' },
+      { id: 'okonomiyaki', nameJa: 'お好み焼き', nameRomaji: 'okonomiyaki', image: '/images/dish-okonomiyaki.png' },
+      { id: 'yakisoba', nameJa: '焼きそば', nameRomaji: 'yakisoba', image: '/images/dish-yakisoba.png' },
+      { id: 'tempuraUdon', nameJa: '天ぷらうどん', nameRomaji: 'tempura udon', image: '/images/dish-tempura.jpg' },
+      { id: 'friedTofu', nameJa: '稲荷寿司', nameRomaji: 'inari zushi', vegetarian: true, image: '/images/dish-fried-tofu.png' },
     ],
   },
   {
     id: 'dessert',
     items: [
-      { id: 'appleGyoza', nameJa: 'りんご餃子', vegetarian: true, image: '/images/dish-apple-gyoza.png' },
-      { id: 'mochi', nameJa: '餅', vegetarian: true, image: '/images/dish-mochi.png' },
+      { id: 'appleGyoza', nameJa: 'りんご餃子', nameRomaji: 'ringo gyōza', vegetarian: true, image: '/images/dish-apple-gyoza.png' },
+      { id: 'mochi', nameJa: '餅', nameRomaji: 'mochi', vegetarian: true, image: '/images/dish-mochi.png' },
     ],
   },
   {
     id: 'drinks',
-    items: [{ id: 'japaneseBeer', nameJa: 'ビール', image: '/images/dish-japanese-beer.png' }],
+    items: [{ id: 'japaneseBeer', nameJa: 'ビール', nameRomaji: 'bīru', image: '/images/dish-japanese-beer.png' }],
   },
 ]
 
@@ -125,4 +126,17 @@ export function isMenuItemId(value: unknown): value is MenuItemId {
     default:
       return false
   }
+}
+
+export function romajiForMenuSlug(slug: string): string {
+  if (!isMenuItemId(slug)) {
+    return ''
+  }
+  for (const category of menuCategories) {
+    const item = category.items.find((entry) => entry.id === slug)
+    if (item) {
+      return item.nameRomaji
+    }
+  }
+  return ''
 }
