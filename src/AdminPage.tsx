@@ -174,25 +174,28 @@ function DishEditor({
         <fieldset className="admin-allergens">
           <legend>{t.adminAllergens}</legend>
           <div className="admin-allergen-grid">
-            {ALLERGEN_IDS.map((id) => (
-              <label key={id} className="admin-allergen">
-                <input
-                  type="checkbox"
-                  checked={item.allergens.includes(id)}
-                  onChange={(event) =>
-                    set({
-                      allergens: toggleAllergen(
-                        item.allergens,
-                        id,
-                        event.target.checked,
-                      ),
-                    })
-                  }
-                />
-                <AllergenIcon id={id} />
-                <span>{t.cartaAllergens[id]}</span>
-              </label>
-            ))}
+            {ALLERGEN_IDS.map((id) => {
+              const allergens = item.allergens ?? []
+              return (
+                <label key={id} className="admin-allergen">
+                  <input
+                    type="checkbox"
+                    checked={allergens.includes(id)}
+                    onChange={(event) =>
+                      set({
+                        allergens: toggleAllergen(
+                          allergens,
+                          id,
+                          event.target.checked,
+                        ),
+                      })
+                    }
+                  />
+                  <AllergenIcon id={id} />
+                  <span>{t.cartaAllergens[id]}</span>
+                </label>
+              )
+            })}
           </div>
         </fieldset>
         <label className="admin-check">

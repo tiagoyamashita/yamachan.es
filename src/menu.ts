@@ -3,6 +3,7 @@ import {
   isMenuItemId,
   menuCategories,
   type MenuCategoryId,
+  type MenuItemId,
 } from './content.ts'
 import { copy } from './i18n/copy.ts'
 import type { Locale } from './i18n/locales.ts'
@@ -28,6 +29,7 @@ export function parseStoredMenuItem(value: unknown): StoredMenuItem | null {
     return null
   }
   const row = value as Record<string, unknown>
+  const sortOrder = Number(row.sort_order)
   if (
     typeof row.id !== 'string' ||
     typeof row.slug !== 'string' ||
@@ -39,7 +41,7 @@ export function parseStoredMenuItem(value: unknown): StoredMenuItem | null {
     typeof row.blurb_en !== 'string' ||
     typeof row.image_url !== 'string' ||
     typeof row.vegetarian !== 'boolean' ||
-    typeof row.sort_order !== 'number' ||
+    !Number.isFinite(sortOrder) ||
     typeof row.published !== 'boolean'
   ) {
     return null
@@ -55,7 +57,7 @@ export function parseStoredMenuItem(value: unknown): StoredMenuItem | null {
     blurb_en: row.blurb_en,
     image_url: row.image_url,
     vegetarian: row.vegetarian,
-    sort_order: row.sort_order,
+    sort_order: Math.floor(sortOrder),
     published: row.published,
     allergens: parseAllergens(row.allergens),
   }
@@ -155,6 +157,28 @@ export function groupMenuByCategory(
   })
 }
 
+const FALLBACK_ALLERGENS: Record<MenuItemId, AllergenId[]> = {
+  edamame: ['soy'],
+  gyozaPork: ['gluten', 'soy', 'sesame'],
+  gyozaVeg: ['gluten', 'soy', 'sesame'],
+  takoyaki: ['gluten', 'eggs', 'fish', 'soy', 'molluscs'],
+  mushrooms: ['gluten', 'soy', 'milk'],
+  sushi: ['gluten', 'eggs', 'fish', 'soy', 'sesame'],
+  sashimi: ['gluten', 'fish', 'soy'],
+  hotPhilly: ['gluten', 'eggs', 'fish', 'soy', 'milk', 'sesame'],
+  katsudon: ['gluten', 'eggs', 'fish', 'soy'],
+  katsuCurry: ['gluten', 'eggs', 'soy', 'milk', 'celery'],
+  yakinikuDon: ['gluten', 'soy', 'sesame'],
+  karaageCurry: ['gluten', 'eggs', 'soy', 'milk', 'celery'],
+  okonomiyaki: ['gluten', 'eggs', 'fish', 'soy'],
+  yakisoba: ['gluten', 'soy', 'sesame'],
+  tempuraUdon: ['gluten', 'crustaceans', 'eggs', 'fish', 'soy'],
+  friedTofu: ['gluten', 'soy'],
+  appleGyoza: ['gluten'],
+  mochi: [],
+  japaneseBeer: ['gluten'],
+}
+
 export function fallbackMenuItems(): StoredMenuItem[] {
   const es = copy.es.cartaItems
   const en = copy.en.cartaItems
@@ -176,7 +200,7 @@ export function fallbackMenuItems(): StoredMenuItem[] {
         vegetarian: Boolean(item.vegetarian),
         sort_order: current,
         published: true,
-        allergens: [],
+        allergens: FALLBACK_ALLERGENS[item.id],
       }
     }),
   )

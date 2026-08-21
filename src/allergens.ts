@@ -40,10 +40,17 @@ export function isAllergenId(value: unknown): value is AllergenId {
 }
 
 export function parseAllergens(value: unknown): AllergenId[] {
-  if (!Array.isArray(value)) {
+  let raw: unknown = value
+  if (typeof raw === 'string') {
+    const inner = raw.replace(/^\{|\}$/g, '').trim()
+    raw = inner
+      ? inner.split(',').map((part) => part.trim().replace(/^["']|["']$/g, ''))
+      : []
+  }
+  if (!Array.isArray(raw)) {
     return []
   }
-  const selected = new Set(value.filter(isAllergenId))
+  const selected = new Set(raw.filter(isAllergenId))
   return ALLERGEN_IDS.filter((id) => selected.has(id))
 }
 
