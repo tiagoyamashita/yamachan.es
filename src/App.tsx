@@ -13,7 +13,7 @@ import {
 import { LanguagePicker } from './LanguagePicker.tsx'
 import { CartaPage } from './CartaPage.tsx'
 import { FeaturedDishes } from './FeaturedDishes.tsx'
-import { TakeoutPage } from './TakeoutPage.tsx'
+// import { TakeoutPage } from './TakeoutPage.tsx'
 import { ReservasPage } from './ReservasPage.tsx'
 import { AdminPage } from './AdminPage.tsx'
 import { InstagramFeed } from './InstagramFeed.tsx'
