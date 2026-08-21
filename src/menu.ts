@@ -24,6 +24,39 @@ export type StoredMenuItem = {
   allergens: AllergenId[]
 }
 
+const FALLBACK_ALLERGENS: Record<MenuItemId, AllergenId[]> = {
+  edamame: ['soy'],
+  gyozaPork: ['gluten', 'soy', 'sesame'],
+  gyozaVeg: ['gluten', 'soy', 'sesame'],
+  takoyaki: ['gluten', 'eggs', 'fish', 'soy', 'molluscs'],
+  mushrooms: ['gluten', 'soy', 'milk'],
+  sushi: ['gluten', 'eggs', 'fish', 'soy', 'sesame'],
+  sashimi: ['gluten', 'fish', 'soy'],
+  hotPhilly: ['gluten', 'eggs', 'fish', 'soy', 'milk', 'sesame'],
+  katsudon: ['gluten', 'eggs', 'fish', 'soy'],
+  katsuCurry: ['gluten', 'eggs', 'soy', 'milk', 'celery'],
+  yakinikuDon: ['gluten', 'soy', 'sesame'],
+  karaageCurry: ['gluten', 'eggs', 'soy', 'milk', 'celery'],
+  okonomiyaki: ['gluten', 'eggs', 'fish', 'soy'],
+  yakisoba: ['gluten', 'soy', 'sesame'],
+  tempuraUdon: ['gluten', 'crustaceans', 'eggs', 'fish', 'soy'],
+  friedTofu: ['gluten', 'soy'],
+  appleGyoza: ['gluten'],
+  mochi: [],
+  japaneseBeer: ['gluten'],
+}
+
+function resolvedAllergens(slug: string, raw: unknown): AllergenId[] {
+  const parsed = parseAllergens(raw)
+  if (parsed.length > 0) {
+    return parsed
+  }
+  if (isMenuItemId(slug)) {
+    return FALLBACK_ALLERGENS[slug]
+  }
+  return parsed
+}
+
 export function parseStoredMenuItem(value: unknown): StoredMenuItem | null {
   if (!value || typeof value !== 'object') {
     return null
@@ -59,7 +92,7 @@ export function parseStoredMenuItem(value: unknown): StoredMenuItem | null {
     vegetarian: row.vegetarian,
     sort_order: Math.floor(sortOrder),
     published: row.published,
-    allergens: parseAllergens(row.allergens),
+    allergens: resolvedAllergens(row.slug, row.allergens),
   }
 }
 
@@ -155,28 +188,6 @@ export function groupMenuByCategory(
     }
     return [{ id, items: grouped }]
   })
-}
-
-const FALLBACK_ALLERGENS: Record<MenuItemId, AllergenId[]> = {
-  edamame: ['soy'],
-  gyozaPork: ['gluten', 'soy', 'sesame'],
-  gyozaVeg: ['gluten', 'soy', 'sesame'],
-  takoyaki: ['gluten', 'eggs', 'fish', 'soy', 'molluscs'],
-  mushrooms: ['gluten', 'soy', 'milk'],
-  sushi: ['gluten', 'eggs', 'fish', 'soy', 'sesame'],
-  sashimi: ['gluten', 'fish', 'soy'],
-  hotPhilly: ['gluten', 'eggs', 'fish', 'soy', 'milk', 'sesame'],
-  katsudon: ['gluten', 'eggs', 'fish', 'soy'],
-  katsuCurry: ['gluten', 'eggs', 'soy', 'milk', 'celery'],
-  yakinikuDon: ['gluten', 'soy', 'sesame'],
-  karaageCurry: ['gluten', 'eggs', 'soy', 'milk', 'celery'],
-  okonomiyaki: ['gluten', 'eggs', 'fish', 'soy'],
-  yakisoba: ['gluten', 'soy', 'sesame'],
-  tempuraUdon: ['gluten', 'crustaceans', 'eggs', 'fish', 'soy'],
-  friedTofu: ['gluten', 'soy'],
-  appleGyoza: ['gluten'],
-  mochi: [],
-  japaneseBeer: ['gluten'],
 }
 
 export function fallbackMenuItems(): StoredMenuItem[] {

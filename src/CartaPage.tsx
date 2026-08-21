@@ -1,5 +1,5 @@
 import { type MouseEvent } from 'react'
-import { AllergenMarks } from './AllergenIcon.tsx'
+import { AllergenLegend, AllergenMarks } from './AllergenIcon.tsx'
 import { type Copy, type Locale, showJapaneseCaption } from './i18n/index.ts'
 import {
   categoryHeading,
@@ -94,6 +94,7 @@ export function CartaPage({
             {t.cartaVegNotePrefix} {vegNames.join(', ')}.
           </p>
         ) : null}
+        <AllergenLegend names={t.cartaAllergens} label={t.cartaAllergenLabel} />
         <p className="carta-allergen-note">{t.cartaAllergenNote}</p>
         <p className="carta-price-note">{t.cartaPageNote}</p>
         <p className="carta-back">
