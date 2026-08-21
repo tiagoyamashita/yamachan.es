@@ -526,23 +526,55 @@ h3 {
 .carta-allergens {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem 0.7rem;
+  gap: 0.35rem;
   list-style: none;
-  margin: 0.5rem 0 0;
+  margin: 0.55rem 0 0;
   padding: 0;
-  color: var(--muted);
-  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
 }
 
-.carta-allergens li {
+.carta-allergens li,
+.carta-allergen-legend li {
   display: inline-flex;
   align-items: center;
   gap: 0.28rem;
+  border: 1px solid var(--line);
+  background: var(--white);
+  padding: 0.18rem 0.45rem 0.18rem 0.35rem;
 }
 
 .allergen-icon {
   display: block;
   flex-shrink: 0;
+  color: var(--vermillion);
+}
+
+.carta-allergen-legend {
+  margin-top: 2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+}
+
+.carta-allergen-legend h2 {
+  font-family: var(--font-body);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+  margin: 0 0 0.75rem;
+}
+
+.carta-allergen-legend ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
 }
 
 .carta-allergen-note,

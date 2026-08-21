@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
 import { restaurant } from './content.ts'
-import { AllergenMarks } from './AllergenIcon.tsx'
+import { AllergenLegend, AllergenMarks } from './AllergenIcon.tsx'
 import { type Copy, type Locale, showJapaneseCaption } from './i18n/index.ts'
 import {
   categoryHeading,
@@ -288,6 +288,10 @@ export function TakeoutPage({
                       </section>
                     ))
                   )}
+                  <AllergenLegend
+                    names={t.cartaAllergens}
+                    label={t.cartaAllergenLabel}
+                  />
                   {itemCount > 0 ? (
                     <p className="takeout-menu-cta">
                       <a

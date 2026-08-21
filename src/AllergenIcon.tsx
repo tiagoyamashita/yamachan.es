@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { type AllergenId } from './allergens.ts'
+import { ALLERGEN_IDS, type AllergenId } from './allergens.ts'
 
 function graphic(id: AllergenId): ReactNode {
   switch (id) {
@@ -151,21 +151,44 @@ export function AllergenMarks({
   names,
   label,
 }: {
-  ids: AllergenId[]
+  ids: AllergenId[] | undefined
   names: Record<AllergenId, string>
   label: string
 }) {
-  if (ids.length === 0) {
+  const selected = ids ?? []
+  if (selected.length === 0) {
     return null
   }
   return (
     <ul className="carta-allergens" aria-label={label}>
-      {ids.map((id) => (
+      {selected.map((id) => (
         <li key={id}>
           <AllergenIcon id={id} />
           <span>{names[id]}</span>
         </li>
       ))}
     </ul>
+  )
+}
+
+export function AllergenLegend({
+  names,
+  label,
+}: {
+  names: Record<AllergenId, string>
+  label: string
+}) {
+  return (
+    <section className="carta-allergen-legend" aria-label={label}>
+      <h2>{label}</h2>
+      <ul>
+        {ALLERGEN_IDS.map((id) => (
+          <li key={id}>
+            <AllergenIcon id={id} />
+            <span>{names[id]}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
