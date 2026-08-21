@@ -14,12 +14,13 @@ import { LanguagePicker } from './LanguagePicker.tsx'
 import { CartaPage } from './CartaPage.tsx'
 import { FeaturedDishes } from './FeaturedDishes.tsx'
 import { TakeoutPage } from './TakeoutPage.tsx'
+import { ReservasPage } from './ReservasPage.tsx'
 import { AdminPage } from './AdminPage.tsx'
 import { InstagramFeed } from './InstagramFeed.tsx'
 import { GoogleReviews } from './GoogleReviews.tsx'
 import './App.css'
 
-type Route = '/' | '/carta' | '/para-llevar' | '/admin'
+type Route = '/' | '/carta' | '/para-llevar' | '/reservas' | '/admin'
 
 function routeFromLocation(): Route {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
@@ -28,6 +29,8 @@ function routeFromLocation(): Route {
       return '/carta'
     case '/para-llevar':
       return '/para-llevar'
+    case '/reservas':
+      return '/reservas'
     case '/admin':
       return '/admin'
     default:
@@ -125,6 +128,7 @@ export default function App() {
   const t = copy[locale]
   const onCarta = route === '/carta'
   const onTakeout = route === '/para-llevar'
+  const onReserve = route === '/reservas'
   const onAdmin = route === '/admin'
 
   useEffect(() => {
@@ -144,7 +148,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (onCarta || onTakeout || onAdmin) {
+    if (onCarta || onTakeout || onReserve || onAdmin) {
       window.scrollTo(0, 0)
       return
     }
@@ -156,7 +160,7 @@ export default function App() {
     }
 
     document.getElementById(id)?.scrollIntoView()
-  }, [onAdmin, onCarta, onTakeout, route, hash])
+  }, [onAdmin, onCarta, onReserve, onTakeout, route, hash])
 
   useEffect(() => {
     persistLocale(locale)
@@ -172,6 +176,11 @@ export default function App() {
           return {
             title: t.takeoutPageTitle,
             description: t.takeoutPageDescription,
+          }
+        case '/reservas':
+          return {
+            title: t.reservePageTitle,
+            description: t.reservePageDescription,
           }
         case '/admin':
           return {
@@ -200,6 +209,8 @@ export default function App() {
     t.metaTitle,
     t.takeoutPageDescription,
     t.takeoutPageTitle,
+    t.reservePageDescription,
+    t.reservePageTitle,
     t.adminPageTitle,
     t.adminLead,
   ])
@@ -253,18 +264,19 @@ export default function App() {
             <a href="/#visita" onClick={(event) => go(event, '/#visita')}>
               {t.nav.visitas}
             </a>
-            <a
+            {/* <a
               href="/para-llevar"
               aria-current={onTakeout ? 'page' : undefined}
               onClick={(event) => go(event, '/para-llevar')}
             >
               {t.nav.takeout}
-            </a>
+            </a> */}
             <LanguagePicker locale={locale} onChange={setLocale} />
             <a
               className="btn btn-small"
-              href="/#visita"
-              onClick={(event) => go(event, '/#visita')}
+              href="/reservas"
+              aria-current={onReserve ? 'page' : undefined}
+              onClick={(event) => go(event, '/reservas')}
             >
               {t.nav.reservar}
             </a>
@@ -279,19 +291,20 @@ export default function App() {
             >
               {t.nav.carta}
             </a>
-            <a
+            {/* <a
               className="header-carta"
               href="/para-llevar"
               aria-current={onTakeout ? 'page' : undefined}
               onClick={(event) => go(event, '/para-llevar')}
             >
               {t.nav.takeout}
-            </a>
+            </a> */}
             <LanguagePicker locale={locale} onChange={setLocale} />
             <a
               className="btn btn-small"
-              href="/#visita"
-              onClick={(event) => go(event, '/#visita')}
+              href="/reservas"
+              aria-current={onReserve ? 'page' : undefined}
+              onClick={(event) => go(event, '/reservas')}
             >
               {t.nav.reservar}
             </a>
@@ -314,6 +327,12 @@ export default function App() {
             onHome={(event) => go(event, '/')}
             onNavigate={go}
           />
+        ) : onReserve ? (
+          <ReservasPage
+            t={t}
+            locale={locale}
+            onHome={(event) => go(event, '/')}
+          />
         ) : (
           <>
             <section className="hero" id="inicio">
@@ -328,8 +347,8 @@ export default function App() {
                 <div className="hero-actions">
                   <a
                     className="btn"
-                    href="/#visita"
-                    onClick={(event) => go(event, '/#visita')}
+                    href="/reservas"
+                    onClick={(event) => go(event, '/reservas')}
                   >
                     {t.heroReserve}
                   </a>
@@ -452,7 +471,14 @@ export default function App() {
                   <p className="lead muted">{t.visitLead}</p>
 
                   <div className="visit-actions">
-                    <a className="btn" href={whatsappUrl(t.whatsappReserveText)}>
+                    <a
+                      className="btn"
+                      href="/reservas"
+                      onClick={(event) => go(event, '/reservas')}
+                    >
+                      {t.nav.reservar}
+                    </a>
+                    <a className="btn btn-outline" href={whatsappUrl(t.whatsappReserveText)}>
                       {t.whatsapp}
                     </a>
                     <a className="btn btn-outline" href={`tel:${restaurant.phone}`}>
@@ -518,11 +544,15 @@ export default function App() {
               {t.nav.carta}
             </a>
             {' · '}
-            <a
+            {/* <a
               href="/para-llevar"
               onClick={(event) => go(event, '/para-llevar')}
             >
               {t.nav.takeout}
+            </a> */}
+            {' · '}
+            <a href="/reservas" onClick={(event) => go(event, '/reservas')}>
+              {t.nav.reservar}
             </a>
             {' · '}
             <a href={`tel:${restaurant.phone}`}>{restaurant.phoneDisplay}</a>

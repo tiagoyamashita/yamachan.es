@@ -22,7 +22,7 @@ export function usePublishedMenu() {
       const { data, error } = await client
         .from('yamachan_menu_items')
         .select(
-          'id, slug, category_id, name_es, name_en, name_ja, blurb_es, blurb_en, image_url, vegetarian, sort_order, published, allergens',
+          'id, slug, category_id, name_es, name_en, name_ja, blurb_es, blurb_en, image_url, vegetarian, sort_order, published, allergens, price_cents',
         )
         .eq('published', true)
         .order('sort_order', { ascending: true })

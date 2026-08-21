@@ -53,24 +53,77 @@ export type Copy = {
   takeoutPageLead: string
   takeoutTabMenu: string
   takeoutTabOrder: string
+  takeoutTabInfo: string
+  takeoutTabSend: string
   takeoutAdd: string
   takeoutEmptyOrder: string
   takeoutSeeMenu: string
+  takeoutContinueToInfo: string
+  takeoutContinueToSend: string
+  takeoutEditOrder: string
+  takeoutEditInfo: string
+  takeoutSummaryTitle: string
+  takeoutTotalLabel: string
+  takeoutItemTotalLabel: string
+  takeoutTotalPending: string
+  takeoutTaxNote: string
+  takeoutPaymentLabel: string
+  takeoutPaymentCard: string
+  takeoutPaymentCardOnly: string
+  takeoutPayCard: string
+  takeoutPaying: string
+  takeoutPayError: string
+  takeoutCanceled: string
+  takeoutPaidTitle: string
+  takeoutPaidLead: string
+  takeoutPaidNew: string
   takeoutNameLabel: string
   takeoutPhoneLabel: string
   takeoutTimeLabel: string
   takeoutTimePlaceholder: string
   takeoutNotesLabel: string
   takeoutNotesPlaceholder: string
-  takeoutSendWhatsapp: string
   takeoutNeedDetails: string
+  takeoutNeedTime: string
   takeoutNeedItems: string
+  takeoutNoPickupTimes: string
   takeoutPickupNote: string
-  takeoutWhatsappGreeting: string
-  takeoutWhatsappName: string
-  takeoutWhatsappPhone: string
-  takeoutWhatsappTime: string
-  takeoutWhatsappNotes: string
+  reservePageTitle: string
+  reservePageHeading: string
+  reservePageDescription: string
+  reservePageLead: string
+  reserveDateLabel: string
+  reserveTimeLabel: string
+  reserveGuestsLabel: string
+  reserveFewerGuests: string
+  reserveMoreGuests: string
+  reserveNameLabel: string
+  reserveEmailLabel: string
+  reservePhoneLabel: string
+  reserveOccasionLabel: string
+  reserveOccasionNone: string
+  reserveOccasionBirthday: string
+  reserveOccasionAnniversary: string
+  reserveOccasionCelebration: string
+  reserveNotesLabel: string
+  reserveNotesPlaceholder: string
+  reserveSubmit: string
+  reserveSubmitting: string
+  reserveNeedDate: string
+  reserveNeedTime: string
+  reserveNeedDetails: string
+  reserveSubmitError: string
+  reservePrevMonth: string
+  reserveNextMonth: string
+  reserveNote: string
+  reservePickDate: string
+  reserveNoTimes: string
+  reserveLoading: string
+  reserveUnavailable: string
+  reserveConfirmTitle: string
+  reserveConfirmLead: string
+  reserveConfirmNew: string
+  reserveTableLabel: string
   adminPageTitle: string
   adminTitle: string
   adminHeading: string
@@ -98,6 +151,7 @@ export type Copy = {
   adminBlurbEn: string
   adminCategory: string
   adminSort: string
+  adminPrice: string
   adminPublished: string
   adminAllergens: string
   adminEmptyCategory: string

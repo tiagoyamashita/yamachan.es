@@ -28,6 +28,7 @@ function emptyItem(sortOrder: number): StoredMenuItem {
     sort_order: sortOrder,
     published: true,
     allergens: [],
+    price_cents: 0,
   }
 }
 
@@ -160,6 +161,26 @@ function DishEditor({
               onChange={(event) =>
                 set({ sort_order: Number(event.target.value) || 0 })
               }
+            />
+          </label>
+          <label className="takeout-field">
+            <span>{t.adminPrice}</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={
+                item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : ''
+              }
+              onChange={(event) => {
+                const euros = Number(event.target.value.replace(',', '.'))
+                set({
+                  price_cents:
+                    Number.isFinite(euros) && euros >= 0
+                      ? Math.round(euros * 100)
+                      : 0,
+                })
+              }}
             />
           </label>
         </div>
