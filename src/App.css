@@ -350,7 +350,7 @@ h3 {
 }
 
 .dish-ja rt {
-  font-size: 0.62em;
+  font-size: 0.85em;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: lowercase;
@@ -358,7 +358,7 @@ h3 {
 
 .carta-item-head .dish-ja {
   margin-bottom: 0;
-  line-height: 1.85;
+  line-height: 2.05;
 }
 
 .dish-meta h3 {
