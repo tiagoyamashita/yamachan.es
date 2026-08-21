@@ -8,6 +8,8 @@ import {
   groupMenuByCategory,
   type StoredMenuItem,
 } from './menu.ts'
+import { PickupCalendar } from './PickupCalendar.tsx'
+import { formatPickupLabel } from './openingHours.ts'
 import { usePublishedMenu } from './usePublishedMenu.ts'
 
 const CART_KEY = 'yamachan-takeout-cart'
@@ -157,7 +159,8 @@ export function TakeoutPage({
   const [cart, setCart] = useState<Cart>(readCart)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [pickupTime, setPickupTime] = useState('')
+  const [pickupDate, setPickupDate] = useState<string | null>(null)
+  const [pickupSlot, setPickupSlot] = useState('')
   const [notes, setNotes] = useState('')
   const [payment, setPayment] = useState<PaymentMethod>('cash')
   const [error, setError] = useState<string | null>(null)
@@ -206,6 +209,10 @@ export function TakeoutPage({
 
   const money = (cents: number) =>
     cents > 0 ? formatEuros(cents, locale) : t.takeoutTotalPending
+  const pickupLabel =
+    pickupDate && pickupSlot
+      ? formatPickupLabel(locale, pickupDate, pickupSlot)
+      : ''
 
   const sendOrder = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -215,6 +222,10 @@ export function TakeoutPage({
     }
     if (!name.trim() || !phone.trim()) {
       setError(t.takeoutNeedDetails)
+      return
+    }
+    if (!pickupLabel) {
+      setError(t.takeoutNeedTime)
       return
     }
 
@@ -229,9 +240,7 @@ export function TakeoutPage({
       `${t.takeoutWhatsappName}: ${name.trim()}`,
       `${t.takeoutWhatsappPhone}: ${phone.trim()}`,
     ]
-    if (pickupTime.trim()) {
-      extra.push(`${t.takeoutWhatsappTime}: ${pickupTime.trim()}`)
-    }
+    extra.push(`${t.takeoutWhatsappTime}: ${pickupLabel}`)
     if (notes.trim()) {
       extra.push(`${t.takeoutWhatsappNotes}: ${notes.trim()}`)
     }
@@ -504,18 +513,17 @@ export function TakeoutPage({
                           }}
                         />
                       </label>
-                      <label className="takeout-field">
-                        <span>{t.takeoutTimeLabel}</span>
-                        <input
-                          type="text"
-                          name="pickupTime"
-                          placeholder={t.takeoutTimePlaceholder}
-                          value={pickupTime}
-                          onChange={(event) =>
-                            setPickupTime(event.target.value)
-                          }
-                        />
-                      </label>
+                      <PickupCalendar
+                        t={t}
+                        locale={locale}
+                        selectedDate={pickupDate}
+                        selectedTime={pickupSlot}
+                        onSelect={(date, time) => {
+                          setPickupDate(date)
+                          setPickupSlot(time)
+                          setError(null)
+                        }}
+                      />
                       <label className="takeout-field">
                         <span>{t.takeoutNotesLabel}</span>
                         <textarea
@@ -535,6 +543,11 @@ export function TakeoutPage({
                             if (!name.trim() || !phone.trim()) {
                               event.preventDefault()
                               setError(t.takeoutNeedDetails)
+                              return
+                            }
+                            if (!pickupDate || !pickupSlot) {
+                              event.preventDefault()
+                              setError(t.takeoutNeedTime)
                               return
                             }
                             onNavigate(event, '/para-llevar#enviar')
@@ -612,10 +625,10 @@ export function TakeoutPage({
                             <span>{t.takeoutPhoneLabel}</span>
                             <span>{phone.trim() || '—'}</span>
                           </li>
-                          {pickupTime.trim() ? (
+                          {pickupLabel ? (
                             <li>
                               <span>{t.takeoutTimeLabel}</span>
-                              <span>{pickupTime.trim()}</span>
+                              <span>{pickupLabel}</span>
                             </li>
                           ) : null}
                           {notes.trim() ? (

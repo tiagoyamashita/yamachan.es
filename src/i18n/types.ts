@@ -79,7 +79,9 @@ export type Copy = {
   takeoutNotesPlaceholder: string
   takeoutSendWhatsapp: string
   takeoutNeedDetails: string
+  takeoutNeedTime: string
   takeoutNeedItems: string
+  takeoutNoPickupTimes: string
   takeoutPickupNote: string
   takeoutWhatsappGreeting: string
   takeoutWhatsappName: string
