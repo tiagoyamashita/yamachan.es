@@ -6,14 +6,21 @@ import {
   categoryHeading,
   displayMenuItem,
   groupMenuByCategory,
+  type StoredMenuItem,
 } from './menu.ts'
 import { usePublishedMenu } from './usePublishedMenu.ts'
 
 const CART_KEY = 'yamachan-takeout-cart'
+const PAYMENT_METHODS = ['cash', 'card', 'bizum'] as const
 
 type Cart = Record<string, number>
-
-type TakeoutTab = 'menu' | 'order'
+type TakeoutTab = 'menu' | 'order' | 'send'
+type PaymentMethod = (typeof PAYMENT_METHODS)[number]
+type OrderLine = {
+  item: StoredMenuItem
+  qty: number
+  copy: { name: string; blurb: string }
+}
 
 function readCart(): Cart {
   try {
@@ -38,7 +45,29 @@ function readCart(): Cart {
 }
 
 function tabFromHash(hash: string): TakeoutTab {
-  return hash === '#pedido' ? 'order' : 'menu'
+  switch (hash) {
+    case '#pedido':
+      return 'order'
+    case '#enviar':
+      return 'send'
+    default:
+      return 'menu'
+  }
+}
+
+function paymentLabel(method: PaymentMethod, t: Copy): string {
+  switch (method) {
+    case 'cash':
+      return t.takeoutPaymentCash
+    case 'card':
+      return t.takeoutPaymentCard
+    case 'bizum':
+      return t.takeoutPaymentBizum
+    default: {
+      const _exhaustive: never = method
+      return _exhaustive
+    }
+  }
 }
 
 function QuantityControls({
@@ -85,6 +114,26 @@ function QuantityControls({
   )
 }
 
+function EmptyOrder({
+  t,
+  onNavigate,
+}: {
+  t: Copy
+  onNavigate: (event: MouseEvent<HTMLAnchorElement>, href: string) => void
+}) {
+  return (
+    <p className="takeout-empty">
+      {t.takeoutEmptyOrder}{' '}
+      <a
+        href="/para-llevar"
+        onClick={(event) => onNavigate(event, '/para-llevar')}
+      >
+        {t.takeoutSeeMenu}
+      </a>
+    </p>
+  )
+}
+
 export function TakeoutPage({
   t,
   locale,
@@ -106,6 +155,7 @@ export function TakeoutPage({
   const [phone, setPhone] = useState('')
   const [pickupTime, setPickupTime] = useState('')
   const [notes, setNotes] = useState('')
+  const [payment, setPayment] = useState<PaymentMethod>('cash')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -125,7 +175,7 @@ export function TakeoutPage({
     setError(null)
   }
 
-  const lines = useMemo(() => {
+  const lines = useMemo((): OrderLine[] => {
     if (!menuItems) {
       return []
     }
@@ -154,6 +204,8 @@ export function TakeoutPage({
     const dishLines = lines.map((line) => `- ${line.qty}× ${line.copy.name}`)
     const extra: string[] = [
       '',
+      `${t.takeoutWhatsappTotal}: ${t.takeoutTotalPending}`,
+      `${t.takeoutWhatsappPayment}: ${paymentLabel(payment, t)}`,
       `${t.takeoutWhatsappName}: ${name.trim()}`,
       `${t.takeoutWhatsappPhone}: ${phone.trim()}`,
     ]
@@ -204,6 +256,17 @@ export function TakeoutPage({
             {itemCount > 0 ? (
               <span className="takeout-badge">{itemCount}</span>
             ) : null}
+          </a>
+          <a
+            className="takeout-tab"
+            href="/para-llevar#enviar"
+            role="tab"
+            id="takeout-tab-send"
+            aria-selected={tab === 'send'}
+            aria-controls="takeout-panel-send"
+            onClick={(event) => onNavigate(event, '/para-llevar#enviar')}
+          >
+            {t.takeoutTabSend}
           </a>
         </div>
 
@@ -256,7 +319,8 @@ export function TakeoutPage({
                                   <div className="carta-item-head">
                                     <div>
                                       <h3>{shown.name}</h3>
-                                      {showJapaneseCaption(locale) && item.name_ja ? (
+                                      {showJapaneseCaption(locale) &&
+                                      item.name_ja ? (
                                         <p className="dish-ja">{item.name_ja}</p>
                                       ) : null}
                                     </div>
@@ -317,15 +381,7 @@ export function TakeoutPage({
                   aria-labelledby="takeout-tab-order"
                 >
                   {lines.length === 0 ? (
-                    <p className="takeout-empty">
-                      {t.takeoutEmptyOrder}{' '}
-                      <a
-                        href="/para-llevar"
-                        onClick={(event) => onNavigate(event, '/para-llevar')}
-                      >
-                        {t.takeoutSeeMenu}
-                      </a>
-                    </p>
+                    <EmptyOrder t={t} onNavigate={onNavigate} />
                   ) : (
                     <>
                       <ul className="takeout-order-list">
@@ -333,7 +389,8 @@ export function TakeoutPage({
                           <li key={line.item.id} className="takeout-order-line">
                             <div>
                               <h3>{line.copy.name}</h3>
-                              {showJapaneseCaption(locale) && line.item.name_ja ? (
+                              {showJapaneseCaption(locale) &&
+                              line.item.name_ja ? (
                                 <p className="dish-ja">{line.item.name_ja}</p>
                               ) : null}
                             </div>
@@ -348,8 +405,78 @@ export function TakeoutPage({
                           </li>
                         ))}
                       </ul>
+                      <p className="takeout-menu-cta">
+                        <a
+                          className="btn"
+                          href="/para-llevar#enviar"
+                          onClick={(event) =>
+                            onNavigate(event, '/para-llevar#enviar')
+                          }
+                        >
+                          {t.takeoutContinueToSend}
+                        </a>
+                      </p>
+                    </>
+                  )}
+                </div>
+              )
+            case 'send':
+              return (
+                <div
+                  role="tabpanel"
+                  id="takeout-panel-send"
+                  aria-labelledby="takeout-tab-send"
+                >
+                  {lines.length === 0 ? (
+                    <EmptyOrder t={t} onNavigate={onNavigate} />
+                  ) : (
+                    <>
+                      <section className="takeout-send-summary">
+                        <div className="takeout-send-summary-head">
+                          <h2>{t.takeoutSummaryTitle}</h2>
+                          <a
+                            href="/para-llevar#pedido"
+                            onClick={(event) =>
+                              onNavigate(event, '/para-llevar#pedido')
+                            }
+                          >
+                            {t.takeoutEditOrder}
+                          </a>
+                        </div>
+                        <ul className="takeout-summary-list">
+                          {lines.map((line) => (
+                            <li key={line.item.id}>
+                              <span>
+                                {line.qty}× {line.copy.name}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="takeout-totals">
+                          <p className="takeout-totals-row">
+                            <span>{t.takeoutTotalLabel}</span>
+                            <strong>{t.takeoutTotalPending}</strong>
+                          </p>
+                          <p className="takeout-tax-note">{t.takeoutTaxNote}</p>
+                        </div>
+                      </section>
 
                       <form className="takeout-form" onSubmit={sendOrder}>
+                        <fieldset className="takeout-payment">
+                          <legend>{t.takeoutPaymentLabel}</legend>
+                          {PAYMENT_METHODS.map((method) => (
+                            <label key={method} className="takeout-payment-option">
+                              <input
+                                type="radio"
+                                name="payment"
+                                value={method}
+                                checked={payment === method}
+                                onChange={() => setPayment(method)}
+                              />
+                              <span>{paymentLabel(method, t)}</span>
+                            </label>
+                          ))}
+                        </fieldset>
                         <label className="takeout-field">
                           <span>{t.takeoutNameLabel}</span>
                           <input

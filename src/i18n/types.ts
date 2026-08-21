@@ -53,9 +53,20 @@ export type Copy = {
   takeoutPageLead: string
   takeoutTabMenu: string
   takeoutTabOrder: string
+  takeoutTabSend: string
   takeoutAdd: string
   takeoutEmptyOrder: string
   takeoutSeeMenu: string
+  takeoutContinueToSend: string
+  takeoutEditOrder: string
+  takeoutSummaryTitle: string
+  takeoutTotalLabel: string
+  takeoutTotalPending: string
+  takeoutTaxNote: string
+  takeoutPaymentLabel: string
+  takeoutPaymentCash: string
+  takeoutPaymentCard: string
+  takeoutPaymentBizum: string
   takeoutNameLabel: string
   takeoutPhoneLabel: string
   takeoutTimeLabel: string
@@ -71,6 +82,8 @@ export type Copy = {
   takeoutWhatsappPhone: string
   takeoutWhatsappTime: string
   takeoutWhatsappNotes: string
+  takeoutWhatsappPayment: string
+  takeoutWhatsappTotal: string
   adminPageTitle: string
   adminTitle: string
   adminHeading: string
