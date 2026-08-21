@@ -2,6 +2,7 @@ import { restaurant } from '../content.ts'
 import { copy } from './copy.ts'
 import {
   LOCALES,
+  formatEuros,
   formatRating,
   isLocale,
   localeMeta,
@@ -14,6 +15,7 @@ export type { Copy, Locale }
 export {
   LOCALES,
   copy,
+  formatEuros,
   formatRating,
   isLocale,
   localeMeta,

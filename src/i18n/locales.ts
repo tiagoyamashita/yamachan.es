@@ -100,6 +100,25 @@ export function formatRating(value: number, locale: Locale): string {
   }
 }
 
+export function formatEuros(cents: number, locale: Locale): string {
+  const formatted = (cents / 100).toFixed(2)
+  const amount = (() => {
+    switch (locale) {
+      case 'es':
+      case 'pt-BR':
+        return formatted.replace('.', ',')
+      case 'en':
+      case 'ja':
+        return formatted
+      default: {
+        const _exhaustive: never = locale
+        return _exhaustive
+      }
+    }
+  })()
+  return `${amount} €`
+}
+
 export function showJapaneseCaption(locale: Locale): boolean {
   return locale !== 'ja'
 }

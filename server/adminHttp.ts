@@ -68,6 +68,17 @@ function readItem(value: unknown): StoredMenuItem | null {
         : 0,
     published: row.published !== false,
     allergens: parseAllergens(row.allergens),
+    price_cents: (() => {
+      const cents = Number(row.price_cents)
+      if (Number.isFinite(cents) && cents >= 0) {
+        return Math.round(cents)
+      }
+      const euros = Number(row.price)
+      if (Number.isFinite(euros) && euros >= 0) {
+        return Math.round(euros * 100)
+      }
+      return 0
+    })(),
   }
 }
 
