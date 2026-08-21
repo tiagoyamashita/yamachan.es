@@ -1,7 +1,7 @@
 {
   "rewrites": [
     { "source": "/carta", "destination": "/index.html" },
-    // { "source": "/para-llevar", "destination": "/index.html" },
+    { "source": "/para-llevar", "destination": "/index.html" },
     { "source": "/reservas", "destination": "/index.html" },
     { "source": "/admin", "destination": "/index.html" }
   ]
