@@ -1,5 +1,6 @@
 import { type MouseEvent } from 'react'
 import { AllergenMarks } from './AllergenIcon.tsx'
+import { romajiForMenuSlug } from './content.ts'
 import { type Copy, type Locale, showJapaneseCaption } from './i18n/index.ts'
 import {
   categoryHeading,
@@ -47,6 +48,7 @@ export function CartaPage({
               <ul className="carta-list">
                 {category.items.map((item) => {
                   const shown = displayMenuItem(item, locale)
+                  const romaji = romajiForMenuSlug(item.slug)
                   return (
                     <li
                       key={item.id}
@@ -68,7 +70,16 @@ export function CartaPage({
                         <div className="carta-item-head">
                           <h3>{shown.name}</h3>
                           {showJapaneseCaption(locale) && item.name_ja ? (
-                            <p className="dish-ja">{item.name_ja}</p>
+                            <p className="dish-ja">
+                              {romaji ? (
+                                <ruby lang="ja">
+                                  {item.name_ja}
+                                  <rt lang="ja-Latn">{romaji}</rt>
+                                </ruby>
+                              ) : (
+                                item.name_ja
+                              )}
+                            </p>
                           ) : null}
                         </div>
                         <p>{shown.blurb}</p>
