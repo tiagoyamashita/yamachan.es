@@ -1,5 +1,11 @@
-import type { Locale, MenuCategoryId } from './content.ts'
-import { menuCategories, copy } from './content.ts'
+import { parseAllergens, type AllergenId } from './allergens.ts'
+import {
+  isMenuItemId,
+  menuCategories,
+  type MenuCategoryId,
+} from './content.ts'
+import { copy } from './i18n/copy.ts'
+import type { Locale } from './i18n/locales.ts'
 
 export type StoredMenuItem = {
   id: string
@@ -14,6 +20,45 @@ export type StoredMenuItem = {
   vegetarian: boolean
   sort_order: number
   published: boolean
+  allergens: AllergenId[]
+}
+
+export function parseStoredMenuItem(value: unknown): StoredMenuItem | null {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+  const row = value as Record<string, unknown>
+  if (
+    typeof row.id !== 'string' ||
+    typeof row.slug !== 'string' ||
+    !isMenuCategoryId(row.category_id) ||
+    typeof row.name_es !== 'string' ||
+    typeof row.name_en !== 'string' ||
+    typeof row.name_ja !== 'string' ||
+    typeof row.blurb_es !== 'string' ||
+    typeof row.blurb_en !== 'string' ||
+    typeof row.image_url !== 'string' ||
+    typeof row.vegetarian !== 'boolean' ||
+    typeof row.sort_order !== 'number' ||
+    typeof row.published !== 'boolean'
+  ) {
+    return null
+  }
+  return {
+    id: row.id,
+    slug: row.slug,
+    category_id: row.category_id,
+    name_es: row.name_es,
+    name_en: row.name_en,
+    name_ja: row.name_ja,
+    blurb_es: row.blurb_es,
+    blurb_en: row.blurb_en,
+    image_url: row.image_url,
+    vegetarian: row.vegetarian,
+    sort_order: row.sort_order,
+    published: row.published,
+    allergens: parseAllergens(row.allergens),
+  }
 }
 
 export const MENU_CATEGORY_IDS: MenuCategoryId[] = [
@@ -52,12 +97,42 @@ export function categoryHeading(id: MenuCategoryId, label: string): string {
   }
 }
 
+function firstNonEmpty(...values: Array<string | undefined>): string {
+  for (const value of values) {
+    if (value?.trim()) {
+      return value
+    }
+  }
+  return ''
+}
+
+export function catalogCopy(slug: string, locale: Locale) {
+  if (!isMenuItemId(slug)) {
+    return null
+  }
+  return copy[locale].cartaItems[slug]
+}
+
 export function displayMenuItem(item: StoredMenuItem, locale: Locale) {
+  const fromCatalog = catalogCopy(item.slug, locale)
   switch (locale) {
     case 'es':
       return { name: item.name_es, blurb: item.blurb_es }
     case 'en':
-      return { name: item.name_en, blurb: item.blurb_en }
+      return {
+        name: firstNonEmpty(item.name_en, item.name_es),
+        blurb: firstNonEmpty(item.blurb_en, item.blurb_es),
+      }
+    case 'ja':
+      return {
+        name: firstNonEmpty(item.name_ja, fromCatalog?.name, item.name_es),
+        blurb: firstNonEmpty(fromCatalog?.blurb, item.blurb_en, item.blurb_es),
+      }
+    case 'pt-BR':
+      return {
+        name: firstNonEmpty(fromCatalog?.name, item.name_es, item.name_en),
+        blurb: firstNonEmpty(fromCatalog?.blurb, item.blurb_es, item.blurb_en),
+      }
     default: {
       const _exhaustive: never = locale
       return _exhaustive
@@ -101,6 +176,7 @@ export function fallbackMenuItems(): StoredMenuItem[] {
         vegetarian: Boolean(item.vegetarian),
         sort_order: current,
         published: true,
+        allergens: [],
       }
     }),
   )

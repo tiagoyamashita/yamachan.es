@@ -17,6 +17,7 @@ import {
   slugFromName,
   type StoredMenuItem,
 } from '../src/menu.ts'
+import { parseAllergens } from '../src/allergens.ts'
 
 function json(
   data: unknown,
@@ -66,6 +67,7 @@ function readItem(value: unknown): StoredMenuItem | null {
         ? Math.floor(row.sort_order)
         : 0,
     published: row.published !== false,
+    allergens: parseAllergens(row.allergens),
   }
 }
 

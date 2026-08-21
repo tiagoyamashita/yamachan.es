@@ -5,7 +5,11 @@ import {
   slugFromName,
   type StoredMenuItem,
 } from './menu.ts'
-import { restaurant, type Copy } from './content.ts'
+import { restaurant } from './content.ts'
+import { AllergenIcon } from './AllergenIcon.tsx'
+import { ALLERGEN_IDS, toggleAllergen } from './allergens.ts'
+import { type Copy, type Locale } from './i18n/index.ts'
+import { LanguagePicker } from './LanguagePicker.tsx'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
 
@@ -23,6 +27,7 @@ function emptyItem(sortOrder: number): StoredMenuItem {
     vegetarian: false,
     sort_order: sortOrder,
     published: true,
+    allergens: [],
   }
 }
 
@@ -166,6 +171,30 @@ function DishEditor({
           />
           {t.cartaVegLabel}
         </label>
+        <fieldset className="admin-allergens">
+          <legend>{t.adminAllergens}</legend>
+          <div className="admin-allergen-grid">
+            {ALLERGEN_IDS.map((id) => (
+              <label key={id} className="admin-allergen">
+                <input
+                  type="checkbox"
+                  checked={item.allergens.includes(id)}
+                  onChange={(event) =>
+                    set({
+                      allergens: toggleAllergen(
+                        item.allergens,
+                        id,
+                        event.target.checked,
+                      ),
+                    })
+                  }
+                />
+                <AllergenIcon id={id} />
+                <span>{t.cartaAllergens[id]}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <label className="admin-check">
           <input
             type="checkbox"
@@ -196,12 +225,14 @@ function DishEditor({
 
 export function AdminPage({
   t,
+  locale,
   onHome,
-  onToggleLocale,
+  onLocaleChange,
 }: {
   t: Copy
+  locale: Locale
   onHome: (event: MouseEvent<HTMLAnchorElement>) => void
-  onToggleLocale: () => void
+  onLocaleChange: (locale: Locale) => void
 }) {
   const [status, setStatus] = useState<AdminStatus>('loading')
   const [username, setUsername] = useState('')
@@ -351,9 +382,7 @@ export function AdminPage({
           </a>
           <div className="header-actions">
             <span className="header-carta">{t.adminTitle}</span>
-            <button type="button" className="lang-btn" onClick={onToggleLocale}>
-              {t.langLabel}
-            </button>
+            <LanguagePicker locale={locale} onChange={onLocaleChange} />
             {status === 'ready' ? (
               <button type="button" className="btn btn-small" onClick={() => void logout()}>
                 {t.adminLogout}
