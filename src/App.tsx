@@ -264,13 +264,13 @@ export default function App() {
             <a href="/#visita" onClick={(event) => go(event, '/#visita')}>
               {t.nav.visitas}
             </a>
-            <a
+            {/* <a
               href="/para-llevar"
               aria-current={onTakeout ? 'page' : undefined}
               onClick={(event) => go(event, '/para-llevar')}
             >
               {t.nav.takeout}
-            </a>
+            </a> */}
             <LanguagePicker locale={locale} onChange={setLocale} />
             <a
               className="btn btn-small"
@@ -291,14 +291,14 @@ export default function App() {
             >
               {t.nav.carta}
             </a>
-            <a
+            {/* <a
               className="header-carta"
               href="/para-llevar"
               aria-current={onTakeout ? 'page' : undefined}
               onClick={(event) => go(event, '/para-llevar')}
             >
               {t.nav.takeout}
-            </a>
+            </a> */}
             <LanguagePicker locale={locale} onChange={setLocale} />
             <a
               className="btn btn-small"
@@ -544,12 +544,12 @@ export default function App() {
               {t.nav.carta}
             </a>
             {' · '}
-            <a
+            {/* <a
               href="/para-llevar"
               onClick={(event) => go(event, '/para-llevar')}
             >
               {t.nav.takeout}
-            </a>
+            </a> */}
             {' · '}
             <a href="/reservas" onClick={(event) => go(event, '/reservas')}>
               {t.nav.reservar}
