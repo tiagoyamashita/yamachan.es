@@ -45,7 +45,8 @@ export const ptBR: Copy = {
     'Cardápio completo do Yama-Chan em Alicante: gyoza, takoyaki, sushi, katsudon, katsu curry e o resto dos pratos da casa.',
   cartaPageLead:
     'Cozinha japonesa de casa. Se um prato não estiver naquele dia, a gente avisa na hora de pedir.',
-  cartaPageNote: 'Os preços se confirmam na mesa.',
+  cartaPageNote:
+    'IVA incluso. No para levar o total é calculado a partir do que você pedir.',
   cartaVegLabel: 'Vegetariano',
   cartaVegNote:
     'Pratos vegetarianos: edamame, gyoza de legumes, cogumelos, tofu frito recheado de arroz, gyoza de maçã e mochi.',
@@ -94,7 +95,7 @@ export const ptBR: Copy = {
   takeoutItemTotalLabel: 'Total',
   takeoutTotalPending: 'Confirmado no pagamento',
   takeoutTaxNote:
-    'IVA incluso quando o valor for confirmado (10% na comida; 21% em bebidas, se aplicar).',
+    'IVA incluso (10% na comida; 21% em bebidas, se aplicar). O total é calculado no pedido.',
   takeoutPaymentLabel: 'Pagamento',
   takeoutPaymentCard: 'Cartão',
   takeoutPaymentCardOnly:

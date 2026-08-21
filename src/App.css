@@ -518,6 +518,18 @@ h3 {
   font-weight: 600;
 }
 
+.carta-item-price {
+  margin: 0.2rem 0 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.carta-item-head > .carta-item-price {
+  margin: 0;
+}
+
 .carta-item > p {
   color: var(--muted);
   font-size: 0.95rem;

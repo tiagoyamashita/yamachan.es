@@ -475,6 +475,9 @@ export function TakeoutPage({
                                       item.name_ja ? (
                                         <p className="dish-ja">{item.name_ja}</p>
                                       ) : null}
+                                      <p className="carta-item-price">
+                                        {money(item.price_cents)}
+                                      </p>
                                     </div>
                                     <QuantityControls
                                       name={shown.name}
@@ -520,6 +523,12 @@ export function TakeoutPage({
                         {t.takeoutTabOrder}
                         {' · '}
                         {itemCount}
+                        {orderTotalCents > 0 ? (
+                          <>
+                            {' · '}
+                            {money(orderTotalCents)}
+                          </>
+                        ) : null}
                       </a>
                     </p>
                   ) : null}
@@ -769,7 +778,9 @@ export function TakeoutPage({
                           {t.takeoutPickupNote}
                         </p>
                         <button className="btn" type="submit" disabled={paying}>
-                          {paying ? t.takeoutPaying : t.takeoutPayCard}
+                          {paying
+                            ? t.takeoutPaying
+                            : `${t.takeoutPayCard} · ${money(orderTotalCents)}`}
                         </button>
                       </form>
                     </>

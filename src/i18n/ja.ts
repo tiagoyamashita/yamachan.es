@@ -45,7 +45,8 @@ export const ja: Copy = {
     'アリカンテの山ちゃんの全メニュー。餃子、たこ焼き、寿司、カツ丼、カツカレーなど、家庭の味です。',
   cartaPageLead:
     '家庭の日本料理です。その日ない料理があれば、ご注文のときにご案内します。',
-  cartaPageNote: '価格は店頭でご確認ください。',
+  cartaPageNote:
+    '表示価格は税込です。テイクアウトはカートの内容から合計します。',
   cartaVegLabel: 'ベジタリアン',
   cartaVegNote:
     'ベジタリアン料理：枝豆、野菜餃子、きのこ、稲荷寿司、りんご餃子、餅。',
@@ -94,7 +95,7 @@ export const ja: Copy = {
   takeoutItemTotalLabel: '小計',
   takeoutTotalPending: 'お支払い時に確定します',
   takeoutTaxNote:
-    '金額確定時に消費税相当のIVAが含まれます（食事10%、飲み物は21%の場合あり）。',
+    '表示価格は税込です（食事10%、飲み物は21%の場合あり）。合計は注文内容から計算します。',
   takeoutPaymentLabel: 'お支払い方法',
   takeoutPaymentCard: 'カード',
   takeoutPaymentCardOnly:

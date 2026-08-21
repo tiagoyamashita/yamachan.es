@@ -1,7 +1,7 @@
 import { type MouseEvent } from 'react'
 import { AllergenLegend, AllergenMarks } from './AllergenIcon.tsx'
 import { romajiForMenuSlug } from './content.ts'
-import { type Copy, type Locale, showJapaneseCaption } from './i18n/index.ts'
+import { type Copy, formatEuros, type Locale, showJapaneseCaption } from './i18n/index.ts'
 import {
   categoryHeading,
   displayMenuItem,
@@ -68,17 +68,24 @@ export function CartaPage({
                       ) : null}
                       <div className="carta-item-body">
                         <div className="carta-item-head">
-                          <h3>{shown.name}</h3>
-                          {showJapaneseCaption(locale) && item.name_ja ? (
-                            <p className="dish-ja">
-                              {romaji ? (
-                                <ruby lang="ja">
-                                  {item.name_ja}
-                                  <rt lang="ja-Latn">{romaji}</rt>
-                                </ruby>
-                              ) : (
-                                item.name_ja
-                              )}
+                          <div>
+                            <h3>{shown.name}</h3>
+                            {showJapaneseCaption(locale) && item.name_ja ? (
+                              <p className="dish-ja">
+                                {romaji ? (
+                                  <ruby lang="ja">
+                                    {item.name_ja}
+                                    <rt lang="ja-Latn">{romaji}</rt>
+                                  </ruby>
+                                ) : (
+                                  item.name_ja
+                                )}
+                              </p>
+                            ) : null}
+                          </div>
+                          {item.price_cents > 0 ? (
+                            <p className="carta-item-price">
+                              {formatEuros(item.price_cents, locale)}
                             </p>
                           ) : null}
                         </div>
