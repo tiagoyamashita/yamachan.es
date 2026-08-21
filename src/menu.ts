@@ -2,6 +2,7 @@ import { parseAllergens, type AllergenId } from './allergens.ts'
 import {
   isMenuItemId,
   menuCategories,
+  priceCentsForSlug,
   type MenuCategoryId,
   type MenuItemId,
 } from './content.ts'
@@ -22,6 +23,7 @@ export type StoredMenuItem = {
   sort_order: number
   published: boolean
   allergens: AllergenId[]
+  price_cents: number
 }
 
 const FALLBACK_ALLERGENS: Record<MenuItemId, AllergenId[]> = {
@@ -44,6 +46,18 @@ const FALLBACK_ALLERGENS: Record<MenuItemId, AllergenId[]> = {
   appleGyoza: ['gluten'],
   mochi: [],
   japaneseBeer: ['gluten'],
+}
+
+function parsePriceCents(row: Record<string, unknown>, slug: string): number {
+  const fromCents = Number(row.price_cents)
+  if (Number.isFinite(fromCents) && fromCents > 0) {
+    return Math.round(fromCents)
+  }
+  const fromEuros = Number(row.price)
+  if (Number.isFinite(fromEuros) && fromEuros > 0) {
+    return Math.round(fromEuros * 100)
+  }
+  return priceCentsForSlug(slug)
 }
 
 function resolvedAllergens(slug: string, raw: unknown): AllergenId[] {
@@ -93,6 +107,7 @@ export function parseStoredMenuItem(value: unknown): StoredMenuItem | null {
     sort_order: Math.floor(sortOrder),
     published: row.published,
     allergens: resolvedAllergens(row.slug, row.allergens),
+    price_cents: parsePriceCents(row, row.slug),
   }
 }
 
@@ -212,6 +227,7 @@ export function fallbackMenuItems(): StoredMenuItem[] {
         sort_order: current,
         published: true,
         allergens: FALLBACK_ALLERGENS[item.id],
+        price_cents: item.priceCents,
       }
     }),
   )

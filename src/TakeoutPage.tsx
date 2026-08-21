@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
 import { restaurant } from './content.ts'
 import { AllergenLegend, AllergenMarks } from './AllergenIcon.tsx'
-import { type Copy, type Locale, showJapaneseCaption } from './i18n/index.ts'
+import { type Copy, formatEuros, type Locale, showJapaneseCaption } from './i18n/index.ts'
 import {
   categoryHeading,
   displayMenuItem,
@@ -14,12 +14,14 @@ const CART_KEY = 'yamachan-takeout-cart'
 const PAYMENT_METHODS = ['cash', 'card', 'bizum'] as const
 
 type Cart = Record<string, number>
-type TakeoutTab = 'menu' | 'order' | 'send'
+type TakeoutTab = 'menu' | 'order' | 'info' | 'send'
 type PaymentMethod = (typeof PAYMENT_METHODS)[number]
 type OrderLine = {
   item: StoredMenuItem
   qty: number
   copy: { name: string; blurb: string }
+  unitCents: number
+  lineTotalCents: number
 }
 
 function readCart(): Cart {
@@ -48,6 +50,8 @@ function tabFromHash(hash: string): TakeoutTab {
   switch (hash) {
     case '#pedido':
       return 'order'
+    case '#datos':
+      return 'info'
     case '#enviar':
       return 'send'
     default:
@@ -184,11 +188,24 @@ export function TakeoutPage({
       if (qty <= 0) {
         return []
       }
-      return [{ item, qty, copy: displayMenuItem(item, locale) }]
+      const unitCents = item.price_cents
+      return [
+        {
+          item,
+          qty,
+          copy: displayMenuItem(item, locale),
+          unitCents,
+          lineTotalCents: unitCents * qty,
+        },
+      ]
     })
   }, [cart, locale, menuItems])
 
   const itemCount = lines.reduce((sum, line) => sum + line.qty, 0)
+  const orderTotalCents = lines.reduce((sum, line) => sum + line.lineTotalCents, 0)
+
+  const money = (cents: number) =>
+    cents > 0 ? formatEuros(cents, locale) : t.takeoutTotalPending
 
   const sendOrder = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -201,10 +218,13 @@ export function TakeoutPage({
       return
     }
 
-    const dishLines = lines.map((line) => `- ${line.qty}× ${line.copy.name}`)
+    const dishLines = lines.map(
+      (line) =>
+        `- ${line.qty}× ${line.copy.name} — ${money(line.lineTotalCents)}`,
+    )
     const extra: string[] = [
       '',
-      `${t.takeoutWhatsappTotal}: ${t.takeoutTotalPending}`,
+      `${t.takeoutWhatsappTotal}: ${money(orderTotalCents)}`,
       `${t.takeoutWhatsappPayment}: ${paymentLabel(payment, t)}`,
       `${t.takeoutWhatsappName}: ${name.trim()}`,
       `${t.takeoutWhatsappPhone}: ${phone.trim()}`,
@@ -256,6 +276,17 @@ export function TakeoutPage({
             {itemCount > 0 ? (
               <span className="takeout-badge">{itemCount}</span>
             ) : null}
+          </a>
+          <a
+            className="takeout-tab"
+            href="/para-llevar#datos"
+            role="tab"
+            id="takeout-tab-info"
+            aria-selected={tab === 'info'}
+            aria-controls="takeout-panel-info"
+            onClick={(event) => onNavigate(event, '/para-llevar#datos')}
+          >
+            {t.takeoutTabInfo}
           </a>
           <a
             className="takeout-tab"
@@ -393,30 +424,126 @@ export function TakeoutPage({
                               line.item.name_ja ? (
                                 <p className="dish-ja">{line.item.name_ja}</p>
                               ) : null}
+                              <p className="takeout-line-price">
+                                {line.qty} × {money(line.unitCents)}
+                              </p>
                             </div>
-                            <QuantityControls
-                              name={line.copy.name}
-                              qty={line.qty}
-                              addLabel={t.takeoutAdd}
-                              onChange={(next) =>
-                                setQty(line.item.slug, next)
-                              }
-                            />
+                            <div className="takeout-order-line-end">
+                              <QuantityControls
+                                name={line.copy.name}
+                                qty={line.qty}
+                                addLabel={t.takeoutAdd}
+                                onChange={(next) =>
+                                  setQty(line.item.slug, next)
+                                }
+                              />
+                              <p className="takeout-line-amount">
+                                {t.takeoutItemTotalLabel}{' '}
+                                {money(line.lineTotalCents)}
+                              </p>
+                            </div>
                           </li>
                         ))}
                       </ul>
+                      <div className="takeout-totals">
+                        <p className="takeout-totals-row">
+                          <span>{t.takeoutTotalLabel}</span>
+                          <strong>{money(orderTotalCents)}</strong>
+                        </p>
+                        <p className="takeout-tax-note">{t.takeoutTaxNote}</p>
+                      </div>
+                      <p className="takeout-menu-cta">
+                        <a
+                          className="btn"
+                          href="/para-llevar#datos"
+                          onClick={(event) =>
+                            onNavigate(event, '/para-llevar#datos')
+                          }
+                        >
+                          {t.takeoutContinueToInfo}
+                        </a>
+                      </p>
+                    </>
+                  )}
+                </div>
+              )
+            case 'info':
+              return (
+                <div
+                  role="tabpanel"
+                  id="takeout-panel-info"
+                  aria-labelledby="takeout-tab-info"
+                >
+                  {lines.length === 0 ? (
+                    <EmptyOrder t={t} onNavigate={onNavigate} />
+                  ) : (
+                    <div className="takeout-form">
+                      <label className="takeout-field">
+                        <span>{t.takeoutNameLabel}</span>
+                        <input
+                          type="text"
+                          name="name"
+                          autoComplete="name"
+                          value={name}
+                          onChange={(event) => {
+                            setName(event.target.value)
+                            setError(null)
+                          }}
+                        />
+                      </label>
+                      <label className="takeout-field">
+                        <span>{t.takeoutPhoneLabel}</span>
+                        <input
+                          type="tel"
+                          name="phone"
+                          autoComplete="tel"
+                          value={phone}
+                          onChange={(event) => {
+                            setPhone(event.target.value)
+                            setError(null)
+                          }}
+                        />
+                      </label>
+                      <label className="takeout-field">
+                        <span>{t.takeoutTimeLabel}</span>
+                        <input
+                          type="text"
+                          name="pickupTime"
+                          placeholder={t.takeoutTimePlaceholder}
+                          value={pickupTime}
+                          onChange={(event) =>
+                            setPickupTime(event.target.value)
+                          }
+                        />
+                      </label>
+                      <label className="takeout-field">
+                        <span>{t.takeoutNotesLabel}</span>
+                        <textarea
+                          name="notes"
+                          rows={3}
+                          placeholder={t.takeoutNotesPlaceholder}
+                          value={notes}
+                          onChange={(event) => setNotes(event.target.value)}
+                        />
+                      </label>
+                      {error ? <p className="takeout-error">{error}</p> : null}
                       <p className="takeout-menu-cta">
                         <a
                           className="btn"
                           href="/para-llevar#enviar"
-                          onClick={(event) =>
+                          onClick={(event) => {
+                            if (!name.trim() || !phone.trim()) {
+                              event.preventDefault()
+                              setError(t.takeoutNeedDetails)
+                              return
+                            }
                             onNavigate(event, '/para-llevar#enviar')
-                          }
+                          }}
                         >
                           {t.takeoutContinueToSend}
                         </a>
                       </p>
-                    </>
+                    </div>
                   )}
                 </div>
               )
@@ -447,7 +574,10 @@ export function TakeoutPage({
                           {lines.map((line) => (
                             <li key={line.item.id}>
                               <span>
-                                {line.qty}× {line.copy.name}
+                                {line.qty} × {line.copy.name}
+                              </span>
+                              <span className="takeout-line-amount">
+                                {money(line.lineTotalCents)}
                               </span>
                             </li>
                           ))}
@@ -455,10 +585,46 @@ export function TakeoutPage({
                         <div className="takeout-totals">
                           <p className="takeout-totals-row">
                             <span>{t.takeoutTotalLabel}</span>
-                            <strong>{t.takeoutTotalPending}</strong>
+                            <strong>{money(orderTotalCents)}</strong>
                           </p>
                           <p className="takeout-tax-note">{t.takeoutTaxNote}</p>
                         </div>
+                      </section>
+
+                      <section className="takeout-send-summary">
+                        <div className="takeout-send-summary-head">
+                          <h2>{t.takeoutTabInfo}</h2>
+                          <a
+                            href="/para-llevar#datos"
+                            onClick={(event) =>
+                              onNavigate(event, '/para-llevar#datos')
+                            }
+                          >
+                            {t.takeoutEditInfo}
+                          </a>
+                        </div>
+                        <ul className="takeout-summary-list">
+                          <li>
+                            <span>{t.takeoutNameLabel}</span>
+                            <span>{name.trim() || '—'}</span>
+                          </li>
+                          <li>
+                            <span>{t.takeoutPhoneLabel}</span>
+                            <span>{phone.trim() || '—'}</span>
+                          </li>
+                          {pickupTime.trim() ? (
+                            <li>
+                              <span>{t.takeoutTimeLabel}</span>
+                              <span>{pickupTime.trim()}</span>
+                            </li>
+                          ) : null}
+                          {notes.trim() ? (
+                            <li>
+                              <span>{t.takeoutNotesLabel}</span>
+                              <span>{notes.trim()}</span>
+                            </li>
+                          ) : null}
+                        </ul>
                       </section>
 
                       <form className="takeout-form" onSubmit={sendOrder}>
@@ -477,54 +643,6 @@ export function TakeoutPage({
                             </label>
                           ))}
                         </fieldset>
-                        <label className="takeout-field">
-                          <span>{t.takeoutNameLabel}</span>
-                          <input
-                            type="text"
-                            name="name"
-                            autoComplete="name"
-                            value={name}
-                            onChange={(event) => {
-                              setName(event.target.value)
-                              setError(null)
-                            }}
-                          />
-                        </label>
-                        <label className="takeout-field">
-                          <span>{t.takeoutPhoneLabel}</span>
-                          <input
-                            type="tel"
-                            name="phone"
-                            autoComplete="tel"
-                            value={phone}
-                            onChange={(event) => {
-                              setPhone(event.target.value)
-                              setError(null)
-                            }}
-                          />
-                        </label>
-                        <label className="takeout-field">
-                          <span>{t.takeoutTimeLabel}</span>
-                          <input
-                            type="text"
-                            name="pickupTime"
-                            placeholder={t.takeoutTimePlaceholder}
-                            value={pickupTime}
-                            onChange={(event) =>
-                              setPickupTime(event.target.value)
-                            }
-                          />
-                        </label>
-                        <label className="takeout-field">
-                          <span>{t.takeoutNotesLabel}</span>
-                          <textarea
-                            name="notes"
-                            rows={3}
-                            placeholder={t.takeoutNotesPlaceholder}
-                            value={notes}
-                            onChange={(event) => setNotes(event.target.value)}
-                          />
-                        </label>
                         {error ? <p className="takeout-error">{error}</p> : null}
                         <p className="takeout-pickup-note">
                           {t.takeoutPickupNote}
