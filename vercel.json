@@ -1,8 +1,27 @@
 {
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/**/*.ts",
+      "use": "@vercel/node"
+    }
+  ],
   "rewrites": [
     { "source": "/carta", "destination": "/index.html" },
     { "source": "/para-llevar", "destination": "/index.html" },
     { "source": "/reservas", "destination": "/index.html" },
-    { "source": "/admin", "destination": "/index.html" }
-  ]
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/*.js": {
+      "includeFiles": "server/**/*"
+    },
+    "api/*.ts": {
+      "includeFiles": "server/**/*"
+    }
+  }
 }
