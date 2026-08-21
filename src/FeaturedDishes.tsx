@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getSupabase } from './supabase.ts'
-import type { Locale } from './content.ts'
+import { showJapaneseCaption, type Locale } from './i18n/index.ts'
+import { catalogCopy } from './menu.ts'
 
 export type FeaturedDish = {
   id: string
@@ -19,7 +20,17 @@ export type FeaturedDish = {
 
 const SKELETON_KEYS = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6'] as const
 
+function firstNonEmpty(...values: Array<string | undefined>): string {
+  for (const value of values) {
+    if (value?.trim()) {
+      return value
+    }
+  }
+  return ''
+}
+
 function dishCopy(dish: FeaturedDish, locale: Locale) {
+  const fromCatalog = catalogCopy(dish.slug, locale)
   switch (locale) {
     case 'es':
       return {
@@ -29,9 +40,21 @@ function dishCopy(dish: FeaturedDish, locale: Locale) {
       }
     case 'en':
       return {
-        name: dish.name_en,
-        blurb: dish.blurb_en,
-        quote: dish.review_quote_en,
+        name: firstNonEmpty(dish.name_en, dish.name_es),
+        blurb: firstNonEmpty(dish.blurb_en, dish.blurb_es),
+        quote: firstNonEmpty(dish.review_quote_en, dish.review_quote_es),
+      }
+    case 'ja':
+      return {
+        name: firstNonEmpty(dish.name_ja, fromCatalog?.name, dish.name_es),
+        blurb: firstNonEmpty(fromCatalog?.blurb, dish.blurb_en, dish.blurb_es),
+        quote: firstNonEmpty(dish.review_quote_en, dish.review_quote_es),
+      }
+    case 'pt-BR':
+      return {
+        name: firstNonEmpty(fromCatalog?.name, dish.name_es, dish.name_en),
+        blurb: firstNonEmpty(fromCatalog?.blurb, dish.blurb_es, dish.blurb_en),
+        quote: firstNonEmpty(dish.review_quote_es, dish.review_quote_en),
       }
     default: {
       const _exhaustive: never = locale
@@ -102,7 +125,9 @@ export function FeaturedDishes({ locale }: { locale: Locale }) {
               <img src={dish.image_url} alt="" loading="lazy" />
             ) : null}
             <div className="dish-meta">
-              {dish.name_ja ? <p className="dish-ja">{dish.name_ja}</p> : null}
+              {showJapaneseCaption(locale) && dish.name_ja ? (
+                <p className="dish-ja">{dish.name_ja}</p>
+              ) : null}
               <h3>{copy.name}</h3>
               {copy.blurb ? <p>{copy.blurb}</p> : null}
               {copy.quote ? (

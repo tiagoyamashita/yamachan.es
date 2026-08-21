@@ -1,6 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import type { StoredMenuItem } from '../src/menu.ts'
-import { isMenuCategoryId } from '../src/menu.ts'
+import {
+  parseStoredMenuItem,
+  type StoredMenuItem,
+} from '../src/menu.ts'
 
 const MENU_BUCKET = 'yamachan-menu'
 
@@ -27,27 +29,6 @@ function getAdminSupabase(): SupabaseClient | null {
   })
 }
 
-function isStoredMenuItem(value: unknown): value is StoredMenuItem {
-  if (!value || typeof value !== 'object') {
-    return false
-  }
-  const row = value as Record<string, unknown>
-  return (
-    typeof row.id === 'string' &&
-    typeof row.slug === 'string' &&
-    isMenuCategoryId(row.category_id) &&
-    typeof row.name_es === 'string' &&
-    typeof row.name_en === 'string' &&
-    typeof row.name_ja === 'string' &&
-    typeof row.blurb_es === 'string' &&
-    typeof row.blurb_en === 'string' &&
-    typeof row.image_url === 'string' &&
-    typeof row.vegetarian === 'boolean' &&
-    typeof row.sort_order === 'number' &&
-    typeof row.published === 'boolean'
-  )
-}
-
 export async function listAdminMenu(): Promise<StoredMenuItem[]> {
   const secret = writeSecret()
   const supabase = getAdminSupabase()
@@ -63,7 +44,10 @@ export async function listAdminMenu(): Promise<StoredMenuItem[]> {
   if (!Array.isArray(data)) {
     return []
   }
-  return data.filter(isStoredMenuItem)
+  return data.flatMap((row) => {
+    const item = parseStoredMenuItem(row)
+    return item ? [item] : []
+  })
 }
 
 export async function upsertAdminMenuItem(
@@ -84,10 +68,11 @@ export async function upsertAdminMenuItem(
   if (error) {
     throw new Error(error.message)
   }
-  if (!isStoredMenuItem(data)) {
+  const saved = parseStoredMenuItem(data)
+  if (!saved) {
     throw new Error('invalid-menu-item')
   }
-  return data
+  return saved
 }
 
 export async function deleteAdminMenuItem(id: string): Promise<void> {

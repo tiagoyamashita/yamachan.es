@@ -1,10 +1,16 @@
 import { useEffect, useState, type MouseEvent } from 'react'
+import { restaurant } from './content.ts'
 import {
   copy,
-  otherLocale,
-  restaurant,
+  detectLocale,
+  formatRating,
+  localeMeta,
+  mapsEmbedUrl,
+  persistLocale,
+  whatsappUrl,
   type Locale,
-} from './content.ts'
+} from './i18n/index.ts'
+import { LanguagePicker } from './LanguagePicker.tsx'
 import { CartaPage } from './CartaPage.tsx'
 import { FeaturedDishes } from './FeaturedDishes.tsx'
 import { TakeoutPage } from './TakeoutPage.tsx'
@@ -88,20 +94,6 @@ function StarRating({
   )
 }
 
-function formatRating(value: number, locale: Locale): string {
-  const formatted = value.toFixed(1)
-  switch (locale) {
-    case 'es':
-      return formatted.replace('.', ',')
-    case 'en':
-      return formatted
-    default: {
-      const _exhaustive: never = locale
-      return _exhaustive
-    }
-  }
-}
-
 function Mark() {
   return (
     <img
@@ -127,7 +119,7 @@ function NavLogo() {
 }
 
 export default function App() {
-  const [locale, setLocale] = useState<Locale>('es')
+  const [locale, setLocale] = useState<Locale>(detectLocale)
   const [route, setRoute] = useState<Route>(routeFromLocation)
   const [hash, setHash] = useState(() => window.location.hash)
   const t = copy[locale]
@@ -167,7 +159,8 @@ export default function App() {
   }, [onAdmin, onCarta, onTakeout, route, hash])
 
   useEffect(() => {
-    document.documentElement.lang = locale
+    persistLocale(locale)
+    document.documentElement.lang = localeMeta[locale].htmlLang
     const meta = (() => {
       switch (route) {
         case '/carta':
@@ -211,10 +204,6 @@ export default function App() {
     t.adminLead,
   ])
 
-  const toggleLocale = () => {
-    setLocale(otherLocale(locale))
-  }
-
   const go = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
     if (isModifiedClick(event)) {
       return
@@ -228,13 +217,14 @@ export default function App() {
       {onAdmin ? (
         <AdminPage
           t={t}
+          locale={locale}
           onHome={(event) => go(event, '/')}
-          onToggleLocale={toggleLocale}
+          onLocaleChange={setLocale}
         />
       ) : (
         <>
       <a className="skip-link" href="#contenido">
-        {locale === 'es' ? 'Saltar al contenido' : 'Skip to content'}
+        {t.skipToContent}
       </a>
 
       <header className="site-header">
@@ -243,7 +233,7 @@ export default function App() {
             <NavLogo />
           </a>
 
-          <nav className="desktop-nav" aria-label={locale === 'es' ? 'Principal' : 'Primary'}>
+          <nav className="desktop-nav" aria-label={t.navAria}>
             <a href="/#casa" onClick={(event) => go(event, '/#casa')}>
               {t.nav.historia}
             </a>
@@ -270,9 +260,7 @@ export default function App() {
             >
               {t.nav.takeout}
             </a>
-            <button type="button" className="lang-btn" onClick={toggleLocale}>
-              {t.langLabel}
-            </button>
+            <LanguagePicker locale={locale} onChange={setLocale} />
             <a
               className="btn btn-small"
               href="/#visita"
@@ -299,9 +287,7 @@ export default function App() {
             >
               {t.nav.takeout}
             </a>
-            <button type="button" className="lang-btn" onClick={toggleLocale}>
-              {t.langLabel}
-            </button>
+            <LanguagePicker locale={locale} onChange={setLocale} />
             <a
               className="btn btn-small"
               href="/#visita"
@@ -334,11 +320,7 @@ export default function App() {
               <img
                 className="hero-banner"
                 src="/images/banner.png"
-                alt={
-                  locale === 'es'
-                    ? 'Yamachan, auténtico restaurante japonés en Alicante'
-                    : 'Yamachan, authentic Japanese restaurant in Alicante'
-                }
+                alt={t.heroBannerAlt}
                 fetchPriority="high"
               />
               <h1 className="visually-hidden">{t.heroTitle}</h1>
@@ -376,11 +358,7 @@ export default function App() {
                 <figure className="about-frame">
                   <img
                     src="/images/chef-masashi.png"
-                    alt={
-                      locale === 'es'
-                        ? 'Masashi, chef del restaurante Yama-Chan, saludando en la puerta del local'
-                        : 'Masashi, chef of Yama-Chan, waving at the restaurant door'
-                    }
+                    alt={t.chefPhotoAlt}
                     loading="lazy"
                   />
                   <figcaption>{t.aboutCaption}</figcaption>
@@ -474,7 +452,7 @@ export default function App() {
                   <p className="lead muted">{t.visitLead}</p>
 
                   <div className="visit-actions">
-                    <a className="btn" href={restaurant.whatsapp}>
+                    <a className="btn" href={whatsappUrl(t.whatsappReserveText)}>
                       {t.whatsapp}
                     </a>
                     <a className="btn btn-outline" href={`tel:${restaurant.phone}`}>
@@ -513,7 +491,7 @@ export default function App() {
                   <div className="map-wrap">
                     <iframe
                       title={t.addressTitle}
-                      src={restaurant.mapsEmbed}
+                      src={mapsEmbedUrl(locale)}
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
                     />

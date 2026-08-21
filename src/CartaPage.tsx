@@ -1,5 +1,6 @@
 import { type MouseEvent } from 'react'
-import { type Copy, type Locale } from './content.ts'
+import { AllergenMarks } from './AllergenIcon.tsx'
+import { type Copy, type Locale, showJapaneseCaption } from './i18n/index.ts'
 import {
   categoryHeading,
   displayMenuItem,
@@ -66,12 +67,19 @@ export function CartaPage({
                       <div className="carta-item-body">
                         <div className="carta-item-head">
                           <h3>{shown.name}</h3>
-                          <p className="dish-ja">{item.name_ja}</p>
+                          {showJapaneseCaption(locale) && item.name_ja ? (
+                            <p className="dish-ja">{item.name_ja}</p>
+                          ) : null}
                         </div>
                         <p>{shown.blurb}</p>
                         {item.vegetarian ? (
                           <p className="carta-veg">{t.cartaVegLabel}</p>
                         ) : null}
+                        <AllergenMarks
+                          ids={item.allergens}
+                          names={t.cartaAllergens}
+                          label={t.cartaAllergenLabel}
+                        />
                       </div>
                     </li>
                   )
@@ -86,6 +94,7 @@ export function CartaPage({
             {t.cartaVegNotePrefix} {vegNames.join(', ')}.
           </p>
         ) : null}
+        <p className="carta-allergen-note">{t.cartaAllergenNote}</p>
         <p className="carta-price-note">{t.cartaPageNote}</p>
         <p className="carta-back">
           <a href="/" onClick={onHome}>

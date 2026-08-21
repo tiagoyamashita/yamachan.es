@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
-import { restaurant, type Copy, type Locale } from './content.ts'
+import { restaurant } from './content.ts'
+import { AllergenMarks } from './AllergenIcon.tsx'
+import { type Copy, type Locale, showJapaneseCaption } from './i18n/index.ts'
 import {
   categoryHeading,
   displayMenuItem,
@@ -254,7 +256,9 @@ export function TakeoutPage({
                                   <div className="carta-item-head">
                                     <div>
                                       <h3>{shown.name}</h3>
-                                      <p className="dish-ja">{item.name_ja}</p>
+                                      {showJapaneseCaption(locale) && item.name_ja ? (
+                                        <p className="dish-ja">{item.name_ja}</p>
+                                      ) : null}
                                     </div>
                                     <QuantityControls
                                       name={shown.name}
@@ -271,6 +275,11 @@ export function TakeoutPage({
                                       {t.cartaVegLabel}
                                     </p>
                                   ) : null}
+                                  <AllergenMarks
+                                    ids={item.allergens}
+                                    names={t.cartaAllergens}
+                                    label={t.cartaAllergenLabel}
+                                  />
                                 </div>
                               </li>
                             )
@@ -320,7 +329,9 @@ export function TakeoutPage({
                           <li key={line.item.id} className="takeout-order-line">
                             <div>
                               <h3>{line.copy.name}</h3>
-                              <p className="dish-ja">{line.item.name_ja}</p>
+                              {showJapaneseCaption(locale) && line.item.name_ja ? (
+                                <p className="dish-ja">{line.item.name_ja}</p>
+                              ) : null}
                             </div>
                             <QuantityControls
                               name={line.copy.name}
