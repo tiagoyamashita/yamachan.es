@@ -319,14 +319,14 @@ export default function App() {
             locale={locale}
             onHome={(event) => go(event, '/')}
           />
-        ) : onTakeout ? (
-          <TakeoutPage
-            t={t}
-            locale={locale}
-            hash={hash}
-            onHome={(event) => go(event, '/')}
-            onNavigate={go}
-          />
+        // ) : onTakeout ? (
+        //   <TakeoutPage
+        //     t={t}
+        //     locale={locale}
+        //     hash={hash}
+        //     onHome={(event) => go(event, '/')}
+        //     onNavigate={go}
+        //   />
         ) : onReserve ? (
           <ReservasPage
             t={t}
