@@ -1,4 +1,4 @@
-import { loadGoogleReviews } from '../server/loadGoogleReviews.ts'
+import { loadGoogleReviews } from '../server/loadGoogleReviews'
 
 export async function GET() {
   const reviews = await loadGoogleReviews(
