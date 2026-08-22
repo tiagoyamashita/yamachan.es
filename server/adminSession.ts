@@ -1,4 +1,8 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import {
+  adminHasStoredPassword,
+  verifyStoredAdminPassword,
+} from './adminPassword.ts'
 
 export const ADMIN_COOKIE = 'yamachan_admin'
 const MAX_AGE_SEC = 60 * 60 * 24 * 7
@@ -12,12 +16,30 @@ function sessionSecret(): string {
   )
 }
 
-function expectedUsername(): string {
+export function expectedAdminUsername(): string {
   return process.env.ADMIN_USERNAME || ''
 }
 
 function expectedPassword(): string {
   return process.env.ADMIN_PASSWORD || ''
+}
+
+export async function credentialsAreValid(
+  username: string,
+  password: string,
+): Promise<boolean> {
+  const user = expectedAdminUsername()
+  if (!user || !bytesEqual(username, user)) {
+    return false
+  }
+  if (await adminHasStoredPassword()) {
+    return verifyStoredAdminPassword(password)
+  }
+  const pass = expectedPassword()
+  if (!pass) {
+    return false
+  }
+  return bytesEqual(password, pass)
 }
 
 function hmac(value: string): string {
@@ -32,15 +54,6 @@ function bytesEqual(a: string, b: string): boolean {
     return false
   }
   return timingSafeEqual(left, right)
-}
-
-export function credentialsAreValid(username: string, password: string): boolean {
-  const user = expectedUsername()
-  const pass = expectedPassword()
-  if (!user || !pass) {
-    return false
-  }
-  return bytesEqual(username, user) && bytesEqual(password, pass)
 }
 
 export function signSession(): string {

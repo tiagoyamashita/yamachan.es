@@ -209,6 +209,23 @@ export const es: Copy = {
   adminCompanyOpenDays: 'Días abiertos (para llevar y reservas)',
   adminCompanyLunchOpen: 'Apertura comida',
   adminCompanyLunchClose: 'Cierre comida',
+  adminForgotPassword: '¿Olvidaste la contraseña?',
+  adminForgotHeading: 'Recuperar acceso',
+  adminForgotLead:
+    'Escribe tu usuario de admin. Si está configurado, te enviaremos un enlace al correo del restaurante.',
+  adminForgotSubmit: 'Enviar enlace',
+  adminForgotSent:
+    'Si el usuario es correcto, te hemos enviado un correo con el enlace para elegir una contraseña nueva.',
+  adminForgotError: 'No se ha podido enviar el correo. Prueba más tarde.',
+  adminBackToSignIn: 'Volver a entrar',
+  adminResetHeading: 'Nueva contraseña',
+  adminResetLead: 'Elige una contraseña nueva de al menos 8 caracteres.',
+  adminResetPassword: 'Contraseña nueva',
+  adminResetConfirm: 'Repetir contraseña',
+  adminResetSubmit: 'Guardar contraseña',
+  adminResetDone: 'Contraseña actualizada. Ya puedes entrar.',
+  adminResetError: 'No se ha podido guardar la contraseña. Prueba otra vez.',
+  adminResetInvalid: 'Este enlace no es válido o ha caducado.',
   cartaCategories: {
     starters: 'Entrantes',
     sushi: 'Sushi',

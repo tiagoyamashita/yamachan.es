@@ -208,6 +208,23 @@ export const en: Copy = {
   adminCompanyOpenDays: 'Open days (takeaway and bookings)',
   adminCompanyLunchOpen: 'Lunch opening',
   adminCompanyLunchClose: 'Lunch closing',
+  adminForgotPassword: 'Forgot password?',
+  adminForgotHeading: 'Recover access',
+  adminForgotLead:
+    'Enter your admin username. If it matches, we will email a reset link to the restaurant inbox.',
+  adminForgotSubmit: 'Send link',
+  adminForgotSent:
+    'If the username is correct, we sent an email with a link to choose a new password.',
+  adminForgotError: 'Could not send the email. Try again later.',
+  adminBackToSignIn: 'Back to sign in',
+  adminResetHeading: 'New password',
+  adminResetLead: 'Choose a new password with at least 8 characters.',
+  adminResetPassword: 'New password',
+  adminResetConfirm: 'Confirm password',
+  adminResetSubmit: 'Save password',
+  adminResetDone: 'Password updated. You can sign in now.',
+  adminResetError: 'Could not save the password. Try again.',
+  adminResetInvalid: 'This link is invalid or has expired.',
   cartaCategories: {
     starters: 'Starters',
     sushi: 'Sushi',

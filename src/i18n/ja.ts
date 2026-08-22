@@ -206,6 +206,23 @@ export const ja: Copy = {
   adminCompanyOpenDays: '営業日（テイクアウト・予約）',
   adminCompanyLunchOpen: 'ランチ開始',
   adminCompanyLunchClose: 'ランチ終了',
+  adminForgotPassword: 'パスワードをお忘れですか？',
+  adminForgotHeading: 'アクセスの復旧',
+  adminForgotLead:
+    '管理ユーザー名を入力してください。正しければ、店舗のメールに再設定リンクを送ります。',
+  adminForgotSubmit: 'リンクを送信',
+  adminForgotSent:
+    'ユーザー名が正しければ、新しいパスワード用のリンクをメールで送りました。',
+  adminForgotError: 'メールを送信できませんでした。後でもう一度お試しください。',
+  adminBackToSignIn: 'ログインに戻る',
+  adminResetHeading: '新しいパスワード',
+  adminResetLead: '8文字以上の新しいパスワードを入力してください。',
+  adminResetPassword: '新しいパスワード',
+  adminResetConfirm: 'パスワード（確認）',
+  adminResetSubmit: 'パスワードを保存',
+  adminResetDone: 'パスワードを更新しました。ログインできます。',
+  adminResetError: 'パスワードを保存できませんでした。もう一度お試しください。',
+  adminResetInvalid: 'このリンクは無効か、期限切れです。',
   cartaCategories: {
     starters: '前菜',
     sushi: '寿司',

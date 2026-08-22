@@ -1086,6 +1086,21 @@ h3 {
   grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
 }
 
+.admin-login-alt {
+  margin: 0.25rem 0 0;
+}
+
+.admin-link-button {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--vermillion);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
 .takeout-field select {
   width: 100%;
   font: inherit;

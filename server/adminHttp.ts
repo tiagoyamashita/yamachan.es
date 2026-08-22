@@ -1,11 +1,21 @@
 import {
   clearSessionCookie,
   credentialsAreValid,
+  expectedAdminUsername,
   isSecureRequest,
   requestIsAuthed,
   sessionCookie,
   signSession,
 } from './adminSession.ts'
+import { setStoredAdminPassword } from './adminPassword.ts'
+import {
+  passwordResetEmailConfigured,
+  sendPasswordResetEmail,
+} from './adminMail.ts'
+import {
+  passwordResetTokenIsValid,
+  signPasswordResetToken,
+} from './adminResetToken.ts'
 import {
   deleteAdminMenuItem,
   listAdminMenu,
@@ -104,6 +114,26 @@ function readCompanyInfo(value: unknown): StoredCompanyInfo | null {
   return parsed
 }
 
+function siteOrigin(request: Request): string {
+  const configured = process.env.ADMIN_SITE_URL?.trim()
+  if (configured) {
+    return configured.replace(/\/+$/, '')
+  }
+  const url = new URL(request.url)
+  return url.origin
+}
+
+function readPassword(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+  const password = value.trim()
+  if (password.length < 8) {
+    return null
+  }
+  return password
+}
+
 export async function handleAdminRequest(request: Request): Promise<Response> {
   const url = new URL(request.url)
   const path = url.pathname.replace(/\/+$/, '') || '/'
@@ -121,7 +151,7 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
     if (
       typeof username !== 'string' ||
       typeof password !== 'string' ||
-      !credentialsAreValid(username, password)
+      !(await credentialsAreValid(username, password))
     ) {
       return unauthorized()
     }
@@ -143,6 +173,59 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
   if (path === '/api/admin/session' && request.method === 'GET') {
     if (!requestIsAuthed(request)) {
       return unauthorized()
+    }
+    return json({ ok: true })
+  }
+
+  if (path === '/api/admin/forgot-password' && request.method === 'POST') {
+    const body: unknown = await request.json().catch(() => null)
+    if (!body || typeof body !== 'object') {
+      return json({ ok: true })
+    }
+    const username =
+      typeof (body as { username?: unknown }).username === 'string'
+        ? (body as { username: string }).username.trim()
+        : ''
+    const expected = expectedAdminUsername()
+    if (
+      username &&
+      expected &&
+      username === expected &&
+      passwordResetEmailConfigured()
+    ) {
+      const token = signPasswordResetToken()
+      if (token) {
+        const resetUrl = `${siteOrigin(request)}/admin?reset=${encodeURIComponent(token)}`
+        try {
+          await sendPasswordResetEmail(resetUrl)
+        } catch {
+          return json({ error: 'mail-send-failed' }, 500)
+        }
+      }
+    }
+    return json({ ok: true })
+  }
+
+  if (path === '/api/admin/reset-password' && request.method === 'POST') {
+    const body: unknown = await request.json().catch(() => null)
+    if (!body || typeof body !== 'object') {
+      return json({ error: 'invalid-request' }, 400)
+    }
+    const row = body as {
+      token?: unknown
+      password?: unknown
+      confirm?: unknown
+    }
+    const token = typeof row.token === 'string' ? row.token : ''
+    const password = readPassword(row.password)
+    const confirm = readPassword(row.confirm)
+    if (!passwordResetTokenIsValid(token) || !password || password !== confirm) {
+      return json({ error: 'invalid-reset' }, 400)
+    }
+    try {
+      await setStoredAdminPassword(password)
+    } catch {
+      return json({ error: 'reset-failed' }, 500)
     }
     return json({ ok: true })
   }

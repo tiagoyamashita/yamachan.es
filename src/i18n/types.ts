@@ -171,6 +171,21 @@ export type Copy = {
   adminCompanyOpenDays: string
   adminCompanyLunchOpen: string
   adminCompanyLunchClose: string
+  adminForgotPassword: string
+  adminForgotHeading: string
+  adminForgotLead: string
+  adminForgotSubmit: string
+  adminForgotSent: string
+  adminForgotError: string
+  adminBackToSignIn: string
+  adminResetHeading: string
+  adminResetLead: string
+  adminResetPassword: string
+  adminResetConfirm: string
+  adminResetSubmit: string
+  adminResetDone: string
+  adminResetError: string
+  adminResetInvalid: string
   cartaCategories: Record<MenuCategoryId, string>
   cartaItems: Record<MenuItemId, { name: string; blurb: string }>
   reviewsEyebrow: string

@@ -18,6 +18,12 @@ import { type Copy, type Locale } from './i18n/index.ts'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
 type AdminTab = 'menu' | 'company'
+type LoginView = 'sign-in' | 'forgot' | 'reset'
+
+function resetTokenFromLocation(): string {
+  const token = new URLSearchParams(window.location.search).get('reset')
+  return token?.trim() || ''
+}
 
 function emptyItem(sortOrder: number): StoredMenuItem {
   return {
@@ -475,9 +481,16 @@ export function AdminPage({
   onLocaleChange: (locale: Locale) => void
 }) {
   const [status, setStatus] = useState<AdminStatus>('loading')
+  const [loginView, setLoginView] = useState<LoginView>(() =>
+    resetTokenFromLocation() ? 'reset' : 'sign-in',
+  )
+  const [resetToken, setResetToken] = useState(() => resetTokenFromLocation())
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [loginMessage, setLoginMessage] = useState<string | null>(null)
   const [items, setItems] = useState<StoredMenuItem[]>([])
   const [drafts, setDrafts] = useState<Record<string, StoredMenuItem>>({})
   const [message, setMessage] = useState<string | null>(null)
@@ -520,6 +533,7 @@ export function AdminPage({
   const login = async (event: FormEvent) => {
     event.preventDefault()
     setLoginError(null)
+    setLoginMessage(null)
     try {
       await api('/api/admin/login', {
         method: 'POST',
@@ -535,6 +549,51 @@ export function AdminPage({
       setStatus('ready')
     } catch {
       setLoginError(t.adminLoginError)
+    }
+  }
+
+  const requestPasswordReset = async (event: FormEvent) => {
+    event.preventDefault()
+    setLoginError(null)
+    setLoginMessage(null)
+    try {
+      await api('/api/admin/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username }),
+      })
+      setLoginMessage(t.adminForgotSent)
+    } catch {
+      setLoginError(t.adminForgotError)
+    }
+  }
+
+  const resetPassword = async (event: FormEvent) => {
+    event.preventDefault()
+    setLoginError(null)
+    setLoginMessage(null)
+    if (!resetToken) {
+      setLoginError(t.adminResetInvalid)
+      return
+    }
+    try {
+      await api('/api/admin/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: resetToken,
+          password: newPassword,
+          confirm: confirmPassword,
+        }),
+      })
+      setLoginMessage(t.adminResetDone)
+      setLoginView('sign-in')
+      setResetToken('')
+      setNewPassword('')
+      setConfirmPassword('')
+      window.history.replaceState({}, '', '/admin')
+    } catch {
+      setLoginError(t.adminResetError)
     }
   }
 
@@ -676,9 +735,27 @@ export function AdminPage({
           <div className="section-inner">
             <header className="section-head">
               <p className="kicker">{t.adminTitle}</p>
-              <h1>{tab === 'menu' ? t.adminHeading : t.adminCompanyHeading}</h1>
+              <h1>
+                {status === 'ready'
+                  ? tab === 'menu'
+                    ? t.adminHeading
+                    : t.adminCompanyHeading
+                  : loginView === 'forgot'
+                    ? t.adminForgotHeading
+                    : loginView === 'reset'
+                      ? t.adminResetHeading
+                      : t.adminHeading}
+              </h1>
               <p className="lead muted">
-                {tab === 'menu' ? t.adminLead : t.adminCompanyLead}
+                {status === 'ready'
+                  ? tab === 'menu'
+                    ? t.adminLead
+                    : t.adminCompanyLead
+                  : loginView === 'forgot'
+                    ? t.adminForgotLead
+                    : loginView === 'reset'
+                      ? t.adminResetLead
+                      : t.adminLead}
               </p>
             </header>
 
@@ -708,29 +785,159 @@ export function AdminPage({
             {status === 'loading' ? <p className="muted">{t.adminLoading}</p> : null}
 
             {status === 'login' ? (
-              <form className="takeout-form admin-login" onSubmit={(event) => void login(event)}>
-                <label className="takeout-field">
-                  <span>{t.adminUser}</span>
-                  <input
-                    autoComplete="username"
-                    value={username}
-                    onChange={(event) => setUsername(event.target.value)}
-                  />
-                </label>
-                <label className="takeout-field">
-                  <span>{t.adminPassword}</span>
-                  <input
-                    type="password"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                  />
-                </label>
-                {loginError ? <p className="takeout-error">{loginError}</p> : null}
-                <button className="btn" type="submit">
-                  {t.adminSignIn}
-                </button>
-              </form>
+              <>
+                {loginView === 'sign-in' ? (
+                  <form
+                    className="takeout-form admin-login"
+                    onSubmit={(event) => void login(event)}
+                  >
+                    <label className="takeout-field">
+                      <span>{t.adminUser}</span>
+                      <input
+                        autoComplete="username"
+                        value={username}
+                        onChange={(event) => setUsername(event.target.value)}
+                      />
+                    </label>
+                    <label className="takeout-field">
+                      <span>{t.adminPassword}</span>
+                      <input
+                        type="password"
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                      />
+                    </label>
+                    {loginError ? (
+                      <p className="takeout-error">{loginError}</p>
+                    ) : null}
+                    {loginMessage ? (
+                      <p className="admin-message">{loginMessage}</p>
+                    ) : null}
+                    <button className="btn" type="submit">
+                      {t.adminSignIn}
+                    </button>
+                    <p className="admin-login-alt">
+                      <button
+                        type="button"
+                        className="admin-link-button"
+                        onClick={() => {
+                          setLoginView('forgot')
+                          setLoginError(null)
+                          setLoginMessage(null)
+                        }}
+                      >
+                        {t.adminForgotPassword}
+                      </button>
+                    </p>
+                  </form>
+                ) : null}
+
+                {loginView === 'forgot' ? (
+                  <form
+                    className="takeout-form admin-login"
+                    onSubmit={(event) => void requestPasswordReset(event)}
+                  >
+                    <label className="takeout-field">
+                      <span>{t.adminUser}</span>
+                      <input
+                        autoComplete="username"
+                        value={username}
+                        onChange={(event) => setUsername(event.target.value)}
+                      />
+                    </label>
+                    {loginError ? (
+                      <p className="takeout-error">{loginError}</p>
+                    ) : null}
+                    {loginMessage ? (
+                      <p className="admin-message">{loginMessage}</p>
+                    ) : null}
+                    <button className="btn" type="submit">
+                      {t.adminForgotSubmit}
+                    </button>
+                    <p className="admin-login-alt">
+                      <button
+                        type="button"
+                        className="admin-link-button"
+                        onClick={() => {
+                          setLoginView('sign-in')
+                          setLoginError(null)
+                          setLoginMessage(null)
+                        }}
+                      >
+                        {t.adminBackToSignIn}
+                      </button>
+                    </p>
+                  </form>
+                ) : null}
+
+                {loginView === 'reset' ? (
+                  resetToken ? (
+                    <form
+                      className="takeout-form admin-login"
+                      onSubmit={(event) => void resetPassword(event)}
+                    >
+                      <label className="takeout-field">
+                        <span>{t.adminResetPassword}</span>
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          value={newPassword}
+                          onChange={(event) =>
+                            setNewPassword(event.target.value)
+                          }
+                        />
+                      </label>
+                      <label className="takeout-field">
+                        <span>{t.adminResetConfirm}</span>
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          value={confirmPassword}
+                          onChange={(event) =>
+                            setConfirmPassword(event.target.value)
+                          }
+                        />
+                      </label>
+                      {loginError ? (
+                        <p className="takeout-error">{loginError}</p>
+                      ) : null}
+                      {loginMessage ? (
+                        <p className="admin-message">{loginMessage}</p>
+                      ) : null}
+                      <button className="btn" type="submit">
+                        {t.adminResetSubmit}
+                      </button>
+                      <p className="admin-login-alt">
+                        <button
+                          type="button"
+                          className="admin-link-button"
+                          onClick={() => {
+                            setLoginView('sign-in')
+                            setResetToken('')
+                            setLoginError(null)
+                            setLoginMessage(null)
+                            window.history.replaceState({}, '', '/admin')
+                          }}
+                        >
+                          {t.adminBackToSignIn}
+                        </button>
+                      </p>
+                    </form>
+                  ) : (
+                    <div className="takeout-form admin-login">
+                      <p className="takeout-error">{t.adminResetInvalid}</p>
+                      <button
+                        className="btn btn-outline"
+                        type="button"
+                        onClick={() => setLoginView('sign-in')}
+                      >
+                        {t.adminBackToSignIn}
+                      </button>
+                    </div>
+                  )
+                ) : null}
+              </>
             ) : null}
 
             {status === 'ready' ? (

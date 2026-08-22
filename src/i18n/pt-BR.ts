@@ -209,6 +209,23 @@ export const ptBR: Copy = {
   adminCompanyOpenDays: 'Dias abertos (para viagem e reservas)',
   adminCompanyLunchOpen: 'Abertura do almoço',
   adminCompanyLunchClose: 'Fechamento do almoço',
+  adminForgotPassword: 'Esqueceu a senha?',
+  adminForgotHeading: 'Recuperar acesso',
+  adminForgotLead:
+    'Digite seu usuário de admin. Se estiver correto, enviaremos um link para o e-mail do restaurante.',
+  adminForgotSubmit: 'Enviar link',
+  adminForgotSent:
+    'Se o usuário estiver correto, enviamos um e-mail com o link para escolher uma nova senha.',
+  adminForgotError: 'Não foi possível enviar o e-mail. Tente mais tarde.',
+  adminBackToSignIn: 'Voltar ao login',
+  adminResetHeading: 'Nova senha',
+  adminResetLead: 'Escolha uma nova senha com pelo menos 8 caracteres.',
+  adminResetPassword: 'Nova senha',
+  adminResetConfirm: 'Repetir senha',
+  adminResetSubmit: 'Salvar senha',
+  adminResetDone: 'Senha atualizada. Você já pode entrar.',
+  adminResetError: 'Não foi possível salvar a senha. Tente novamente.',
+  adminResetInvalid: 'Este link é inválido ou expirou.',
   cartaCategories: {
     starters: 'Entradas',
     sushi: 'Sushi',
