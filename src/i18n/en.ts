@@ -192,9 +192,10 @@ export const en: Copy = {
   adminAllergens: 'Allergens',
   adminEmptyCategory: 'No dishes in this section.',
   adminTabMenu: 'Menu',
-  adminTabCompany: 'Venue info',
-  adminCompanyHeading: 'Venue info',
-  adminCompanyLead:
+  adminTabAccount: 'Account',
+  adminTabRestaurant: 'Restaurant',
+  adminRestaurantHeading: 'Restaurant info',
+  adminRestaurantLead:
     'Phone, address and hours shown on the site and on the booking page.',
   adminCompanyPhone: 'Phone (for links)',
   adminCompanyPhoneDisplay: 'Phone (display)',
@@ -208,6 +209,14 @@ export const en: Copy = {
   adminCompanyOpenDays: 'Open days (takeaway and bookings)',
   adminCompanyLunchOpen: 'Lunch opening',
   adminCompanyLunchClose: 'Lunch closing',
+  adminAccountHeading: 'Account',
+  adminAccountLead: 'Your admin username and password for signing in.',
+  adminAccountChangePassword: 'Change password',
+  adminAccountCurrentPassword: 'Current password',
+  adminAccountSavePassword: 'Save password',
+  adminAccountPasswordSaved: 'Password updated.',
+  adminAccountPasswordError: 'Could not save the password. Try again.',
+  adminAccountWrongPassword: 'Current password is wrong.',
   adminForgotPassword: 'Forgot password?',
   adminForgotHeading: 'Recover access',
   adminForgotLead:

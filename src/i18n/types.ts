@@ -156,9 +156,10 @@ export type Copy = {
   adminAllergens: string
   adminEmptyCategory: string
   adminTabMenu: string
-  adminTabCompany: string
-  adminCompanyHeading: string
-  adminCompanyLead: string
+  adminTabAccount: string
+  adminTabRestaurant: string
+  adminRestaurantHeading: string
+  adminRestaurantLead: string
   adminCompanyPhone: string
   adminCompanyPhoneDisplay: string
   adminCompanyAddress: string
@@ -171,6 +172,14 @@ export type Copy = {
   adminCompanyOpenDays: string
   adminCompanyLunchOpen: string
   adminCompanyLunchClose: string
+  adminAccountHeading: string
+  adminAccountLead: string
+  adminAccountChangePassword: string
+  adminAccountCurrentPassword: string
+  adminAccountSavePassword: string
+  adminAccountPasswordSaved: string
+  adminAccountPasswordError: string
+  adminAccountWrongPassword: string
   adminForgotPassword: string
   adminForgotHeading: string
   adminForgotLead: string

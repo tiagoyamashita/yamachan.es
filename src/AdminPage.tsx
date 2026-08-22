@@ -17,8 +17,38 @@ import { LanguagePicker } from './LanguagePicker.tsx'
 import { type Copy, type Locale } from './i18n/index.ts'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
-type AdminTab = 'menu' | 'company'
+type AdminTab = 'menu' | 'account' | 'restaurant'
 type LoginView = 'sign-in' | 'forgot' | 'reset'
+
+function adminHeading(t: Copy, tab: AdminTab): string {
+  switch (tab) {
+    case 'menu':
+      return t.adminHeading
+    case 'account':
+      return t.adminAccountHeading
+    case 'restaurant':
+      return t.adminRestaurantHeading
+    default: {
+      const _exhaustive: never = tab
+      return _exhaustive
+    }
+  }
+}
+
+function adminLead(t: Copy, tab: AdminTab): string {
+  switch (tab) {
+    case 'menu':
+      return t.adminLead
+    case 'account':
+      return t.adminAccountLead
+    case 'restaurant':
+      return t.adminRestaurantLead
+    default: {
+      const _exhaustive: never = tab
+      return _exhaustive
+    }
+  }
+}
 
 function resetTokenFromLocation(): string {
   const token = new URLSearchParams(window.location.search).get('reset')
@@ -51,7 +81,14 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   })
   const data: unknown = await response.json().catch(() => null)
   if (!response.ok) {
-    throw new Error('request-failed')
+    const code =
+      data &&
+      typeof data === 'object' &&
+      'error' in data &&
+      typeof (data as { error: unknown }).error === 'string'
+        ? (data as { error: string }).error
+        : 'request-failed'
+    throw new Error(code)
   }
   return data as T
 }
@@ -469,6 +506,77 @@ function CompanyInfoEditor({
   )
 }
 
+function AccountInfoEditor({
+  accountUsername,
+  currentPassword,
+  newPassword,
+  confirmPassword,
+  onCurrentPasswordChange,
+  onNewPasswordChange,
+  onConfirmPasswordChange,
+  onSave,
+  busy,
+  t,
+}: {
+  accountUsername: string
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+  onCurrentPasswordChange: (value: string) => void
+  onNewPasswordChange: (value: string) => void
+  onConfirmPasswordChange: (value: string) => void
+  onSave: () => void
+  busy: boolean
+  t: Copy
+}) {
+  return (
+    <section className="admin-account takeout-form">
+      <label className="takeout-field">
+        <span>{t.adminUser}</span>
+        <input value={accountUsername} readOnly />
+      </label>
+
+      <fieldset className="admin-company-block">
+        <legend>{t.adminAccountChangePassword}</legend>
+        <label className="takeout-field">
+          <span>{t.adminAccountCurrentPassword}</span>
+          <input
+            type="password"
+            autoComplete="current-password"
+            value={currentPassword}
+            disabled={busy}
+            onChange={(event) => onCurrentPasswordChange(event.target.value)}
+          />
+        </label>
+        <label className="takeout-field">
+          <span>{t.adminResetPassword}</span>
+          <input
+            type="password"
+            autoComplete="new-password"
+            value={newPassword}
+            disabled={busy}
+            onChange={(event) => onNewPasswordChange(event.target.value)}
+          />
+        </label>
+        <label className="takeout-field">
+          <span>{t.adminResetConfirm}</span>
+          <input
+            type="password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            disabled={busy}
+            onChange={(event) => onConfirmPasswordChange(event.target.value)}
+          />
+        </label>
+      </fieldset>
+
+      <button className="btn" type="button" disabled={busy} onClick={onSave}>
+        {t.adminAccountSavePassword}
+      </button>
+    </section>
+  )
+}
+
 export function AdminPage({
   t,
   locale,
@@ -503,19 +611,26 @@ export function AdminPage({
     null,
   )
   const [companyBusy, setCompanyBusy] = useState(false)
+  const [accountUsername, setAccountUsername] = useState('')
+  const [accountCurrentPassword, setAccountCurrentPassword] = useState('')
+  const [accountNewPassword, setAccountNewPassword] = useState('')
+  const [accountConfirmPassword, setAccountConfirmPassword] = useState('')
+  const [accountBusy, setAccountBusy] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     async function boot() {
       try {
         await api('/api/admin/session')
-        const [menuData, companyData] = await Promise.all([
+        const [menuData, companyData, accountData] = await Promise.all([
           api<{ items: StoredMenuItem[] }>('/api/admin/menu'),
           api<{ info: StoredCompanyInfo }>('/api/admin/company'),
+          api<{ username: string }>('/api/admin/account'),
         ])
         if (!cancelled) {
           setItems(menuData.items)
           setCompanyInfo(companyData.info)
+          setAccountUsername(accountData.username)
           setStatus('ready')
         }
       } catch {
@@ -540,12 +655,14 @@ export function AdminPage({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
-      const [menuData, companyData] = await Promise.all([
+      const [menuData, companyData, accountData] = await Promise.all([
         api<{ items: StoredMenuItem[] }>('/api/admin/menu'),
         api<{ info: StoredCompanyInfo }>('/api/admin/company'),
+        api<{ username: string }>('/api/admin/account'),
       ])
       setItems(menuData.items)
       setCompanyInfo(companyData.info)
+      setAccountUsername(accountData.username)
       setStatus('ready')
     } catch {
       setLoginError(t.adminLoginError)
@@ -602,8 +719,39 @@ export function AdminPage({
     setItems([])
     setDrafts({})
     setCompanyDraft(null)
+    setAccountCurrentPassword('')
+    setAccountNewPassword('')
+    setAccountConfirmPassword('')
     setTab('menu')
     setStatus('login')
+  }
+
+  const saveAccountPassword = async () => {
+    setAccountBusy(true)
+    setMessage(null)
+    try {
+      await api('/api/admin/account/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: accountCurrentPassword,
+          password: accountNewPassword,
+          confirm: accountConfirmPassword,
+        }),
+      })
+      setAccountCurrentPassword('')
+      setAccountNewPassword('')
+      setAccountConfirmPassword('')
+      setMessage(t.adminAccountPasswordSaved)
+    } catch (error) {
+      if (error instanceof Error && error.message === 'wrong-password') {
+        setMessage(t.adminAccountWrongPassword)
+      } else {
+        setMessage(t.adminAccountPasswordError)
+      }
+    } finally {
+      setAccountBusy(false)
+    }
   }
 
   const currentCompany = companyDraft ?? companyInfo
@@ -737,9 +885,7 @@ export function AdminPage({
               <p className="kicker">{t.adminTitle}</p>
               <h1>
                 {status === 'ready'
-                  ? tab === 'menu'
-                    ? t.adminHeading
-                    : t.adminCompanyHeading
+                  ? adminHeading(t, tab)
                   : loginView === 'forgot'
                     ? t.adminForgotHeading
                     : loginView === 'reset'
@@ -748,9 +894,7 @@ export function AdminPage({
               </h1>
               <p className="lead muted">
                 {status === 'ready'
-                  ? tab === 'menu'
-                    ? t.adminLead
-                    : t.adminCompanyLead
+                  ? adminLead(t, tab)
                   : loginView === 'forgot'
                     ? t.adminForgotLead
                     : loginView === 'reset'
@@ -773,11 +917,20 @@ export function AdminPage({
                 <button
                   type="button"
                   role="tab"
-                  className={`admin-tab${tab === 'company' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'company'}
-                  onClick={() => setTab('company')}
+                  className={`admin-tab${tab === 'account' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'account'}
+                  onClick={() => setTab('account')}
                 >
-                  {t.adminTabCompany}
+                  {t.adminTabAccount}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  className={`admin-tab${tab === 'restaurant' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'restaurant'}
+                  onClick={() => setTab('restaurant')}
+                >
+                  {t.adminTabRestaurant}
                 </button>
               </div>
             ) : null}
@@ -943,7 +1096,7 @@ export function AdminPage({
             {status === 'ready' ? (
               <>
                 {message ? <p className="admin-message">{message}</p> : null}
-                {tab === 'company' ? (
+                {tab === 'restaurant' ? (
                   <CompanyInfoEditor
                     info={currentCompany}
                     t={t}
@@ -951,7 +1104,22 @@ export function AdminPage({
                     onChange={setCompanyDraft}
                     onSave={() => void saveCompanyInfo()}
                   />
-                ) : (
+                ) : null}
+                {tab === 'account' ? (
+                  <AccountInfoEditor
+                    accountUsername={accountUsername}
+                    currentPassword={accountCurrentPassword}
+                    newPassword={accountNewPassword}
+                    confirmPassword={accountConfirmPassword}
+                    onCurrentPasswordChange={setAccountCurrentPassword}
+                    onNewPasswordChange={setAccountNewPassword}
+                    onConfirmPasswordChange={setAccountConfirmPassword}
+                    onSave={() => void saveAccountPassword()}
+                    busy={accountBusy}
+                    t={t}
+                  />
+                ) : null}
+                {tab === 'menu' ? (
                   <>
                     {MENU_CATEGORY_IDS.map((categoryId) => {
                       const rows = items.filter(
@@ -1013,7 +1181,7 @@ export function AdminPage({
                       />
                     </section>
                   </>
-                )}
+                ) : null}
               </>
             ) : null}
 

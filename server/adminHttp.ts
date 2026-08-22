@@ -1,4 +1,8 @@
 import {
+  adminHasStoredPassword,
+  setStoredAdminPassword,
+} from './adminPassword.ts'
+import {
   clearSessionCookie,
   credentialsAreValid,
   expectedAdminUsername,
@@ -6,8 +10,8 @@ import {
   requestIsAuthed,
   sessionCookie,
   signSession,
+  verifyAdminPassword,
 } from './adminSession.ts'
-import { setStoredAdminPassword } from './adminPassword.ts'
 import {
   passwordResetEmailConfigured,
   sendPasswordResetEmail,
@@ -275,6 +279,37 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
         return json({ error: 'invalid-company-info' }, 400)
       }
       return json({ info: await upsertAdminCompanyInfo(info) })
+    }
+
+    if (path === '/api/admin/account' && request.method === 'GET') {
+      return json({
+        username: expectedAdminUsername(),
+        hasStoredPassword: await adminHasStoredPassword(),
+      })
+    }
+
+    if (path === '/api/admin/account/password' && request.method === 'PUT') {
+      const body: unknown = await request.json().catch(() => null)
+      if (!body || typeof body !== 'object') {
+        return json({ error: 'invalid-request' }, 400)
+      }
+      const row = body as {
+        currentPassword?: unknown
+        password?: unknown
+        confirm?: unknown
+      }
+      const currentPassword =
+        typeof row.currentPassword === 'string' ? row.currentPassword : ''
+      const password = readPassword(row.password)
+      const confirm = readPassword(row.confirm)
+      if (!password || password !== confirm) {
+        return json({ error: 'invalid-password' }, 400)
+      }
+      if (!(await verifyAdminPassword(currentPassword))) {
+        return json({ error: 'wrong-password' }, 401)
+      }
+      await setStoredAdminPassword(password)
+      return json({ ok: true })
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'error'

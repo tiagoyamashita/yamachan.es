@@ -1101,6 +1101,11 @@ h3 {
   font: inherit;
 }
 
+.admin-account {
+  margin-top: 1rem;
+  max-width: 28rem;
+}
+
 .takeout-field select {
   width: 100%;
   font: inherit;

@@ -193,9 +193,10 @@ export const es: Copy = {
   adminAllergens: 'Alérgenos',
   adminEmptyCategory: 'No hay platos en esta sección.',
   adminTabMenu: 'Carta',
-  adminTabCompany: 'Datos del local',
-  adminCompanyHeading: 'Datos del local',
-  adminCompanyLead:
+  adminTabAccount: 'Cuenta',
+  adminTabRestaurant: 'Restaurante',
+  adminRestaurantHeading: 'Datos del restaurante',
+  adminRestaurantLead:
     'Teléfono, dirección y horario que se muestran en la web y en reservas.',
   adminCompanyPhone: 'Teléfono (para enlaces)',
   adminCompanyPhoneDisplay: 'Teléfono (visible)',
@@ -209,6 +210,14 @@ export const es: Copy = {
   adminCompanyOpenDays: 'Días abiertos (para llevar y reservas)',
   adminCompanyLunchOpen: 'Apertura comida',
   adminCompanyLunchClose: 'Cierre comida',
+  adminAccountHeading: 'Cuenta',
+  adminAccountLead: 'Tu usuario y contraseña de admin para entrar.',
+  adminAccountChangePassword: 'Cambiar contraseña',
+  adminAccountCurrentPassword: 'Contraseña actual',
+  adminAccountSavePassword: 'Guardar contraseña',
+  adminAccountPasswordSaved: 'Contraseña actualizada.',
+  adminAccountPasswordError: 'No se ha podido guardar la contraseña. Prueba otra vez.',
+  adminAccountWrongPassword: 'La contraseña actual no es correcta.',
   adminForgotPassword: '¿Olvidaste la contraseña?',
   adminForgotHeading: 'Recuperar acceso',
   adminForgotLead:

@@ -24,14 +24,7 @@ function expectedPassword(): string {
   return process.env.ADMIN_PASSWORD || ''
 }
 
-export async function credentialsAreValid(
-  username: string,
-  password: string,
-): Promise<boolean> {
-  const user = expectedAdminUsername()
-  if (!user || !bytesEqual(username, user)) {
-    return false
-  }
+export async function verifyAdminPassword(password: string): Promise<boolean> {
   if (await adminHasStoredPassword()) {
     return verifyStoredAdminPassword(password)
   }
@@ -40,6 +33,17 @@ export async function credentialsAreValid(
     return false
   }
   return bytesEqual(password, pass)
+}
+
+export async function credentialsAreValid(
+  username: string,
+  password: string,
+): Promise<boolean> {
+  const user = expectedAdminUsername()
+  if (!user || !bytesEqual(username, user)) {
+    return false
+  }
+  return verifyAdminPassword(password)
 }
 
 function hmac(value: string): string {

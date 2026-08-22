@@ -193,9 +193,10 @@ export const ptBR: Copy = {
   adminAllergens: 'Alergênicos',
   adminEmptyCategory: 'Não há pratos nesta seção.',
   adminTabMenu: 'Cardápio',
-  adminTabCompany: 'Dados do local',
-  adminCompanyHeading: 'Dados do local',
-  adminCompanyLead:
+  adminTabAccount: 'Conta',
+  adminTabRestaurant: 'Restaurante',
+  adminRestaurantHeading: 'Dados do restaurante',
+  adminRestaurantLead:
     'Telefone, endereço e horário exibidos no site e nas reservas.',
   adminCompanyPhone: 'Telefone (para links)',
   adminCompanyPhoneDisplay: 'Telefone (visível)',
@@ -209,6 +210,14 @@ export const ptBR: Copy = {
   adminCompanyOpenDays: 'Dias abertos (para viagem e reservas)',
   adminCompanyLunchOpen: 'Abertura do almoço',
   adminCompanyLunchClose: 'Fechamento do almoço',
+  adminAccountHeading: 'Conta',
+  adminAccountLead: 'Seu usuário e senha de admin para entrar.',
+  adminAccountChangePassword: 'Alterar senha',
+  adminAccountCurrentPassword: 'Senha atual',
+  adminAccountSavePassword: 'Salvar senha',
+  adminAccountPasswordSaved: 'Senha atualizada.',
+  adminAccountPasswordError: 'Não foi possível salvar a senha. Tente de novo.',
+  adminAccountWrongPassword: 'A senha atual está incorreta.',
   adminForgotPassword: 'Esqueceu a senha?',
   adminForgotHeading: 'Recuperar acesso',
   adminForgotLead:
