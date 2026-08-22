@@ -2,6 +2,8 @@ import type Stripe from 'stripe'
 import { isLocale, type Locale } from '../src/i18n/locales.ts'
 import { displayMenuItem } from '../src/menu.ts'
 import { pickupSlotsForDate } from '../src/openingHours.ts'
+import { scheduleFromCompanyInfo } from '../src/companyInfo.ts'
+import { loadCompanyInfo } from './companyInfo.ts'
 import { listPublishedMenu } from './publishedMenu.ts'
 import { getStripeClient } from './stripeClient.ts'
 
@@ -189,7 +191,8 @@ export async function createTakeoutCheckoutSession(
   if (!stripe) {
     throw new TakeoutCheckoutError('missing-stripe', 503)
   }
-  if (!pickupSlotsForDate(input.pickupDate).includes(input.pickupSlot)) {
+  const schedule = scheduleFromCompanyInfo(await loadCompanyInfo())
+  if (!pickupSlotsForDate(input.pickupDate, new Date(), schedule).includes(input.pickupSlot)) {
     throw new TakeoutCheckoutError('invalid-slot', 400)
   }
 

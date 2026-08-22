@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
-import { restaurant } from './content.ts'
+import { contactFromCompanyInfo, mergeVisitCopy } from './companyInfo.ts'
 import { type Copy, localeMeta, type Locale, whatsappUrl } from './i18n/index.ts'
+import { useCompanyInfo } from './useCompanyInfo.ts'
 
 type OccasionId = 'none' | 'birthday' | 'anniversary' | 'celebration'
 
@@ -139,6 +140,9 @@ export function ReservasPage({
   locale: Locale
   onHome: (event: MouseEvent<HTMLAnchorElement>) => void
 }) {
+  const companyInfo = useCompanyInfo()
+  const visit = mergeVisitCopy(t, companyInfo)
+  const contact = contactFromCompanyInfo(companyInfo)
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
@@ -599,21 +603,21 @@ export function ReservasPage({
             </form>
 
             <div className="hours reserve-hours">
-              <h3>{t.hoursTitle}</h3>
+              <h3>{visit.hoursTitle}</h3>
               <ul>
-                {t.hours.map((row) => (
+                {visit.hours.map((row) => (
                   <li key={row.days}>
                     <span>{row.days}</span>
                     <b>{row.time}</b>
                   </li>
                 ))}
               </ul>
-              <p className="hours-note">{t.hoursNote}</p>
+              <p className="hours-note">{visit.hoursNote}</p>
               <p className="reserve-alt">
-                <a href={whatsappUrl(t.whatsappReserveText)}>{t.whatsapp}</a>
+                <a href={whatsappUrl(t.whatsappReserveText)}>{visit.whatsapp}</a>
                 {' · '}
-                <a href={`tel:${restaurant.phone}`}>
-                  {t.call} {restaurant.phoneDisplay}
+                <a href={`tel:${contact.phone}`}>
+                  {visit.call} {contact.phoneDisplay}
                 </a>
               </p>
             </div>

@@ -1,11 +1,22 @@
+import {
+  fallbackCompanyInfo,
+  type OpeningSchedule,
+} from './companyInfo.ts'
 import { localeMeta, type Locale } from './i18n/locales.ts'
 
 export const RESTAURANT_TIME_ZONE = 'Europe/Madrid'
 
 const SLOT_MINUTES = 15
-const OPEN_MINUTES = 13 * 60
-const CLOSE_MINUTES = 16 * 60 + 30
 const LEAD_MINUTES = 30
+
+function defaultSchedule(): OpeningSchedule {
+  return fallbackCompanyInfo().schedule
+}
+
+function timeToMinutes(value: string): number {
+  const [hour, minute] = value.split(':').map(Number)
+  return hour * 60 + minute
+}
 const WEEKDAY_SHORT: Record<string, number> = {
   Sun: 0,
   Mon: 1,
@@ -36,21 +47,12 @@ export function weekdayInRestaurantTz(key: string): number {
   return WEEKDAY_SHORT[short] ?? -1
 }
 
-export function isOpenDate(key: string): boolean {
+export function isOpenDate(
+  key: string,
+  schedule: OpeningSchedule = defaultSchedule(),
+): boolean {
   const weekday = weekdayInRestaurantTz(key)
-  switch (weekday) {
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-      return true
-    case 0:
-    case 1:
-    case 2:
-      return false
-    default:
-      return false
-  }
+  return schedule.openWeekdays.includes(weekday)
 }
 
 function madridParts(ms: number): {
@@ -102,13 +104,23 @@ function formatHm(totalMinutes: number): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
 
-export function pickupSlotsForDate(key: string, now = new Date()): string[] {
-  if (!isOpenDate(key) || key < todayKey(now)) {
+export function pickupSlotsForDate(
+  key: string,
+  now = new Date(),
+  schedule: OpeningSchedule = defaultSchedule(),
+): string[] {
+  if (!isOpenDate(key, schedule) || key < todayKey(now)) {
     return []
   }
+  const openMinutes = timeToMinutes(schedule.lunchOpen)
+  const closeMinutes = timeToMinutes(schedule.lunchClose)
   const earliest = new Date(now.getTime() + LEAD_MINUTES * 60_000)
   const slots: string[] = []
-  for (let minutes = OPEN_MINUTES; minutes <= CLOSE_MINUTES; minutes += SLOT_MINUTES) {
+  for (
+    let minutes = openMinutes;
+    minutes <= closeMinutes;
+    minutes += SLOT_MINUTES
+  ) {
     const time = formatHm(minutes)
     if (localMadridToUtc(key, time) >= earliest) {
       slots.push(time)
@@ -117,8 +129,12 @@ export function pickupSlotsForDate(key: string, now = new Date()): string[] {
   return slots
 }
 
-export function hasPickupSlots(key: string, now = new Date()): boolean {
-  return pickupSlotsForDate(key, now).length > 0
+export function hasPickupSlots(
+  key: string,
+  now = new Date(),
+  schedule: OpeningSchedule = defaultSchedule(),
+): boolean {
+  return pickupSlotsForDate(key, now, schedule).length > 0
 }
 
 export function formatPickupLabel(

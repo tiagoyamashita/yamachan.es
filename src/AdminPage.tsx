@@ -8,10 +8,16 @@ import {
 import { restaurant } from './content.ts'
 import { AllergenIcon } from './AllergenIcon.tsx'
 import { ALLERGEN_IDS, toggleAllergen } from './allergens.ts'
-import { type Copy, type Locale } from './i18n/index.ts'
+import {
+  fallbackCompanyInfo,
+  WEEKDAY_LABELS_ES,
+  type StoredCompanyInfo,
+} from './companyInfo.ts'
 import { LanguagePicker } from './LanguagePicker.tsx'
+import { type Copy, type Locale } from './i18n/index.ts'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
+type AdminTab = 'menu' | 'company'
 
 function emptyItem(sortOrder: number): StoredMenuItem {
   return {
@@ -247,6 +253,216 @@ function DishEditor({
   )
 }
 
+function CompanyInfoEditor({
+  info,
+  t,
+  onChange,
+  onSave,
+  busy,
+}: {
+  info: StoredCompanyInfo
+  t: Copy
+  onChange: (info: StoredCompanyInfo) => void
+  onSave: () => void
+  busy: boolean
+}) {
+  const set = (patch: Partial<StoredCompanyInfo>) => {
+    onChange({ ...info, ...patch })
+  }
+
+  const setAddressLine = (index: number, value: string) => {
+    const lines = [...info.addressLines]
+    while (lines.length <= index) {
+      lines.push('')
+    }
+    lines[index] = value
+    set({ addressLines: lines })
+  }
+
+  const setHourRow = (
+    index: number,
+    patch: Partial<StoredCompanyInfo['hours'][number]>,
+  ) => {
+    set({
+      hours: info.hours.map((row, rowIndex) =>
+        rowIndex === index ? { ...row, ...patch } : row,
+      ),
+    })
+  }
+
+  const toggleOpenDay = (weekday: number, checked: boolean) => {
+    const openWeekdays = checked
+      ? [...new Set([...info.schedule.openWeekdays, weekday])].sort(
+          (a, b) => a - b,
+        )
+      : info.schedule.openWeekdays.filter((day) => day !== weekday)
+    set({
+      schedule: {
+        ...info.schedule,
+        openWeekdays,
+      },
+    })
+  }
+
+  return (
+    <section className="admin-company">
+      <div className="admin-company-grid">
+        <label className="takeout-field">
+          <span>{t.adminCompanyPhone}</span>
+          <input
+            value={info.phone}
+            onChange={(event) => set({ phone: event.target.value })}
+          />
+        </label>
+        <label className="takeout-field">
+          <span>{t.adminCompanyPhoneDisplay}</span>
+          <input
+            value={info.phoneDisplay}
+            onChange={(event) => set({ phoneDisplay: event.target.value })}
+          />
+        </label>
+      </div>
+
+      <fieldset className="admin-company-block">
+        <legend>{t.adminCompanyAddress}</legend>
+        {[0, 1, 2].map((index) => (
+          <label className="takeout-field" key={index}>
+            <span>
+              {t.adminCompanyAddress} {index + 1}
+            </span>
+            <input
+              value={info.addressLines[index] ?? ''}
+              onChange={(event) => setAddressLine(index, event.target.value)}
+            />
+          </label>
+        ))}
+        <label className="takeout-field">
+          <span>{t.adminCompanyNeighborhood}</span>
+          <textarea
+            rows={2}
+            value={info.neighborhood}
+            onChange={(event) => set({ neighborhood: event.target.value })}
+          />
+        </label>
+      </fieldset>
+
+      <fieldset className="admin-company-block">
+        <legend>{t.hoursTitle}</legend>
+        <label className="takeout-field">
+          <span>{t.adminCompanyHoursNote}</span>
+          <textarea
+            rows={2}
+            value={info.hoursNote}
+            onChange={(event) => set({ hoursNote: event.target.value })}
+          />
+        </label>
+        {info.hours.map((row, index) => (
+          <div className="admin-company-hours-row" key={`${index}-${row.days}`}>
+            <label className="takeout-field">
+              <span>{t.adminCompanyHoursDays}</span>
+              <input
+                value={row.days}
+                onChange={(event) =>
+                  setHourRow(index, { days: event.target.value })
+                }
+              />
+            </label>
+            <label className="takeout-field">
+              <span>{t.adminCompanyHoursTime}</span>
+              <input
+                value={row.time}
+                onChange={(event) =>
+                  setHourRow(index, { time: event.target.value })
+                }
+              />
+            </label>
+            <button
+              className="btn btn-outline btn-small"
+              type="button"
+              disabled={busy || info.hours.length <= 1}
+              onClick={() =>
+                set({
+                  hours: info.hours.filter((_, rowIndex) => rowIndex !== index),
+                })
+              }
+            >
+              {t.adminCompanyRemoveHoursRow}
+            </button>
+          </div>
+        ))}
+        <button
+          className="btn btn-outline btn-small"
+          type="button"
+          disabled={busy}
+          onClick={() =>
+            set({
+              hours: [...info.hours, { days: '', time: '' }],
+            })
+          }
+        >
+          {t.adminCompanyAddHoursRow}
+        </button>
+      </fieldset>
+
+      <fieldset className="admin-company-block">
+        <legend>{t.adminCompanyOpenDays}</legend>
+        <div className="admin-weekday-grid">
+          {WEEKDAY_LABELS_ES.map((label, weekday) => (
+            <label className="admin-check" key={label}>
+              <input
+                type="checkbox"
+                checked={info.schedule.openWeekdays.includes(weekday)}
+                onChange={(event) =>
+                  toggleOpenDay(weekday, event.target.checked)
+                }
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+        <div className="admin-company-grid">
+          <label className="takeout-field">
+            <span>{t.adminCompanyLunchOpen}</span>
+            <input
+              type="time"
+              value={info.schedule.lunchOpen}
+              onChange={(event) =>
+                set({
+                  schedule: {
+                    ...info.schedule,
+                    lunchOpen: event.target.value,
+                  },
+                })
+              }
+            />
+          </label>
+          <label className="takeout-field">
+            <span>{t.adminCompanyLunchClose}</span>
+            <input
+              type="time"
+              value={info.schedule.lunchClose}
+              onChange={(event) =>
+                set({
+                  schedule: {
+                    ...info.schedule,
+                    lunchClose: event.target.value,
+                  },
+                })
+              }
+            />
+          </label>
+        </div>
+      </fieldset>
+
+      <div className="admin-dish-actions">
+        <button className="btn" type="button" disabled={busy} onClick={onSave}>
+          {t.adminSave}
+        </button>
+      </div>
+    </section>
+  )
+}
+
 export function AdminPage({
   t,
   locale,
@@ -266,15 +482,27 @@ export function AdminPage({
   const [drafts, setDrafts] = useState<Record<string, StoredMenuItem>>({})
   const [message, setMessage] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [tab, setTab] = useState<AdminTab>('menu')
+  const [companyInfo, setCompanyInfo] = useState<StoredCompanyInfo>(
+    fallbackCompanyInfo(),
+  )
+  const [companyDraft, setCompanyDraft] = useState<StoredCompanyInfo | null>(
+    null,
+  )
+  const [companyBusy, setCompanyBusy] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     async function boot() {
       try {
         await api('/api/admin/session')
-        const data = await api<{ items: StoredMenuItem[] }>('/api/admin/menu')
+        const [menuData, companyData] = await Promise.all([
+          api<{ items: StoredMenuItem[] }>('/api/admin/menu'),
+          api<{ info: StoredCompanyInfo }>('/api/admin/company'),
+        ])
         if (!cancelled) {
-          setItems(data.items)
+          setItems(menuData.items)
+          setCompanyInfo(companyData.info)
           setStatus('ready')
         }
       } catch {
@@ -298,8 +526,12 @@ export function AdminPage({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
-      const data = await api<{ items: StoredMenuItem[] }>('/api/admin/menu')
-      setItems(data.items)
+      const [menuData, companyData] = await Promise.all([
+        api<{ items: StoredMenuItem[] }>('/api/admin/menu'),
+        api<{ info: StoredCompanyInfo }>('/api/admin/company'),
+      ])
+      setItems(menuData.items)
+      setCompanyInfo(companyData.info)
       setStatus('ready')
     } catch {
       setLoginError(t.adminLoginError)
@@ -310,7 +542,30 @@ export function AdminPage({
     await api('/api/admin/logout', { method: 'POST' })
     setItems([])
     setDrafts({})
+    setCompanyDraft(null)
+    setTab('menu')
     setStatus('login')
+  }
+
+  const currentCompany = companyDraft ?? companyInfo
+
+  const saveCompanyInfo = async () => {
+    setCompanyBusy(true)
+    setMessage(null)
+    try {
+      const data = await api<{ info: StoredCompanyInfo }>('/api/admin/company', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(currentCompany),
+      })
+      setCompanyInfo(data.info)
+      setCompanyDraft(null)
+      setMessage(t.adminSaved)
+    } catch {
+      setMessage(t.adminSaveError)
+    } finally {
+      setCompanyBusy(false)
+    }
   }
 
   const current = (item: StoredMenuItem) => drafts[item.id || 'new'] ?? item
@@ -421,9 +676,34 @@ export function AdminPage({
           <div className="section-inner">
             <header className="section-head">
               <p className="kicker">{t.adminTitle}</p>
-              <h1>{t.adminHeading}</h1>
-              <p className="lead muted">{t.adminLead}</p>
+              <h1>{tab === 'menu' ? t.adminHeading : t.adminCompanyHeading}</h1>
+              <p className="lead muted">
+                {tab === 'menu' ? t.adminLead : t.adminCompanyLead}
+              </p>
             </header>
+
+            {status === 'ready' ? (
+              <div className="admin-tabs" role="tablist" aria-label={t.adminTitle}>
+                <button
+                  type="button"
+                  role="tab"
+                  className={`admin-tab${tab === 'menu' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'menu'}
+                  onClick={() => setTab('menu')}
+                >
+                  {t.adminTabMenu}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  className={`admin-tab${tab === 'company' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'company'}
+                  onClick={() => setTab('company')}
+                >
+                  {t.adminTabCompany}
+                </button>
+              </div>
+            ) : null}
 
             {status === 'loading' ? <p className="muted">{t.adminLoading}</p> : null}
 
@@ -456,55 +736,77 @@ export function AdminPage({
             {status === 'ready' ? (
               <>
                 {message ? <p className="admin-message">{message}</p> : null}
-                {MENU_CATEGORY_IDS.map((categoryId) => {
-                  const rows = items.filter((item) => item.category_id === categoryId)
-                  return (
-                    <section className="carta-section" key={categoryId}>
-                      <h2>{t.cartaCategories[categoryId]}</h2>
-                      {rows.length === 0 ? (
-                        <p className="muted">{t.adminEmptyCategory}</p>
-                      ) : null}
-                      {rows.map((item) => (
-                        <DishEditor
-                          key={item.id}
-                          item={current(item)}
-                          t={t}
-                          busy={busyId === item.id}
-                          onChange={(next) =>
-                            setDrafts((prev) => ({ ...prev, [item.id]: next }))
-                          }
-                          onSave={() => void saveItem(current(item))}
-                          onDelete={() => void deleteItem(item)}
-                          onPhoto={(file) => void uploadPhoto(current(item), file)}
-                        />
-                      ))}
-                    </section>
-                  )
-                })}
-
-                <section className="carta-section">
-                  <h2>{t.adminNewDish}</h2>
-                  <DishEditor
-                    item={current(emptyItem((items.at(-1)?.sort_order ?? 0) + 10))}
+                {tab === 'company' ? (
+                  <CompanyInfoEditor
+                    info={currentCompany}
                     t={t}
-                    busy={busyId === 'new'}
-                    onChange={(next) =>
-                      setDrafts((prev) => ({ ...prev, new: next }))
-                    }
-                    onSave={() =>
-                      void saveItem(
-                        current(emptyItem((items.at(-1)?.sort_order ?? 0) + 10)),
-                      )
-                    }
-                    onDelete={() => undefined}
-                    onPhoto={(file) =>
-                      void uploadPhoto(
-                        current(emptyItem((items.at(-1)?.sort_order ?? 0) + 10)),
-                        file,
-                      )
-                    }
+                    busy={companyBusy}
+                    onChange={setCompanyDraft}
+                    onSave={() => void saveCompanyInfo()}
                   />
-                </section>
+                ) : (
+                  <>
+                    {MENU_CATEGORY_IDS.map((categoryId) => {
+                      const rows = items.filter(
+                        (item) => item.category_id === categoryId,
+                      )
+                      return (
+                        <section className="carta-section" key={categoryId}>
+                          <h2>{t.cartaCategories[categoryId]}</h2>
+                          {rows.length === 0 ? (
+                            <p className="muted">{t.adminEmptyCategory}</p>
+                          ) : null}
+                          {rows.map((item) => (
+                            <DishEditor
+                              key={item.id}
+                              item={current(item)}
+                              t={t}
+                              busy={busyId === item.id}
+                              onChange={(next) =>
+                                setDrafts((prev) => ({ ...prev, [item.id]: next }))
+                              }
+                              onSave={() => void saveItem(current(item))}
+                              onDelete={() => void deleteItem(item)}
+                              onPhoto={(file) =>
+                                void uploadPhoto(current(item), file)
+                              }
+                            />
+                          ))}
+                        </section>
+                      )
+                    })}
+
+                    <section className="carta-section">
+                      <h2>{t.adminNewDish}</h2>
+                      <DishEditor
+                        item={current(
+                          emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
+                        )}
+                        t={t}
+                        busy={busyId === 'new'}
+                        onChange={(next) =>
+                          setDrafts((prev) => ({ ...prev, new: next }))
+                        }
+                        onSave={() =>
+                          void saveItem(
+                            current(
+                              emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
+                            ),
+                          )
+                        }
+                        onDelete={() => undefined}
+                        onPhoto={(file) =>
+                          void uploadPhoto(
+                            current(
+                              emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
+                            ),
+                            file,
+                          )
+                        }
+                      />
+                    </section>
+                  </>
+                )}
               </>
             ) : null}
 

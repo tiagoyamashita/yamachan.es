@@ -17,6 +17,14 @@ import {
   slugFromName,
   type StoredMenuItem,
 } from '../src/menu.ts'
+import {
+  getAdminCompanyInfo,
+  upsertAdminCompanyInfo,
+} from './adminCompanyInfo.ts'
+import {
+  parseStoredCompanyInfo,
+  type StoredCompanyInfo,
+} from '../src/companyInfo.ts'
 import { parseAllergens } from '../src/allergens.ts'
 
 function json(
@@ -80,6 +88,20 @@ function readItem(value: unknown): StoredMenuItem | null {
       return 0
     })(),
   }
+}
+
+function readCompanyInfo(value: unknown): StoredCompanyInfo | null {
+  const parsed = parseStoredCompanyInfo(value)
+  if (!parsed) {
+    return null
+  }
+  if (parsed.hours.length === 0) {
+    return null
+  }
+  if (parsed.schedule.openWeekdays.length === 0) {
+    return null
+  }
+  return parsed
 }
 
 export async function handleAdminRequest(request: Request): Promise<Response> {
@@ -158,6 +180,18 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
         return json({ error: 'missing-file' }, 400)
       }
       return json(await uploadMenuPhoto(file))
+    }
+
+    if (path === '/api/admin/company' && request.method === 'GET') {
+      return json({ info: await getAdminCompanyInfo() })
+    }
+
+    if (path === '/api/admin/company' && request.method === 'PUT') {
+      const info = readCompanyInfo(await request.json().catch(() => null))
+      if (!info) {
+        return json({ error: 'invalid-company-info' }, 400)
+      }
+      return json({ info: await upsertAdminCompanyInfo(info) })
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'error'

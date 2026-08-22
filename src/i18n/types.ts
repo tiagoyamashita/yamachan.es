@@ -155,6 +155,22 @@ export type Copy = {
   adminPublished: string
   adminAllergens: string
   adminEmptyCategory: string
+  adminTabMenu: string
+  adminTabCompany: string
+  adminCompanyHeading: string
+  adminCompanyLead: string
+  adminCompanyPhone: string
+  adminCompanyPhoneDisplay: string
+  adminCompanyAddress: string
+  adminCompanyNeighborhood: string
+  adminCompanyHoursNote: string
+  adminCompanyHoursDays: string
+  adminCompanyHoursTime: string
+  adminCompanyAddHoursRow: string
+  adminCompanyRemoveHoursRow: string
+  adminCompanyOpenDays: string
+  adminCompanyLunchOpen: string
+  adminCompanyLunchClose: string
   cartaCategories: Record<MenuCategoryId, string>
   cartaItems: Record<MenuItemId, { name: string; blurb: string }>
   reviewsEyebrow: string

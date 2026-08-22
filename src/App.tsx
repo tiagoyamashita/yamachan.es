@@ -1,6 +1,11 @@
 import { useEffect, useState, type MouseEvent } from 'react'
 import { restaurant } from './content.ts'
 import {
+  contactFromCompanyInfo,
+  mergeVisitCopy,
+} from './companyInfo.ts'
+import { useCompanyInfo } from './useCompanyInfo.ts'
+import {
   copy,
   detectLocale,
   formatRating,
@@ -125,7 +130,10 @@ export default function App() {
   const [locale, setLocale] = useState<Locale>(detectLocale)
   const [route, setRoute] = useState<Route>(routeFromLocation)
   const [hash, setHash] = useState(() => window.location.hash)
+  const companyInfo = useCompanyInfo()
   const t = copy[locale]
+  const visit = mergeVisitCopy(t, companyInfo)
+  const contact = contactFromCompanyInfo(companyInfo)
   const onCarta = route === '/carta'
   const onTakeout = route === '/para-llevar'
   const onReserve = route === '/reservas'
@@ -481,42 +489,42 @@ export default function App() {
                     <a className="btn btn-outline" href={whatsappUrl(t.whatsappReserveText)}>
                       {t.whatsapp}
                     </a>
-                    <a className="btn btn-outline" href={`tel:${restaurant.phone}`}>
-                      {t.call} {restaurant.phoneDisplay}
+                    <a className="btn btn-outline" href={`tel:${contact.phone}`}>
+                      {visit.call} {contact.phoneDisplay}
                     </a>
                   </div>
 
                   <div className="hours">
-                    <h3>{t.hoursTitle}</h3>
+                    <h3>{visit.hoursTitle}</h3>
                     <ul>
-                      {t.hours.map((row) => (
+                      {visit.hours.map((row) => (
                         <li key={row.days}>
                           <span>{row.days}</span>
                           <b>{row.time}</b>
                         </li>
                       ))}
                     </ul>
-                    <p className="hours-note">{t.hoursNote}</p>
+                    <p className="hours-note">{visit.hoursNote}</p>
                   </div>
                 </div>
 
                 <div className="place">
-                  <h3>{t.addressTitle}</h3>
+                  <h3>{visit.addressTitle}</h3>
                   <address>
-                    {t.addressLines.map((line) => (
+                    {visit.addressLines.map((line) => (
                       <span key={line}>
                         {line}
                         <br />
                       </span>
                     ))}
                   </address>
-                  <p className="neighborhood">{t.neighborhood}</p>
+                  <p className="neighborhood">{visit.neighborhood}</p>
                   <div className="place-links">
-                    <a href={restaurant.mapsUrl}>{t.directions}</a>
+                    <a href={restaurant.mapsUrl}>{visit.directions}</a>
                   </div>
                   <div className="map-wrap">
                     <iframe
-                      title={t.addressTitle}
+                      title={visit.addressTitle}
                       src={mapsEmbedUrl(locale)}
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
@@ -555,7 +563,7 @@ export default function App() {
               {t.nav.reservar}
             </a>
             {' · '}
-            <a href={`tel:${restaurant.phone}`}>{restaurant.phoneDisplay}</a>
+            <a href={`tel:${contact.phone}`}>{contact.phoneDisplay}</a>
           </p>
         </div>
       </footer>

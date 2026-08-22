@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { type Copy, type Locale } from './i18n/index.ts'
+import { scheduleFromCompanyInfo, type OpeningSchedule } from './companyInfo.ts'
 import {
   calendarCells,
   hasPickupSlots,
@@ -19,13 +20,16 @@ export function PickupCalendar({
   selectedDate,
   selectedTime,
   onSelect,
+  schedule,
 }: {
   t: Copy
   locale: Locale
   selectedDate: string | null
   selectedTime: string
   onSelect: (date: string, time: string) => void
+  schedule?: OpeningSchedule
 }) {
+  const openingSchedule = schedule ?? scheduleFromCompanyInfo(null)
   const today = todayKey()
   const min = monthFromKey(today)
   const max = shiftMonth(min.year, min.month, MAX_MONTHS_AHEAD)
@@ -36,7 +40,9 @@ export function PickupCalendar({
   const cells = useMemo(() => calendarCells(year, month), [year, month])
   const atMinMonth = year === min.year && month === min.month
   const atMaxMonth = year === max.year && month === max.month
-  const slots = selectedDate ? pickupSlotsForDate(selectedDate) : []
+  const slots = selectedDate
+    ? pickupSlotsForDate(selectedDate, new Date(), openingSchedule)
+    : []
 
   return (
     <div className="takeout-pickup">
@@ -85,7 +91,7 @@ export function PickupCalendar({
               if (!key || cell.day === null) {
                 return <span key={`pad-${index}`} className="reserve-day is-empty" />
               }
-              const open = hasPickupSlots(key)
+              const open = hasPickupSlots(key, new Date(), openingSchedule)
               const selected = selectedDate === key
               return (
                 <button
