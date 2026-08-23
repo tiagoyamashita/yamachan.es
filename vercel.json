@@ -9,12 +9,19 @@
       "use": "@vercel/node"
     }
   ],
+  "redirects": [
+    {
+      "source": "/admin/reset",
+      "destination": "/admin",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     { "source": "/carta", "destination": "/index.html" },
     { "source": "/para-llevar", "destination": "/index.html" },
     { "source": "/reservas", "destination": "/index.html" },
     { "source": "/admin", "destination": "/index.html" },
-    { "source": "/admin/:path*", "destination": "/index.html" },
+    { "source": "/admin/(.*)", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {

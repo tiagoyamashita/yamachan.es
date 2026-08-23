@@ -91,13 +91,13 @@ function normalizeAdminResetUrl(): void {
     return
   }
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
-  if (path === '/admin/reset') {
+  if (path === '/admin') {
     return
   }
   window.history.replaceState(
     {},
     '',
-    `/admin/reset?token=${encodeURIComponent(token)}`,
+    `/admin?token=${encodeURIComponent(token)}`,
   )
 }
 

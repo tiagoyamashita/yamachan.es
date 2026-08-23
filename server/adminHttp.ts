@@ -218,7 +218,7 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
     ) {
       const token = signPasswordResetToken()
       if (token) {
-        const resetUrl = `${siteOrigin(request)}/admin/reset?token=${encodeURIComponent(token)}`
+        const resetUrl = `${siteOrigin(request)}/admin?token=${encodeURIComponent(token)}`
         try {
           await sendPasswordResetEmail(resetUrl)
         } catch {
