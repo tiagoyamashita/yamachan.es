@@ -883,24 +883,24 @@ export function AdminPage({
           <div className="section-inner">
             <header className="section-head">
               <p className="kicker">{t.adminTitle}</p>
-              <h1>
-                {status === 'ready'
-                  ? adminHeading(t, tab)
-                  : loginView === 'forgot'
-                    ? t.adminForgotHeading
-                    : loginView === 'reset'
-                      ? t.adminResetHeading
-                      : t.adminHeading}
-              </h1>
-              <p className="lead muted">
-                {status === 'ready'
-                  ? adminLead(t, tab)
-                  : loginView === 'forgot'
-                    ? t.adminForgotLead
-                    : loginView === 'reset'
-                      ? t.adminResetLead
-                      : t.adminLead}
-              </p>
+              {status === 'ready' || loginView !== 'sign-in' ? (
+                <h1>
+                  {status === 'ready'
+                    ? adminHeading(t, tab)
+                    : loginView === 'forgot'
+                      ? t.adminForgotHeading
+                      : t.adminResetHeading}
+                </h1>
+              ) : null}
+              {status === 'ready' || loginView !== 'sign-in' ? (
+                <p className="lead muted">
+                  {status === 'ready'
+                    ? adminLead(t, tab)
+                    : loginView === 'forgot'
+                      ? t.adminForgotLead
+                      : t.adminResetLead}
+                </p>
+              ) : null}
             </header>
 
             {status === 'ready' ? (
