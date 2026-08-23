@@ -29,6 +29,9 @@ type Route = '/' | '/carta' | '/para-llevar' | '/reservas' | '/admin'
 
 function routeFromLocation(): Route {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  if (path === '/admin' || path.startsWith('/admin/')) {
+    return '/admin'
+  }
   switch (path) {
     case '/carta':
       return '/carta'
@@ -36,8 +39,6 @@ function routeFromLocation(): Route {
       return '/para-llevar'
     case '/reservas':
       return '/reservas'
-    case '/admin':
-      return '/admin'
     default:
       return '/'
   }

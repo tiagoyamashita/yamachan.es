@@ -81,8 +81,24 @@ function loginLead(t: Copy, loginView: LoginView): string {
 }
 
 function resetTokenFromLocation(): string {
-  const token = new URLSearchParams(window.location.search).get('reset')
-  return token?.trim() || ''
+  const params = new URLSearchParams(window.location.search)
+  return (params.get('token') ?? params.get('reset'))?.trim() || ''
+}
+
+function normalizeAdminResetUrl(): void {
+  const token = resetTokenFromLocation()
+  if (!token) {
+    return
+  }
+  const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  if (path === '/admin/reset') {
+    return
+  }
+  window.history.replaceState(
+    {},
+    '',
+    `/admin/reset?token=${encodeURIComponent(token)}`,
+  )
 }
 
 function emptyItem(sortOrder: number): StoredMenuItem {
@@ -720,6 +736,17 @@ export function AdminPage({
   useEffect(() => {
     let cancelled = false
     async function boot() {
+      normalizeAdminResetUrl()
+      const token = resetTokenFromLocation()
+      if (token) {
+        if (!cancelled) {
+          setResetToken(token)
+          setLoginView('reset')
+          setStatus('login')
+        }
+        return
+      }
+
       try {
         await api('/api/admin/session')
       } catch {
@@ -807,6 +834,7 @@ export function AdminPage({
       setNewPassword('')
       setConfirmPassword('')
       window.history.replaceState({}, '', '/admin')
+      await api('/api/admin/logout', { method: 'POST' }).catch(() => undefined)
     } catch {
       setLoginError(t.adminResetError)
     }
@@ -1180,6 +1208,9 @@ export function AdminPage({
                             setLoginError(null)
                             setLoginMessage(null)
                             window.history.replaceState({}, '', '/admin')
+                            void api('/api/admin/logout', { method: 'POST' }).catch(
+                              () => undefined,
+                            )
                           }}
                         >
                           {t.adminBackToSignIn}
