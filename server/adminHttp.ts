@@ -190,12 +190,12 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
       typeof (body as { username?: unknown }).username === 'string'
         ? (body as { username: string }).username.trim()
         : ''
-    const expected = expectedAdminUsername()
+    const expected = await expectedAdminUsername()
     if (
       username &&
       expected &&
       username === expected &&
-      passwordResetEmailConfigured()
+      (await passwordResetEmailConfigured())
     ) {
       const token = signPasswordResetToken()
       if (token) {
@@ -283,7 +283,7 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
 
     if (path === '/api/admin/account' && request.method === 'GET') {
       return json({
-        username: expectedAdminUsername(),
+        username: await expectedAdminUsername(),
         hasStoredPassword: await adminHasStoredPassword(),
       })
     }

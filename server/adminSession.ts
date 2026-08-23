@@ -3,6 +3,7 @@ import {
   adminHasStoredPassword,
   verifyStoredAdminPassword,
 } from './adminPassword.ts'
+import { storedAdminUsername } from './adminSettings.ts'
 
 export const ADMIN_COOKIE = 'yamachan_admin'
 const MAX_AGE_SEC = 60 * 60 * 24 * 7
@@ -16,8 +17,12 @@ function sessionSecret(): string {
   )
 }
 
-export function expectedAdminUsername(): string {
-  return process.env.ADMIN_USERNAME || ''
+export async function expectedAdminUsername(): Promise<string> {
+  const fromEnv = process.env.ADMIN_USERNAME?.trim()
+  if (fromEnv) {
+    return fromEnv
+  }
+  return await storedAdminUsername()
 }
 
 function expectedPassword(): string {
@@ -39,7 +44,7 @@ export async function credentialsAreValid(
   username: string,
   password: string,
 ): Promise<boolean> {
-  const user = expectedAdminUsername()
+  const user = await expectedAdminUsername()
   if (!user || !bytesEqual(username, user)) {
     return false
   }

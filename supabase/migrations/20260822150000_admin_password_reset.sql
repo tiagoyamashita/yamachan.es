@@ -22,7 +22,7 @@ create or replace function public.yamachan_verify_admin_password(p_password text
 returns boolean
 language plpgsql
 security definer
-set search_path = public, private
+set search_path = public, private, extensions
 as $$
 declare
   stored text;
@@ -47,7 +47,7 @@ create or replace function public.yamachan_admin_set_password_hash(
 returns void
 language plpgsql
 security definer
-set search_path = public, private
+set search_path = public, private, extensions
 as $$
 begin
   perform private.yamachan_assert_admin(p_secret);
