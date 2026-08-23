@@ -168,7 +168,11 @@ export const ptBR: Copy = {
   adminUser: 'Usuário',
   adminPassword: 'Senha',
   adminSignIn: 'Entrar',
+  adminLoginHeading: 'Entrar',
+  adminLoginLead: 'Digite seu usuário e senha de admin.',
   adminLoginError: 'Usuário ou senha incorretos.',
+  adminDataLoadError:
+    'Você entrou, mas alguns dados não carregaram. Verifique a configuração do Supabase (ADMIN_WRITE_SECRET).',
   adminLogout: 'Sair',
   adminLoading: 'Carregando…',
   adminSave: 'Salvar',
@@ -211,7 +215,15 @@ export const ptBR: Copy = {
   adminCompanyLunchOpen: 'Abertura do almoço',
   adminCompanyLunchClose: 'Fechamento do almoço',
   adminAccountHeading: 'Conta',
-  adminAccountLead: 'Seu usuário e senha de admin para entrar.',
+  adminAccountLead:
+    'Seu usuário, e-mail de recuperação e senha de admin.',
+  adminAccountRecoveryEmail: 'E-mail de recuperação',
+  adminAccountRecoveryEmailHelp:
+    'Os links de “Esqueceu a senha?” são enviados para este endereço. Fica salvo no banco de dados.',
+  adminAccountSaveEmail: 'Salvar e-mail',
+  adminAccountEmailSaved: 'E-mail de recuperação atualizado.',
+  adminAccountEmailError:
+    'Não foi possível salvar o e-mail. Tente de novo.',
   adminAccountChangePassword: 'Alterar senha',
   adminAccountCurrentPassword: 'Senha atual',
   adminAccountSavePassword: 'Salvar senha',

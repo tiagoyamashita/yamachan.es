@@ -12,6 +12,7 @@ import {
   signSession,
   verifyAdminPassword,
 } from './adminSession.ts'
+import { setStoredAdminEmail, expectedAdminEmail } from './adminSettings.ts'
 import {
   passwordResetEmailConfigured,
   sendPasswordResetEmail,
@@ -121,7 +122,14 @@ function readCompanyInfo(value: unknown): StoredCompanyInfo | null {
 function siteOrigin(request: Request): string {
   const configured = process.env.ADMIN_SITE_URL?.trim()
   if (configured) {
-    return configured.replace(/\/+$/, '')
+    try {
+      const href = configured.includes('://')
+        ? configured
+        : `https://${configured}`
+      return new URL(href).origin
+    } catch {
+      // fall through to request origin
+    }
   }
   const url = new URL(request.url)
   return url.origin
@@ -136,6 +144,17 @@ function readPassword(value: unknown): string | null {
     return null
   }
   return password
+}
+
+function readEmail(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+  const email = value.trim()
+  if (email.length < 5 || !email.includes('@')) {
+    return null
+  }
+  return email
 }
 
 export async function handleAdminRequest(request: Request): Promise<Response> {
@@ -285,7 +304,21 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
       return json({
         username: await expectedAdminUsername(),
         hasStoredPassword: await adminHasStoredPassword(),
+        resetEmail: await expectedAdminEmail(),
       })
+    }
+
+    if (path === '/api/admin/account/email' && request.method === 'PUT') {
+      const body: unknown = await request.json().catch(() => null)
+      if (!body || typeof body !== 'object') {
+        return json({ error: 'invalid-request' }, 400)
+      }
+      const email = readEmail((body as { email?: unknown }).email)
+      if (!email) {
+        return json({ error: 'invalid-email' }, 400)
+      }
+      await setStoredAdminEmail(email)
+      return json({ resetEmail: email })
     }
 
     if (path === '/api/admin/account/password' && request.method === 'PUT') {

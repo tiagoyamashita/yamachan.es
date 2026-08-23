@@ -1,0 +1,2 @@
+-- Canonical remote migration (replaces local 20260823083500_admin_account_email).
+-- Applied on linked Supabase project.

@@ -166,7 +166,11 @@ export const ja: Copy = {
   adminUser: 'ユーザー名',
   adminPassword: 'パスワード',
   adminSignIn: 'ログイン',
+  adminLoginHeading: 'ログイン',
+  adminLoginLead: '管理用のユーザー名とパスワードを入力してください。',
   adminLoginError: 'ユーザー名またはパスワードが違います。',
+  adminDataLoadError:
+    'ログインできましたが、一部のデータを読み込めませんでした。Supabase の設定（ADMIN_WRITE_SECRET）を確認してください。',
   adminLogout: 'ログアウト',
   adminLoading: '読み込み中…',
   adminSave: '保存',
@@ -208,7 +212,15 @@ export const ja: Copy = {
   adminCompanyLunchOpen: 'ランチ開始',
   adminCompanyLunchClose: 'ランチ終了',
   adminAccountHeading: 'アカウント',
-  adminAccountLead: '管理画面にログインするユーザー名とパスワードです。',
+  adminAccountLead:
+    '管理画面のユーザー名、復旧用メール、パスワードです。',
+  adminAccountRecoveryEmail: '復旧用メール',
+  adminAccountRecoveryEmailHelp:
+    '「パスワードをお忘れですか？」のリンクはこのアドレスに送信されます。データベースに保存されます。',
+  adminAccountSaveEmail: 'メールを保存',
+  adminAccountEmailSaved: '復旧用メールを更新しました。',
+  adminAccountEmailError:
+    'メールを保存できませんでした。もう一度お試しください。',
   adminAccountChangePassword: 'パスワードを変更',
   adminAccountCurrentPassword: '現在のパスワード',
   adminAccountSavePassword: 'パスワードを保存',

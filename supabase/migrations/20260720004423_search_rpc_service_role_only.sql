@@ -1,0 +1,2 @@
+-- Applied on remote Supabase project before local migration files were synced.
+-- Migration: search_rpc_service_role_only

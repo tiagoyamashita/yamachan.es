@@ -50,6 +50,36 @@ function adminLead(t: Copy, tab: AdminTab): string {
   }
 }
 
+function loginHeading(t: Copy, loginView: LoginView): string {
+  switch (loginView) {
+    case 'sign-in':
+      return t.adminLoginHeading
+    case 'forgot':
+      return t.adminForgotHeading
+    case 'reset':
+      return t.adminResetHeading
+    default: {
+      const _exhaustive: never = loginView
+      return _exhaustive
+    }
+  }
+}
+
+function loginLead(t: Copy, loginView: LoginView): string {
+  switch (loginView) {
+    case 'sign-in':
+      return t.adminLoginLead
+    case 'forgot':
+      return t.adminForgotLead
+    case 'reset':
+      return t.adminResetLead
+    default: {
+      const _exhaustive: never = loginView
+      return _exhaustive
+    }
+  }
+}
+
 function resetTokenFromLocation(): string {
   const token = new URLSearchParams(window.location.search).get('reset')
   return token?.trim() || ''
@@ -508,25 +538,33 @@ function CompanyInfoEditor({
 
 function AccountInfoEditor({
   accountUsername,
+  resetEmail,
   currentPassword,
   newPassword,
   confirmPassword,
+  onResetEmailChange,
   onCurrentPasswordChange,
   onNewPasswordChange,
   onConfirmPasswordChange,
-  onSave,
-  busy,
+  onSaveEmail,
+  onSavePassword,
+  emailBusy,
+  passwordBusy,
   t,
 }: {
   accountUsername: string
+  resetEmail: string
   currentPassword: string
   newPassword: string
   confirmPassword: string
+  onResetEmailChange: (value: string) => void
   onCurrentPasswordChange: (value: string) => void
   onNewPasswordChange: (value: string) => void
   onConfirmPasswordChange: (value: string) => void
-  onSave: () => void
-  busy: boolean
+  onSaveEmail: () => void
+  onSavePassword: () => void
+  emailBusy: boolean
+  passwordBusy: boolean
   t: Copy
 }) {
   return (
@@ -537,6 +575,29 @@ function AccountInfoEditor({
       </label>
 
       <fieldset className="admin-company-block">
+        <legend>{t.adminAccountRecoveryEmail}</legend>
+        <p className="muted">{t.adminAccountRecoveryEmailHelp}</p>
+        <label className="takeout-field">
+          <span>{t.adminAccountRecoveryEmail}</span>
+          <input
+            type="email"
+            autoComplete="email"
+            value={resetEmail}
+            disabled={emailBusy}
+            onChange={(event) => onResetEmailChange(event.target.value)}
+          />
+        </label>
+        <button
+          className="btn"
+          type="button"
+          disabled={emailBusy || !resetEmail.trim()}
+          onClick={onSaveEmail}
+        >
+          {t.adminAccountSaveEmail}
+        </button>
+      </fieldset>
+
+      <fieldset className="admin-company-block">
         <legend>{t.adminAccountChangePassword}</legend>
         <label className="takeout-field">
           <span>{t.adminAccountCurrentPassword}</span>
@@ -544,7 +605,7 @@ function AccountInfoEditor({
             type="password"
             autoComplete="current-password"
             value={currentPassword}
-            disabled={busy}
+            disabled={passwordBusy}
             onChange={(event) => onCurrentPasswordChange(event.target.value)}
           />
         </label>
@@ -554,7 +615,7 @@ function AccountInfoEditor({
             type="password"
             autoComplete="new-password"
             value={newPassword}
-            disabled={busy}
+            disabled={passwordBusy}
             onChange={(event) => onNewPasswordChange(event.target.value)}
           />
         </label>
@@ -564,13 +625,18 @@ function AccountInfoEditor({
             type="password"
             autoComplete="new-password"
             value={confirmPassword}
-            disabled={busy}
+            disabled={passwordBusy}
             onChange={(event) => onConfirmPasswordChange(event.target.value)}
           />
         </label>
       </fieldset>
 
-      <button className="btn" type="button" disabled={busy} onClick={onSave}>
+      <button
+        className="btn"
+        type="button"
+        disabled={passwordBusy}
+        onClick={onSavePassword}
+      >
         {t.adminAccountSavePassword}
       </button>
     </section>
@@ -612,31 +678,64 @@ export function AdminPage({
   )
   const [companyBusy, setCompanyBusy] = useState(false)
   const [accountUsername, setAccountUsername] = useState('')
+  const [accountResetEmail, setAccountResetEmail] = useState('')
   const [accountCurrentPassword, setAccountCurrentPassword] = useState('')
   const [accountNewPassword, setAccountNewPassword] = useState('')
   const [accountConfirmPassword, setAccountConfirmPassword] = useState('')
-  const [accountBusy, setAccountBusy] = useState(false)
+  const [accountEmailBusy, setAccountEmailBusy] = useState(false)
+  const [accountPasswordBusy, setAccountPasswordBusy] = useState(false)
+
+  type AdminAccountResponse = {
+    username: string
+    resetEmail: string
+  }
+
+  const loadAdminData = async (): Promise<boolean> => {
+    const [menuResult, companyResult, accountResult] = await Promise.allSettled([
+      api<{ items: StoredMenuItem[] }>('/api/admin/menu'),
+      api<{ info: StoredCompanyInfo }>('/api/admin/company'),
+      api<AdminAccountResponse>('/api/admin/account'),
+    ])
+
+    if (menuResult.status === 'fulfilled') {
+      setItems(menuResult.value.items)
+    }
+    if (companyResult.status === 'fulfilled') {
+      setCompanyInfo(companyResult.value.info)
+    } else {
+      setCompanyInfo(fallbackCompanyInfo())
+    }
+    if (accountResult.status === 'fulfilled') {
+      setAccountUsername(accountResult.value.username)
+      setAccountResetEmail(accountResult.value.resetEmail)
+    }
+
+    return (
+      menuResult.status === 'fulfilled' &&
+      companyResult.status === 'fulfilled' &&
+      accountResult.status === 'fulfilled'
+    )
+  }
 
   useEffect(() => {
     let cancelled = false
     async function boot() {
       try {
         await api('/api/admin/session')
-        const [menuData, companyData, accountData] = await Promise.all([
-          api<{ items: StoredMenuItem[] }>('/api/admin/menu'),
-          api<{ info: StoredCompanyInfo }>('/api/admin/company'),
-          api<{ username: string }>('/api/admin/account'),
-        ])
-        if (!cancelled) {
-          setItems(menuData.items)
-          setCompanyInfo(companyData.info)
-          setAccountUsername(accountData.username)
-          setStatus('ready')
-        }
       } catch {
         if (!cancelled) {
           setStatus('login')
         }
+        return
+      }
+
+      if (!cancelled) {
+        setStatus('ready')
+      }
+
+      const loaded = await loadAdminData()
+      if (!cancelled && !loaded) {
+        setMessage(t.adminDataLoadError)
       }
     }
     void boot()
@@ -649,23 +748,22 @@ export function AdminPage({
     event.preventDefault()
     setLoginError(null)
     setLoginMessage(null)
+    setMessage(null)
     try {
       await api('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
-      const [menuData, companyData, accountData] = await Promise.all([
-        api<{ items: StoredMenuItem[] }>('/api/admin/menu'),
-        api<{ info: StoredCompanyInfo }>('/api/admin/company'),
-        api<{ username: string }>('/api/admin/account'),
-      ])
-      setItems(menuData.items)
-      setCompanyInfo(companyData.info)
-      setAccountUsername(accountData.username)
-      setStatus('ready')
     } catch {
       setLoginError(t.adminLoginError)
+      return
+    }
+
+    setStatus('ready')
+    const loaded = await loadAdminData()
+    if (!loaded) {
+      setMessage(t.adminDataLoadError)
     }
   }
 
@@ -726,8 +824,26 @@ export function AdminPage({
     setStatus('login')
   }
 
+  const saveAccountEmail = async () => {
+    setAccountEmailBusy(true)
+    setMessage(null)
+    try {
+      const data = await api<{ resetEmail: string }>('/api/admin/account/email', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: accountResetEmail }),
+      })
+      setAccountResetEmail(data.resetEmail)
+      setMessage(t.adminAccountEmailSaved)
+    } catch {
+      setMessage(t.adminAccountEmailError)
+    } finally {
+      setAccountEmailBusy(false)
+    }
+  }
+
   const saveAccountPassword = async () => {
-    setAccountBusy(true)
+    setAccountPasswordBusy(true)
     setMessage(null)
     try {
       await api('/api/admin/account/password', {
@@ -750,7 +866,7 @@ export function AdminPage({
         setMessage(t.adminAccountPasswordError)
       }
     } finally {
-      setAccountBusy(false)
+      setAccountPasswordBusy(false)
     }
   }
 
@@ -883,23 +999,16 @@ export function AdminPage({
           <div className="section-inner">
             <header className="section-head">
               <p className="kicker">{t.adminTitle}</p>
-              {status === 'ready' || loginView !== 'sign-in' ? (
-                <h1>
-                  {status === 'ready'
-                    ? adminHeading(t, tab)
-                    : loginView === 'forgot'
-                      ? t.adminForgotHeading
-                      : t.adminResetHeading}
-                </h1>
-              ) : null}
-              {status === 'ready' || loginView !== 'sign-in' ? (
-                <p className="lead muted">
-                  {status === 'ready'
-                    ? adminLead(t, tab)
-                    : loginView === 'forgot'
-                      ? t.adminForgotLead
-                      : t.adminResetLead}
-                </p>
+              {status === 'ready' ? (
+                <>
+                  <h1>{adminHeading(t, tab)}</h1>
+                  <p className="lead muted">{adminLead(t, tab)}</p>
+                </>
+              ) : status === 'login' ? (
+                <>
+                  <h1>{loginHeading(t, loginView)}</h1>
+                  <p className="lead muted">{loginLead(t, loginView)}</p>
+                </>
               ) : null}
             </header>
 
@@ -1108,14 +1217,18 @@ export function AdminPage({
                 {tab === 'account' ? (
                   <AccountInfoEditor
                     accountUsername={accountUsername}
+                    resetEmail={accountResetEmail}
                     currentPassword={accountCurrentPassword}
                     newPassword={accountNewPassword}
                     confirmPassword={accountConfirmPassword}
+                    onResetEmailChange={setAccountResetEmail}
                     onCurrentPasswordChange={setAccountCurrentPassword}
                     onNewPasswordChange={setAccountNewPassword}
                     onConfirmPasswordChange={setAccountConfirmPassword}
-                    onSave={() => void saveAccountPassword()}
-                    busy={accountBusy}
+                    onSaveEmail={() => void saveAccountEmail()}
+                    onSavePassword={() => void saveAccountPassword()}
+                    emailBusy={accountEmailBusy}
+                    passwordBusy={accountPasswordBusy}
                     t={t}
                   />
                 ) : null}

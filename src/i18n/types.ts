@@ -131,7 +131,10 @@ export type Copy = {
   adminUser: string
   adminPassword: string
   adminSignIn: string
+  adminLoginHeading: string
+  adminLoginLead: string
   adminLoginError: string
+  adminDataLoadError: string
   adminLogout: string
   adminLoading: string
   adminSave: string
@@ -174,6 +177,11 @@ export type Copy = {
   adminCompanyLunchClose: string
   adminAccountHeading: string
   adminAccountLead: string
+  adminAccountRecoveryEmail: string
+  adminAccountRecoveryEmailHelp: string
+  adminAccountSaveEmail: string
+  adminAccountEmailSaved: string
+  adminAccountEmailError: string
   adminAccountChangePassword: string
   adminAccountCurrentPassword: string
   adminAccountSavePassword: string

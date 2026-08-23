@@ -1,0 +1,2 @@
+-- Canonical remote migration (replaces local 20260822140000_company_info).
+-- Applied on linked Supabase project.
