@@ -1,0 +1,2 @@
+-- Canonical remote migration (replaces local 20260822150000_admin_password_reset).
+-- Applied on linked Supabase project.

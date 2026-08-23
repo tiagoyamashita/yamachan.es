@@ -1,0 +1,2 @@
+-- Applied on remote Supabase project before local migration files were synced.
+-- Migration: fix_admin_password_pgcrypto

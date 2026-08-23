@@ -68,6 +68,16 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    server: {
+      host: 'localhost',
+      port: 5173,
+      strictPort: true,
+      hmr: {
+        host: 'localhost',
+        port: 5173,
+        clientPort: 5173,
+      },
+    },
     plugins: [
       react(),
       {
@@ -139,10 +149,13 @@ export default defineConfig(({ mode }) => {
               void nodeToWebRequest(req)
                 .then((request) => handle(request))
                 .then((response) => sendWebResponse(res, response))
-                .catch(() => {
+                .catch((error: unknown) => {
+                  const message =
+                    error instanceof Error ? error.message : 'error'
+                  console.error(`[api] ${path} failed:`, error)
                   res.statusCode = 500
                   res.setHeader('Content-Type', 'application/json')
-                  res.end(JSON.stringify({ error: 'error' }))
+                  res.end(JSON.stringify({ error: message }))
                 })
             },
           )

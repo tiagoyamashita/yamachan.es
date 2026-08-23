@@ -168,7 +168,11 @@ export const es: Copy = {
   adminUser: 'Usuario',
   adminPassword: 'Contraseña',
   adminSignIn: 'Entrar',
+  adminLoginHeading: 'Entrar',
+  adminLoginLead: 'Introduce tu usuario y contraseña de admin.',
   adminLoginError: 'Usuario o contraseña incorrectos.',
+  adminDataLoadError:
+    'Has entrado, pero no se han podido cargar algunos datos. Revisa la configuración de Supabase (ADMIN_WRITE_SECRET).',
   adminLogout: 'Salir',
   adminLoading: 'Cargando…',
   adminSave: 'Guardar',
@@ -211,7 +215,15 @@ export const es: Copy = {
   adminCompanyLunchOpen: 'Apertura comida',
   adminCompanyLunchClose: 'Cierre comida',
   adminAccountHeading: 'Cuenta',
-  adminAccountLead: 'Tu usuario y contraseña de admin para entrar.',
+  adminAccountLead:
+    'Tu usuario, correo de recuperación y contraseña de admin.',
+  adminAccountRecoveryEmail: 'Correo de recuperación',
+  adminAccountRecoveryEmailHelp:
+    'Aquí se envían los enlaces de «¿Olvidaste la contraseña?». Se guarda en la base de datos.',
+  adminAccountSaveEmail: 'Guardar correo',
+  adminAccountEmailSaved: 'Correo de recuperación actualizado.',
+  adminAccountEmailError:
+    'No se ha podido guardar el correo. Prueba otra vez.',
   adminAccountChangePassword: 'Cambiar contraseña',
   adminAccountCurrentPassword: 'Contraseña actual',
   adminAccountSavePassword: 'Guardar contraseña',

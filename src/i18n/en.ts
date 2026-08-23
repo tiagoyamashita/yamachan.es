@@ -167,7 +167,11 @@ export const en: Copy = {
   adminUser: 'Username',
   adminPassword: 'Password',
   adminSignIn: 'Sign in',
+  adminLoginHeading: 'Sign in',
+  adminLoginLead: 'Enter your admin username and password.',
   adminLoginError: 'Wrong username or password.',
+  adminDataLoadError:
+    'You are signed in, but some admin data could not load. Check Supabase setup (ADMIN_WRITE_SECRET).',
   adminLogout: 'Sign out',
   adminLoading: 'Loading…',
   adminSave: 'Save',
@@ -210,7 +214,14 @@ export const en: Copy = {
   adminCompanyLunchOpen: 'Lunch opening',
   adminCompanyLunchClose: 'Lunch closing',
   adminAccountHeading: 'Account',
-  adminAccountLead: 'Your admin username and password for signing in.',
+  adminAccountLead:
+    'Your admin username, recovery email, and password for signing in.',
+  adminAccountRecoveryEmail: 'Recovery email',
+  adminAccountRecoveryEmailHelp:
+    'Password reset links are sent here. Saved in the database.',
+  adminAccountSaveEmail: 'Save email',
+  adminAccountEmailSaved: 'Recovery email updated.',
+  adminAccountEmailError: 'Could not save the recovery email. Try again.',
   adminAccountChangePassword: 'Change password',
   adminAccountCurrentPassword: 'Current password',
   adminAccountSavePassword: 'Save password',

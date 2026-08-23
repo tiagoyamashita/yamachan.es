@@ -1,14 +1,6 @@
 import { restaurant } from '../src/content.ts'
-import { storedAdminEmail } from './adminSettings.ts'
+import { expectedAdminEmail } from './adminSettings.ts'
 import { getResendClient } from './resendClient.ts'
-
-async function adminEmail(): Promise<string> {
-  const fromEnv = process.env.ADMIN_EMAIL?.trim()
-  if (fromEnv) {
-    return fromEnv
-  }
-  return await storedAdminEmail()
-}
 
 function resendFrom(): string {
   return (
@@ -18,7 +10,7 @@ function resendFrom(): string {
 }
 
 export async function passwordResetEmailConfigured(): Promise<boolean> {
-  return Boolean(await adminEmail() && getResendClient())
+  return Boolean(await expectedAdminEmail() && getResendClient())
 }
 
 function passwordResetSubject(): string {
@@ -82,7 +74,7 @@ export async function sendPasswordResetEmail(
   resetUrl: string,
 ): Promise<void> {
   const resend = getResendClient()
-  const to = await adminEmail()
+  const to = await expectedAdminEmail()
   if (!resend || !to) {
     throw new Error('missing-mail-config')
   }
