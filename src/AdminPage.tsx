@@ -17,8 +17,25 @@ import { LanguagePicker } from './LanguagePicker.tsx'
 import { type Copy, type Locale } from './i18n/index.ts'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
-type AdminTab = 'menu' | 'account' | 'restaurant'
+type AdminTab = 'menu' | 'account' | 'restaurant' | 'availability'
 type LoginView = 'sign-in' | 'forgot' | 'reset'
+
+type BookingAvailabilitySettings = {
+  id: string
+  name: string
+  slug: string
+  timezone: string
+  opens_at: string
+  closes_at: string
+  default_turn_minutes: number
+  slot_interval_minutes: number
+}
+
+type BookingDayPreview = {
+  date: string
+  closed: boolean
+  slot_count: number
+}
 
 function adminHeading(t: Copy, tab: AdminTab): string {
   switch (tab) {
@@ -28,6 +45,8 @@ function adminHeading(t: Copy, tab: AdminTab): string {
       return t.adminAccountHeading
     case 'restaurant':
       return t.adminRestaurantHeading
+    case 'availability':
+      return t.adminAvailabilityHeading
     default: {
       const _exhaustive: never = tab
       return _exhaustive
@@ -43,6 +62,8 @@ function adminLead(t: Copy, tab: AdminTab): string {
       return t.adminAccountLead
     case 'restaurant':
       return t.adminRestaurantLead
+    case 'availability':
+      return t.adminAvailabilityLead
     default: {
       const _exhaustive: never = tab
       return _exhaustive
@@ -552,6 +573,202 @@ function CompanyInfoEditor({
   )
 }
 
+function monthBounds(year: number, month: number): { from: string; to: string } {
+  const from = `${year}-${String(month + 1).padStart(2, '0')}-01`
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const to = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  return { from, to }
+}
+
+function shiftMonth(year: number, month: number, delta: number) {
+  const next = new Date(year, month + delta, 1)
+  return { year: next.getFullYear(), month: next.getMonth() }
+}
+
+function AvailabilityEditor({
+  settings,
+  days,
+  year,
+  month,
+  busy,
+  loadError,
+  t,
+  onChange,
+  onSave,
+  onMonthChange,
+}: {
+  settings: BookingAvailabilitySettings | null
+  days: BookingDayPreview[]
+  year: number
+  month: number
+  busy: boolean
+  loadError: string | null
+  t: Copy
+  onChange: (next: BookingAvailabilitySettings) => void
+  onSave: () => void
+  onMonthChange: (year: number, month: number) => void
+}) {
+  const dayMap = new Map(days.map((day) => [day.date, day]))
+  const firstWeekday = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const cells: Array<number | null> = [
+    ...Array.from({ length: firstWeekday }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+  ]
+  const monthLabel = new Intl.DateTimeFormat(undefined, {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(year, month, 1))
+
+  if (loadError === 'not-configured') {
+    return (
+      <section className="admin-company takeout-form">
+        <p className="takeout-error">{t.adminAvailabilityNotConfigured}</p>
+      </section>
+    )
+  }
+
+  if (!settings) {
+    return (
+      <section className="admin-company takeout-form">
+        <p className="muted">{t.adminLoading}</p>
+      </section>
+    )
+  }
+
+  const patch = (partial: Partial<BookingAvailabilitySettings>) => {
+    onChange({ ...settings, ...partial })
+  }
+
+  return (
+    <section className="admin-company takeout-form">
+      {loadError ? <p className="takeout-error">{loadError}</p> : null}
+
+      <fieldset className="admin-company-block">
+        <legend>{t.adminAvailabilityHeading}</legend>
+        <p className="muted">{settings.name} · {settings.slug}</p>
+        <div className="admin-company-grid">
+          <label className="takeout-field">
+            <span>{t.adminAvailabilityOpensAt}</span>
+            <input
+              type="time"
+              value={settings.opens_at}
+              onChange={(event) => patch({ opens_at: event.target.value })}
+            />
+          </label>
+          <label className="takeout-field">
+            <span>{t.adminAvailabilityClosesAt}</span>
+            <input
+              type="time"
+              value={settings.closes_at}
+              onChange={(event) => patch({ closes_at: event.target.value })}
+            />
+          </label>
+          <label className="takeout-field">
+            <span>{t.adminAvailabilitySlotInterval}</span>
+            <input
+              type="number"
+              min={1}
+              value={settings.slot_interval_minutes}
+              onChange={(event) =>
+                patch({ slot_interval_minutes: Number(event.target.value) || 1 })
+              }
+            />
+          </label>
+          <label className="takeout-field">
+            <span>{t.adminAvailabilityTurnMinutes}</span>
+            <input
+              type="number"
+              min={1}
+              value={settings.default_turn_minutes}
+              onChange={(event) =>
+                patch({ default_turn_minutes: Number(event.target.value) || 1 })
+              }
+            />
+          </label>
+          <label className="takeout-field">
+            <span>{t.adminAvailabilityTimezone}</span>
+            <input
+              value={settings.timezone}
+              onChange={(event) => patch({ timezone: event.target.value })}
+            />
+          </label>
+        </div>
+      </fieldset>
+
+      <div className="admin-dish-actions">
+        <button className="btn" type="button" disabled={busy} onClick={onSave}>
+          {t.adminAvailabilitySave}
+        </button>
+      </div>
+
+      <fieldset className="admin-company-block">
+        <legend>{t.adminAvailabilityPreview}</legend>
+        <div className="admin-availability-cal-head">
+          <button
+            type="button"
+            className="btn btn-outline btn-small"
+            aria-label={t.adminAvailabilityPrevMonth}
+            onClick={() => {
+              const next = shiftMonth(year, month, -1)
+              onMonthChange(next.year, next.month)
+            }}
+          >
+            ‹
+          </button>
+          <p>{monthLabel}</p>
+          <button
+            type="button"
+            className="btn btn-outline btn-small"
+            aria-label={t.adminAvailabilityNextMonth}
+            onClick={() => {
+              const next = shiftMonth(year, month, 1)
+              onMonthChange(next.year, next.month)
+            }}
+          >
+            ›
+          </button>
+        </div>
+        <div className="admin-availability-grid" role="grid">
+          {WEEKDAY_LABELS_ES.map((label) => (
+            <div className="admin-availability-dow" key={label}>
+              {label.slice(0, 2)}
+            </div>
+          ))}
+          {cells.map((day, index) => {
+            if (day === null) {
+              return (
+                <div
+                  className="admin-availability-cell is-empty"
+                  key={`e-${index}`}
+                />
+              )
+            }
+            const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+            const row = dayMap.get(key)
+            const closed = row?.closed ?? true
+            const slots = row?.slot_count ?? 0
+            return (
+              <div
+                className={`admin-availability-cell${closed ? ' is-closed' : ' is-open'}`}
+                key={key}
+                title={
+                  closed
+                    ? t.adminAvailabilityClosed
+                    : `${t.adminAvailabilityOpen} · ${slots}`
+                }
+              >
+                <span>{day}</span>
+                <small>{closed ? t.adminAvailabilityClosed : slots}</small>
+              </div>
+            )
+          })}
+        </div>
+      </fieldset>
+    </section>
+  )
+}
+
 function AccountInfoEditor({
   accountUsername,
   resetEmail,
@@ -700,10 +917,43 @@ export function AdminPage({
   const [accountConfirmPassword, setAccountConfirmPassword] = useState('')
   const [accountEmailBusy, setAccountEmailBusy] = useState(false)
   const [accountPasswordBusy, setAccountPasswordBusy] = useState(false)
+  const [availabilitySettings, setAvailabilitySettings] =
+    useState<BookingAvailabilitySettings | null>(null)
+  const [availabilityDays, setAvailabilityDays] = useState<BookingDayPreview[]>(
+    [],
+  )
+  const [availabilityBusy, setAvailabilityBusy] = useState(false)
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null)
+  const now = new Date()
+  const [availabilityYear, setAvailabilityYear] = useState(now.getFullYear())
+  const [availabilityMonth, setAvailabilityMonth] = useState(now.getMonth())
 
   type AdminAccountResponse = {
     username: string
     resetEmail: string
+  }
+
+  const loadAvailability = async (year: number, month: number) => {
+    const { from, to } = monthBounds(year, month)
+    try {
+      const data = await api<{
+        settings: BookingAvailabilitySettings
+        days?: BookingDayPreview[]
+        error?: string
+      }>(`/api/admin/availability?from=${from}&to=${to}`)
+      setAvailabilitySettings(data.settings)
+      setAvailabilityDays(data.days ?? [])
+      setAvailabilityError(null)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'error'
+      if (message === 'not-configured') {
+        setAvailabilityError('not-configured')
+      } else {
+        setAvailabilityError(t.adminAvailabilityError)
+      }
+      setAvailabilitySettings(null)
+      setAvailabilityDays([])
+    }
   }
 
   const loadAdminData = async (): Promise<boolean> => {
@@ -919,6 +1169,37 @@ export function AdminPage({
     }
   }
 
+  const saveAvailability = async () => {
+    if (!availabilitySettings) {
+      return
+    }
+    setAvailabilityBusy(true)
+    setMessage(null)
+    try {
+      const data = await api<{ settings: BookingAvailabilitySettings }>(
+        '/api/admin/availability',
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            opensAt: availabilitySettings.opens_at,
+            closesAt: availabilitySettings.closes_at,
+            slotIntervalMinutes: availabilitySettings.slot_interval_minutes,
+            defaultTurnMinutes: availabilitySettings.default_turn_minutes,
+            timezone: availabilitySettings.timezone,
+          }),
+        },
+      )
+      setAvailabilitySettings(data.settings)
+      setMessage(t.adminAvailabilitySaved)
+      await loadAvailability(availabilityYear, availabilityMonth)
+    } catch {
+      setMessage(t.adminAvailabilityError)
+    } finally {
+      setAvailabilityBusy(false)
+    }
+  }
+
   const current = (item: StoredMenuItem) => drafts[item.id || 'new'] ?? item
 
   const saveItem = async (item: StoredMenuItem) => {
@@ -1068,6 +1349,18 @@ export function AdminPage({
                   onClick={() => setTab('restaurant')}
                 >
                   {t.adminTabRestaurant}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  className={`admin-tab${tab === 'availability' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'availability'}
+                  onClick={() => {
+                    setTab('availability')
+                    void loadAvailability(availabilityYear, availabilityMonth)
+                  }}
+                >
+                  {t.adminTabAvailability}
                 </button>
               </div>
             ) : null}
@@ -1243,6 +1536,24 @@ export function AdminPage({
                     busy={companyBusy}
                     onChange={setCompanyDraft}
                     onSave={() => void saveCompanyInfo()}
+                  />
+                ) : null}
+                {tab === 'availability' ? (
+                  <AvailabilityEditor
+                    settings={availabilitySettings}
+                    days={availabilityDays}
+                    year={availabilityYear}
+                    month={availabilityMonth}
+                    busy={availabilityBusy}
+                    loadError={availabilityError}
+                    t={t}
+                    onChange={setAvailabilitySettings}
+                    onSave={() => void saveAvailability()}
+                    onMonthChange={(year, month) => {
+                      setAvailabilityYear(year)
+                      setAvailabilityMonth(month)
+                      void loadAvailability(year, month)
+                    }}
                   />
                 ) : null}
                 {tab === 'account' ? (

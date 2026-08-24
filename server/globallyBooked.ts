@@ -62,8 +62,19 @@ function restaurantPath(suffix: string): string {
   return `/api/user/restaurants/${encodeURIComponent(restaurantSlug())}${suffix}`
 }
 
+export type RestaurantSettings = {
+  id: string
+  name: string
+  slug: string
+  timezone: string
+  opens_at: string
+  closes_at: string
+  default_turn_minutes: number
+  slot_interval_minutes: number
+}
+
 async function gbFetch<T>(
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
   path: string,
   body?: Record<string, unknown>,
 ): Promise<T> {
@@ -84,6 +95,96 @@ async function gbFetch<T>(
     throw new GloballyBookedError('empty-response', 502)
   }
   return json.data
+}
+
+function normalizeTime(value: string): string | null {
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(value.trim())
+  if (!match) {
+    return null
+  }
+  const hour = Number(match[1])
+  const minute = Number(match[2])
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return null
+  }
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+}
+
+export async function loadRestaurantSettings(): Promise<RestaurantSettings> {
+  const data = await gbFetch<RestaurantSettings>('GET', restaurantPath(''))
+  return {
+    id: data.id,
+    name: data.name,
+    slug: data.slug,
+    timezone: data.timezone,
+    opens_at: normalizeTime(data.opens_at) ?? data.opens_at,
+    closes_at: normalizeTime(data.closes_at) ?? data.closes_at,
+    default_turn_minutes: data.default_turn_minutes,
+    slot_interval_minutes: data.slot_interval_minutes,
+  }
+}
+
+export async function updateRestaurantSettings(input: {
+  opensAt?: string
+  closesAt?: string
+  slotIntervalMinutes?: number
+  defaultTurnMinutes?: number
+  timezone?: string
+}): Promise<RestaurantSettings> {
+  const body: Record<string, unknown> = {}
+  if (input.opensAt !== undefined) {
+    const opens = normalizeTime(input.opensAt)
+    if (!opens) {
+      throw new GloballyBookedError('invalid-opens-at', 400)
+    }
+    body.opens_at = opens
+  }
+  if (input.closesAt !== undefined) {
+    const closes = normalizeTime(input.closesAt)
+    if (!closes) {
+      throw new GloballyBookedError('invalid-closes-at', 400)
+    }
+    body.closes_at = closes
+  }
+  if (input.slotIntervalMinutes !== undefined) {
+    if (
+      !Number.isInteger(input.slotIntervalMinutes) ||
+      input.slotIntervalMinutes < 1
+    ) {
+      throw new GloballyBookedError('invalid-slot-interval', 400)
+    }
+    body.slot_interval_minutes = input.slotIntervalMinutes
+  }
+  if (input.defaultTurnMinutes !== undefined) {
+    if (
+      !Number.isInteger(input.defaultTurnMinutes) ||
+      input.defaultTurnMinutes < 1
+    ) {
+      throw new GloballyBookedError('invalid-turn-minutes', 400)
+    }
+    body.default_turn_minutes = input.defaultTurnMinutes
+  }
+  if (input.timezone !== undefined) {
+    const timezone = input.timezone.trim()
+    if (!timezone) {
+      throw new GloballyBookedError('invalid-timezone', 400)
+    }
+    body.timezone = timezone
+  }
+  if (Object.keys(body).length === 0) {
+    throw new GloballyBookedError('no-fields', 400)
+  }
+  const data = await gbFetch<RestaurantSettings>('PATCH', restaurantPath(''), body)
+  return {
+    id: data.id,
+    name: data.name,
+    slug: data.slug,
+    timezone: data.timezone,
+    opens_at: normalizeTime(data.opens_at) ?? data.opens_at,
+    closes_at: normalizeTime(data.closes_at) ?? data.closes_at,
+    default_turn_minutes: data.default_turn_minutes,
+    slot_interval_minutes: data.slot_interval_minutes,
+  }
 }
 
 export function isDateKey(value: string): boolean {

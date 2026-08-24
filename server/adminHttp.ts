@@ -41,6 +41,13 @@ import {
   type StoredCompanyInfo,
 } from '../src/companyInfo.ts'
 import { parseAllergens } from '../src/allergens.ts'
+import {
+  GloballyBookedError,
+  isDateKey,
+  loadMonthDays,
+  loadRestaurantSettings,
+  updateRestaurantSettings,
+} from './globallyBooked.ts'
 
 function json(
   data: unknown,
@@ -298,6 +305,62 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
         return json({ error: 'invalid-company-info' }, 400)
       }
       return json({ info: await upsertAdminCompanyInfo(info) })
+    }
+
+    if (path === '/api/admin/availability' && request.method === 'GET') {
+      try {
+        const settings = await loadRestaurantSettings()
+        const from = url.searchParams.get('from') ?? ''
+        const to = url.searchParams.get('to') ?? ''
+        if (from && to) {
+          if (!isDateKey(from) || !isDateKey(to)) {
+            return json({ error: 'invalid-range' }, 400)
+          }
+          const month = await loadMonthDays(from, to, 2)
+          return json({ settings, days: month.days, timezone: month.timezone })
+        }
+        return json({ settings })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    if (path === '/api/admin/availability' && request.method === 'PUT') {
+      const body: unknown = await request.json().catch(() => null)
+      if (!body || typeof body !== 'object') {
+        return json({ error: 'invalid-request' }, 400)
+      }
+      const row = body as {
+        opensAt?: unknown
+        closesAt?: unknown
+        slotIntervalMinutes?: unknown
+        defaultTurnMinutes?: unknown
+        timezone?: unknown
+      }
+      try {
+        const settings = await updateRestaurantSettings({
+          opensAt: typeof row.opensAt === 'string' ? row.opensAt : undefined,
+          closesAt: typeof row.closesAt === 'string' ? row.closesAt : undefined,
+          slotIntervalMinutes:
+            typeof row.slotIntervalMinutes === 'number'
+              ? row.slotIntervalMinutes
+              : undefined,
+          defaultTurnMinutes:
+            typeof row.defaultTurnMinutes === 'number'
+              ? row.defaultTurnMinutes
+              : undefined,
+          timezone: typeof row.timezone === 'string' ? row.timezone : undefined,
+        })
+        return json({ settings })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
     }
 
     if (path === '/api/admin/account' && request.method === 'GET') {

@@ -161,8 +161,25 @@ export type Copy = {
   adminTabMenu: string
   adminTabAccount: string
   adminTabRestaurant: string
+  adminTabAvailability: string
   adminRestaurantHeading: string
   adminRestaurantLead: string
+  adminAvailabilityHeading: string
+  adminAvailabilityLead: string
+  adminAvailabilityOpensAt: string
+  adminAvailabilityClosesAt: string
+  adminAvailabilitySlotInterval: string
+  adminAvailabilityTurnMinutes: string
+  adminAvailabilityTimezone: string
+  adminAvailabilitySave: string
+  adminAvailabilitySaved: string
+  adminAvailabilityError: string
+  adminAvailabilityNotConfigured: string
+  adminAvailabilityPreview: string
+  adminAvailabilityOpen: string
+  adminAvailabilityClosed: string
+  adminAvailabilityPrevMonth: string
+  adminAvailabilityNextMonth: string
   adminCompanyPhone: string
   adminCompanyPhoneDisplay: string
   adminCompanyAddress: string

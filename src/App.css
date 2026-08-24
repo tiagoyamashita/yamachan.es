@@ -1086,6 +1086,67 @@ h3 {
   grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
 }
 
+.admin-availability-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-availability-cal-head p {
+  margin: 0;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.admin-availability-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.admin-availability-dow {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted, #6b6358);
+  font-weight: 600;
+}
+
+.admin-availability-cell {
+  min-height: 3.25rem;
+  border: 1px solid color-mix(in srgb, var(--ink, #1c1917) 12%, transparent);
+  border-radius: 0.4rem;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.8rem;
+}
+
+.admin-availability-cell span {
+  font-weight: 600;
+}
+
+.admin-availability-cell small {
+  color: var(--muted, #6b6358);
+  line-height: 1.2;
+}
+
+.admin-availability-cell.is-empty {
+  border-color: transparent;
+  background: transparent;
+}
+
+.admin-availability-cell.is-open {
+  background: color-mix(in srgb, #2f6f4e 12%, white);
+}
+
+.admin-availability-cell.is-closed {
+  background: color-mix(in srgb, var(--ink, #1c1917) 4%, white);
+  opacity: 0.75;
+}
+
 .admin-login-alt {
   margin: 0.25rem 0 0;
 }
