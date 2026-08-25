@@ -12,7 +12,9 @@
     { "source": "/reservas", "destination": "/index.html" },
     { "source": "/admin", "destination": "/index.html" },
     { "source": "/admin/(.*)", "destination": "/index.html" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/api/admin/:match*", "destination": "/api/admin" },
+    { "source": "/api/reservations/:match*", "destination": "/api/reservations" },
+    { "source": "/api/takeout/:match*", "destination": "/api/takeout" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {

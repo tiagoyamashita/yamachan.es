@@ -1,4 +1,4 @@
-import { handleAdminRequest } from '../../server/adminHttp.ts'
+import { handleAdminRequest } from '../server/adminHttp.ts'
 
 export async function GET(request: Request) {
   return handleAdminRequest(request)
