@@ -25,10 +25,10 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/*.js": {
+    "api/**/*.js": {
       "includeFiles": "server/**/*"
     },
-    "api/*.ts": {
+    "api/**/*.ts": {
       "includeFiles": "server/**/*"
     }
   }
