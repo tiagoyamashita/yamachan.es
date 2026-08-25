@@ -19,7 +19,7 @@
   ],
   "functions": {
     "api/**/*.ts": {
-      "includeFiles": "server/**/*"
+      "includeFiles": "{server,src}/**/*"
     }
   }
 }
