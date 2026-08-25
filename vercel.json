@@ -15,9 +15,6 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/**/*.js": {
-      "includeFiles": "server/**/*"
-    },
     "api/**/*.ts": {
       "includeFiles": "server/**/*"
     }
