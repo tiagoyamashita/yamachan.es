@@ -39,8 +39,12 @@ function getInstgrm(): InstagramEmbeds | undefined {
   return view.instgrm
 }
 
-function previewUrl(post: InstagramPost): string {
-  if (post.mediaType === 'VIDEO') {
+function isVideoPost(post: InstagramPost): boolean {
+  return post.mediaType === 'VIDEO' || post.mediaType === 'REEL'
+}
+
+function thumbnailUrl(post: InstagramPost): string {
+  if (isVideoPost(post)) {
     return post.thumbnailUrl ?? post.mediaUrl ?? ''
   }
   return post.mediaUrl ?? post.thumbnailUrl ?? ''
@@ -48,7 +52,35 @@ function previewUrl(post: InstagramPost): string {
 
 function embedUrl(permalink: string): string {
   const withSlash = permalink.endsWith('/') ? permalink : `${permalink}/`
-  return `${withSlash}embed/`
+  return `${withSlash}embed/captioned/`
+}
+
+function PlayGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="ig-play-glyph">
+      <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.45)" />
+      <path d="M9.5 7.5v9l7-4.5z" fill="#fff" />
+    </svg>
+  )
+}
+
+function InstagramGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="ig-fallback-glyph">
+      <rect
+        x="3.5"
+        y="3.5"
+        width="17"
+        height="17"
+        rx="5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="17.2" cy="6.8" r="1" fill="currentColor" />
+    </svg>
+  )
 }
 
 function useInstagramEmbed(enabled: boolean) {
@@ -77,8 +109,68 @@ function useInstagramEmbed(enabled: boolean) {
   }, [enabled])
 }
 
+function PostModal({
+  post,
+  onClose,
+}: {
+  post: InstagramPost
+  onClose: () => void
+}) {
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    const { overflow } = document.body.style
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = overflow
+    }
+  }, [onClose])
+
+  return (
+    <div
+      className="ig-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div className="ig-modal" onClick={(event) => event.stopPropagation()}>
+        <button
+          type="button"
+          className="ig-modal-close"
+          onClick={onClose}
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+        <iframe
+          key={post.id}
+          title={post.caption?.trim() || 'Instagram post'}
+          src={embedUrl(post.permalink)}
+          loading="lazy"
+          allow="encrypted-media; clipboard-write; autoplay"
+          allowFullScreen
+        />
+        <a
+          className="ig-modal-fallback-link"
+          href={post.permalink}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Ver en Instagram ↗
+        </a>
+      </div>
+    </div>
+  )
+}
+
 export function InstagramFeed({ title }: { title: string }) {
   const [posts, setPosts] = useState<InstagramPost[] | null>(null)
+  const [activePost, setActivePost] = useState<InstagramPost | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -129,27 +221,38 @@ export function InstagramFeed({ title }: { title: string }) {
   }
 
   return (
-    <ul className="ig-grid">
-      {posts.map((post) => {
-        const image = previewUrl(post)
-        const caption = post.caption?.trim() || title
-        return (
-          <li key={post.id} className="ig-post">
-            <a href={post.permalink} rel="noreferrer">
-              {image ? (
-                <img src={image} alt={caption} loading="lazy" />
-              ) : (
-                <iframe
-                  title={caption}
-                  src={embedUrl(post.permalink)}
-                  loading="lazy"
-                  allow="encrypted-media; clipboard-write"
-                />
-              )}
-            </a>
-          </li>
-        )
-      })}
-    </ul>
+    <>
+      <ul className="ig-grid">
+        {posts.map((post) => {
+          const image = thumbnailUrl(post)
+          const caption = post.caption?.trim() || title
+          const video = isVideoPost(post)
+          return (
+            <li key={post.id} className="ig-post">
+              <button
+                type="button"
+                className="ig-post-trigger"
+                onClick={() => setActivePost(post)}
+                aria-label={caption}
+              >
+                {image ? (
+                  <>
+                    <img src={image} alt={caption} loading="lazy" />
+                    {video ? <PlayGlyph /> : null}
+                  </>
+                ) : (
+                  <span className="ig-post-fallback">
+                    <InstagramGlyph />
+                  </span>
+                )}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      {activePost ? (
+        <PostModal post={activePost} onClose={() => setActivePost(null)} />
+      ) : null}
+    </>
   )
 }
