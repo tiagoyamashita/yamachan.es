@@ -1,16 +1,14 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-
-function writeSecret(): string {
-  return process.env.ADMIN_WRITE_SECRET || ''
-}
+import {
+  adminSupabaseKey,
+  adminSupabaseUrl,
+  adminWriteSecret,
+  envTrim,
+} from './adminEnv.ts'
 
 function getSupabase(): SupabaseClient | null {
-  const url =
-    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
-  const key =
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    ''
+  const url = adminSupabaseUrl()
+  const key = adminSupabaseKey()
   if (!url || !key) {
     return null
   }
@@ -50,11 +48,11 @@ export async function expectedAdminEmail(): Promise<string> {
   if (stored) {
     return stored
   }
-  return process.env.ADMIN_EMAIL?.trim() || ''
+  return envTrim('ADMIN_EMAIL')
 }
 
 export async function setStoredAdminEmail(email: string): Promise<void> {
-  const secret = writeSecret()
+  const secret = adminWriteSecret()
   const supabase = getSupabase()
   if (!secret || !supabase) {
     throw new Error('missing-admin-config')

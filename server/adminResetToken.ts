@@ -1,14 +1,10 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { adminSessionSecret } from './adminEnv.ts'
 
 const RESET_MAX_AGE_MS = 60 * 60 * 1000
 
 function resetSecret(): string {
-  return (
-    process.env.ADMIN_SESSION_SECRET ||
-    process.env.ADMIN_WRITE_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    ''
-  )
+  return adminSessionSecret()
 }
 
 function bytesEqual(a: string, b: string): boolean {
