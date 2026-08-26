@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
-
-type InstagramComment = {
-  id: string
-  username: string
-  text: string
-}
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from 'react'
 
 type InstagramPost = {
   id: string
@@ -15,12 +15,13 @@ type InstagramPost = {
   videoUrl?: string
   mediaType: string
   caption?: string
-  comments: InstagramComment[]
 }
 
 type FeedResponse = {
   posts: InstagramPost[]
 }
+
+const SWIPE_THRESHOLD_PX = 40
 
 function isVideoPost(post: InstagramPost): boolean {
   return (
@@ -33,10 +34,6 @@ function isVideoPost(post: InstagramPost): boolean {
 
 function posterUrl(post: InstagramPost): string {
   return post.thumbnailUrl ?? post.mediaUrl ?? ''
-}
-
-function topComments(post: InstagramPost): InstagramComment[] {
-  return post.comments.slice(0, 3)
 }
 
 function InstagramGlyph() {
@@ -61,20 +58,43 @@ function InstagramGlyph() {
 function PostCard({
   post,
   title,
+  showNav,
+  onPrev,
+  onNext,
+  follow,
+  onMediaPointerDown,
+  onMediaPointerMove,
+  onMediaPointerUp,
+  onMediaPointerCancel,
 }: {
   post: InstagramPost
   title: string
+  showNav: boolean
+  onPrev: () => void
+  onNext: () => void
+  follow: ReactNode
+  onMediaPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void
+  onMediaPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => void
+  onMediaPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void
+  onMediaPointerCancel: (event: ReactPointerEvent<HTMLDivElement>) => void
 }) {
   const video = post.videoUrl
   const poster = posterUrl(post)
-  const image = isVideoPost(post) ? poster : post.mediaUrl ?? post.thumbnailUrl ?? ''
-  const comments = topComments(post)
+  const image = isVideoPost(post)
+    ? poster
+    : (post.mediaUrl ?? post.thumbnailUrl ?? '')
   const label = `${title} #${String(post.number)}`
 
   return (
     <article className="ig-card">
       <p className="ig-post-number">#{post.number}</p>
-      <div className="ig-card-media">
+      <div
+        className="ig-card-media"
+        onPointerDown={onMediaPointerDown}
+        onPointerMove={onMediaPointerMove}
+        onPointerUp={onMediaPointerUp}
+        onPointerCancel={onMediaPointerCancel}
+      >
         {video ? (
           <video
             key={video}
@@ -92,8 +112,15 @@ function PostCard({
             target="_blank"
             rel="noreferrer"
             aria-label={label}
+            draggable={false}
           >
-            <img src={image} alt="" loading="lazy" referrerPolicy="no-referrer" />
+            <img
+              src={image}
+              alt=""
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              draggable={false}
+            />
           </a>
         ) : (
           <a
@@ -101,36 +128,60 @@ function PostCard({
             target="_blank"
             rel="noreferrer"
             aria-label={label}
+            draggable={false}
           >
             <span className="ig-post-fallback">
               <InstagramGlyph />
             </span>
           </a>
         )}
+
+        {showNav ? (
+          <>
+            <button
+              type="button"
+              className="ig-carousel-nav is-prev"
+              onClick={onPrev}
+              aria-label="Previous post"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="ig-carousel-nav is-next"
+              onClick={onNext}
+              aria-label="Next post"
+            >
+              ›
+            </button>
+          </>
+        ) : null}
       </div>
-      {comments.length > 0 ? (
-        <ul className="ig-card-comments">
-          {comments.map((comment) => (
-            <li key={comment.id}>
-              <strong>{comment.username}</strong>
-              <span>{comment.text}</span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="ig-card-comments-empty">
-          <a href={post.permalink} target="_blank" rel="noreferrer">
-            View on Instagram
-          </a>
-        </p>
-      )}
+      <div className="ig-card-follow">{follow}</div>
     </article>
   )
 }
 
-export function InstagramFeed({ title }: { title: string }) {
+export function InstagramFeed({
+  title,
+  followHref,
+  followLabel,
+  followHandle,
+  followIcon,
+}: {
+  title: string
+  followHref: string
+  followLabel: string
+  followHandle: string
+  followIcon: ReactNode
+}) {
   const [posts, setPosts] = useState<InstagramPost[] | null>(null)
   const [index, setIndex] = useState(0)
+  const dragRef = useRef<{
+    pointerId: number
+    startX: number
+    startY: number
+  } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -166,18 +217,87 @@ export function InstagramFeed({ title }: { title: string }) {
     setIndex((current) => (current + 1) % count)
   }
 
+  const onMediaPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!posts || posts.length < 2) {
+      return
+    }
+    const target = event.target as HTMLElement | null
+    if (target?.closest('button, video')) {
+      return
+    }
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const onMediaPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) {
+      return
+    }
+  }
+
+  const finishDrag = (
+    event: ReactPointerEvent<HTMLDivElement>,
+    clientX: number,
+    clientY: number,
+  ) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) {
+      return
+    }
+    dragRef.current = null
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    } catch {
+      // already released
+    }
+
+    const dx = clientX - drag.startX
+    const dy = clientY - drag.startY
+    if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) <= Math.abs(dy)) {
+      return
+    }
+
+    event.preventDefault()
+    if (dx < 0) {
+      goNext()
+    } else {
+      goPrev()
+    }
+  }
+
+  const onMediaPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    finishDrag(event, event.clientX, event.clientY)
+  }
+
+  const onMediaPointerCancel = (event: ReactPointerEvent<HTMLDivElement>) => {
+    dragRef.current = null
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    } catch {
+      // already released
+    }
+  }
+
+  const follow = (
+    <a className="btn btn-instagram" href={followHref}>
+      {followIcon}
+      {followLabel} <span className="ig-handle">{followHandle}</span>
+    </a>
+  )
+
   if (posts === null) {
     return (
       <div className="ig-carousel" aria-busy="true" aria-label={title}>
-        <div className="ig-carousel-stage">
-          <div className="ig-card ig-card-skeleton">
-            <p className="ig-post-number">#1</p>
-            <div className="ig-card-media" />
-            <ul className="ig-card-comments">
-              <li />
-              <li />
-              <li />
-            </ul>
+        <div className="ig-card ig-card-skeleton">
+          <p className="ig-post-number">#1</p>
+          <div className="ig-card-media" />
+          <div className="ig-card-follow">
+            <span className="ig-follow-skeleton" />
           </div>
         </div>
       </div>
@@ -185,42 +305,33 @@ export function InstagramFeed({ title }: { title: string }) {
   }
 
   if (posts.length === 0) {
-    return null
+    return (
+      <div className="ig-carousel" aria-label={title}>
+        <div className="ig-card-follow ig-card-follow-solo">{follow}</div>
+      </div>
+    )
   }
 
   const active = posts[index] ?? posts[0]
+  const showNav = posts.length > 1
 
   return (
     <div className="ig-carousel" aria-label={title}>
-      <div className="ig-carousel-track">
-        {posts.length > 1 ? (
-          <button
-            type="button"
-            className="ig-carousel-nav"
-            onClick={goPrev}
-            aria-label="Previous post"
-          >
-            ‹
-          </button>
-        ) : null}
+      <PostCard
+        key={active.id}
+        post={active}
+        title={title}
+        showNav={showNav}
+        onPrev={goPrev}
+        onNext={goNext}
+        follow={follow}
+        onMediaPointerDown={onMediaPointerDown}
+        onMediaPointerMove={onMediaPointerMove}
+        onMediaPointerUp={onMediaPointerUp}
+        onMediaPointerCancel={onMediaPointerCancel}
+      />
 
-        <div className="ig-carousel-stage">
-          <PostCard key={active.id} post={active} title={title} />
-        </div>
-
-        {posts.length > 1 ? (
-          <button
-            type="button"
-            className="ig-carousel-nav"
-            onClick={goNext}
-            aria-label="Next post"
-          >
-            ›
-          </button>
-        ) : null}
-      </div>
-
-      {posts.length > 1 ? (
+      {showNav ? (
         <div className="ig-carousel-dots" role="tablist" aria-label={title}>
           {posts.map((post, postIndex) => (
             <button
