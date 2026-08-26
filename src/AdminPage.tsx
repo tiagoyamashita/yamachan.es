@@ -634,6 +634,14 @@ function AvailabilityEditor({
     )
   }
 
+  if (loadError) {
+    return (
+      <section className="admin-company takeout-form">
+        <p className="takeout-error">{loadError}</p>
+      </section>
+    )
+  }
+
   if (!settings) {
     return (
       <section className="admin-company takeout-form">
@@ -1001,6 +1009,7 @@ export function AdminPage({
 
   const loadAvailability = async (year: number, month: number) => {
     const { from, to } = monthBounds(year, month)
+    setAvailabilityBusy(true)
     try {
       const data = await api<{
         settings: BookingAvailabilitySettings
@@ -1019,6 +1028,8 @@ export function AdminPage({
       }
       setAvailabilitySettings(null)
       setAvailabilityDays([])
+    } finally {
+      setAvailabilityBusy(false)
     }
   }
 

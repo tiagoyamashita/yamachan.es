@@ -191,41 +191,277 @@ export function isDateKey(value: string): boolean {
   return DATE_RE.test(value)
 }
 
-export async function loadDaySlots(date: string, partySize: number) {
-  const data = await gbFetch<{
-    date: string
-    timezone: string
-    party_size: number
-    day_closed: boolean
-    slots: AvailabilitySlot[]
-  }>(
-    'GET',
-    `${restaurantPath('/availability')}?date=${encodeURIComponent(date)}&party_size=${partySize}`,
-  )
+type OpenDateRow = {
+  open_date: string
+  opens_at: string
+  closes_at: string
+}
+
+type RestaurantTable = {
+  id: string
+  seat_count: number
+  is_active?: boolean
+  sort_order?: number
+}
+
+type RestaurantReservation = {
+  id: string
+  table_id: string
+  start_datetime: string
+  end_datetime?: string | null
+  turn_minutes?: number
+  status?: string
+  party_size?: number
+}
+
+const MINUTES_PER_DAY = 24 * 60
+
+function parseTimeToMinutes(timeStr: string): number {
+  const match = /^(\d{1,2}):(\d{2})/.exec(timeStr.trim())
+  if (!match) {
+    return Number.NaN
+  }
+  return Number(match[1]) * 60 + Number(match[2])
+}
+
+function formatMinutesAsTime(minutes: number): string {
+  const wrapped =
+    ((Math.round(minutes) % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY
+  const hour = Math.floor(wrapped / 60)
+  const minute = wrapped % 60
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+}
+
+function serviceWindow(
+  opensAt: string,
+  closesAt: string,
+): { opens: number; closeExclusive: number } | null {
+  const opens = parseTimeToMinutes(opensAt)
+  const closes = parseTimeToMinutes(closesAt)
+  if (!Number.isFinite(opens) || !Number.isFinite(closes) || opens === closes) {
+    return null
+  }
   return {
-    date: data.date,
-    timezone: data.timezone,
-    partySize: data.party_size,
-    dayClosed: data.day_closed,
-    slots: data.slots ?? [],
+    opens,
+    closeExclusive: closes > opens ? closes : closes + MINUTES_PER_DAY,
+  }
+}
+
+function usesOpenDateCalendar(openDates: OpenDateRow[]): boolean {
+  return openDates.length > 0
+}
+
+function windowsForDate(
+  settings: RestaurantSettings,
+  date: string,
+  openDates: OpenDateRow[],
+): Array<{ opens: number; closeExclusive: number }> {
+  const dayRows = openDates.filter((row) => row.open_date.slice(0, 10) === date)
+  if (dayRows.length > 0) {
+    return dayRows
+      .map((row) => serviceWindow(row.opens_at, row.closes_at))
+      .filter((window): window is { opens: number; closeExclusive: number } =>
+        Boolean(window),
+      )
+  }
+  if (usesOpenDateCalendar(openDates)) {
+    return []
+  }
+  const window = serviceWindow(settings.opens_at, settings.closes_at)
+  return window ? [window] : []
+}
+
+function eachDateKey(from: string, to: string): string[] {
+  const keys: string[] = []
+  const cursor = new Date(`${from}T12:00:00Z`)
+  const end = new Date(`${to}T12:00:00Z`)
+  while (cursor.getTime() <= end.getTime()) {
+    keys.push(cursor.toISOString().slice(0, 10))
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
+  }
+  return keys
+}
+
+function estimateSlotCount(
+  windows: Array<{ opens: number; closeExclusive: number }>,
+  interval: number,
+  turn: number,
+): number {
+  let count = 0
+  for (const window of windows) {
+    for (let mins = window.opens; mins + turn <= window.closeExclusive; mins += interval) {
+      count += 1
+    }
+  }
+  return count
+}
+
+function localDateTimeToUtcIso(
+  dateKey: string,
+  minutesFromMidnight: number,
+  timeZone: string,
+): string {
+  const [year, month, day] = dateKey.split('-').map(Number)
+  const extraDays = Math.floor(minutesFromMidnight / MINUTES_PER_DAY)
+  const minsInDay =
+    ((minutesFromMidnight % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY
+  const hours = Math.floor(minsInDay / 60)
+  const mins = minsInDay % 60
+  const base = new Date(Date.UTC(year, month - 1, day + extraDays, hours, mins, 0))
+
+  let utc = base.getTime()
+  for (let pass = 0; pass < 3; pass += 1) {
+    const got = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(new Date(utc))
+    const gotValue = (type: Intl.DateTimeFormatPartTypes) =>
+      Number(got.find((part) => part.type === type)?.value ?? '0')
+    const wantMinutes = hours * 60 + mins
+    const gotMinutes = gotValue('hour') * 60 + gotValue('minute')
+    utc += (wantMinutes - gotMinutes) * 60_000
+    const wantDay = Date.UTC(year, month - 1, day + extraDays)
+    const gotDay = Date.UTC(gotValue('year'), gotValue('month') - 1, gotValue('day'))
+    utc += wantDay - gotDay
+  }
+  return new Date(utc).toISOString()
+}
+
+async function loadOpenDates(): Promise<OpenDateRow[]> {
+  const data = await gbFetch<OpenDateRow[]>('GET', restaurantPath('/open-dates'))
+  return Array.isArray(data) ? data : []
+}
+
+async function loadTables(): Promise<RestaurantTable[]> {
+  const data = await gbFetch<RestaurantTable[]>('GET', restaurantPath('/tables'))
+  return Array.isArray(data) ? data : []
+}
+
+async function loadReservationsBetween(
+  fromIso: string,
+  toIso: string,
+): Promise<RestaurantReservation[]> {
+  const data = await gbFetch<RestaurantReservation[]>(
+    'GET',
+    `${restaurantPath('/reservations')}?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
+  )
+  return Array.isArray(data) ? data : []
+}
+
+function reservationEndIso(
+  reservation: RestaurantReservation,
+  defaultTurnMinutes: number,
+): string {
+  if (reservation.end_datetime) {
+    return reservation.end_datetime
+  }
+  const turn = reservation.turn_minutes ?? defaultTurnMinutes
+  return new Date(
+    new Date(reservation.start_datetime).getTime() + turn * 60_000,
+  ).toISOString()
+}
+
+function isTableFreeAt(
+  startIso: string,
+  turnMinutes: number,
+  reservations: RestaurantReservation[],
+  defaultTurnMinutes: number,
+): boolean {
+  const start = new Date(startIso).getTime()
+  const end = start + turnMinutes * 60_000
+  for (const reservation of reservations) {
+    if (reservation.status === 'cancelled') {
+      continue
+    }
+    const existingStart = new Date(reservation.start_datetime).getTime()
+    const existingEnd = new Date(
+      reservationEndIso(reservation, defaultTurnMinutes),
+    ).getTime()
+    if (start < existingEnd && end > existingStart) {
+      return false
+    }
+  }
+  return true
+}
+
+export async function loadDaySlots(date: string, partySize: number) {
+  const settings = await loadRestaurantSettings()
+  const timeZone = settings.timezone || 'UTC'
+  const dayStartIso = localDateTimeToUtcIso(date, 0, timeZone)
+  const dayEndIso = localDateTimeToUtcIso(date, MINUTES_PER_DAY, timeZone)
+  const [openDates, tables, reservations] = await Promise.all([
+    loadOpenDates(),
+    loadTables(),
+    loadReservationsBetween(dayStartIso, dayEndIso),
+  ])
+  const windows = windowsForDate(settings, date, openDates)
+  const interval = settings.slot_interval_minutes || 15
+  const turn = settings.default_turn_minutes || 90
+  const fittingTables = tables.filter(
+    (table) => table.is_active !== false && table.seat_count >= partySize,
+  )
+  const byTable = new Map<string, RestaurantReservation[]>()
+  for (const reservation of reservations) {
+    const list = byTable.get(reservation.table_id) ?? []
+    list.push(reservation)
+    byTable.set(reservation.table_id, list)
+  }
+
+  const slots: AvailabilitySlot[] = []
+  const now = Date.now()
+  for (const window of windows) {
+    for (let mins = window.opens; mins + turn <= window.closeExclusive; mins += interval) {
+      const startIso = localDateTimeToUtcIso(date, mins, settings.timezone || 'UTC')
+      if (new Date(startIso).getTime() <= now) {
+        continue
+      }
+      const available = fittingTables.filter((table) =>
+        isTableFreeAt(startIso, turn, byTable.get(table.id) ?? [], turn),
+      )
+      if (available.length === 0) {
+        continue
+      }
+      slots.push({
+        start_datetime: startIso,
+        time_label: formatMinutesAsTime(mins),
+        available_table_count: available.length,
+      })
+    }
+  }
+
+  return {
+    date,
+    timezone: settings.timezone,
+    partySize,
+    dayClosed: windows.length === 0,
+    slots,
   }
 }
 
 export async function loadMonthDays(from: string, to: string, partySize: number) {
-  const data = await gbFetch<{
-    timezone: string
-    party_size: number
-    from: string
-    to: string
-    days: DayAvailability[]
-  }>(
-    'GET',
-    `${restaurantPath('/availability')}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&party_size=${partySize}`,
-  )
+  const settings = await loadRestaurantSettings()
+  const openDates = await loadOpenDates()
+  const interval = settings.slot_interval_minutes || 15
+  const turn = settings.default_turn_minutes || 90
+
+  const days: DayAvailability[] = eachDateKey(from, to).map((date) => {
+    const windows = windowsForDate(settings, date, openDates)
+    return {
+      date,
+      closed: windows.length === 0,
+      slot_count: estimateSlotCount(windows, interval, turn),
+    }
+  })
+
   return {
-    timezone: data.timezone,
-    partySize: data.party_size,
-    days: data.days ?? [],
+    timezone: settings.timezone,
+    partySize,
+    days,
   }
 }
 
@@ -237,7 +473,51 @@ export async function createReservation(input: {
   clientPhone: string | null
   clientNotes: string | null
 }): Promise<CreatedReservation> {
+  const settings = await loadRestaurantSettings()
+  const date = new Intl.DateTimeFormat('en-CA', {
+    timeZone: settings.timezone || 'UTC',
+  }).format(new Date(input.startDatetime))
+  const day = await loadDaySlots(date, input.partySize)
+  const match = day.slots.find((slot) => slot.start_datetime === input.startDatetime)
+  if (!match || match.available_table_count < 1) {
+    throw new GloballyBookedError('no-tables-available', 409)
+  }
+
+  const tables = await loadTables()
+  const reservations = await loadReservationsBetween(
+    input.startDatetime,
+    new Date(
+      new Date(input.startDatetime).getTime() +
+        (settings.default_turn_minutes || 90) * 60_000,
+    ).toISOString(),
+  )
+  const turn = settings.default_turn_minutes || 90
+  const byTable = new Map<string, RestaurantReservation[]>()
+  for (const reservation of reservations) {
+    const list = byTable.get(reservation.table_id) ?? []
+    list.push(reservation)
+    byTable.set(reservation.table_id, list)
+  }
+  const pick = tables
+    .filter(
+      (table) =>
+        table.is_active !== false &&
+        table.seat_count >= input.partySize &&
+        isTableFreeAt(input.startDatetime, turn, byTable.get(table.id) ?? [], turn),
+    )
+    .sort((a, b) => {
+      const order = (a.sort_order ?? 0) - (b.sort_order ?? 0)
+      if (order !== 0) {
+        return order
+      }
+      return a.seat_count - b.seat_count
+    })[0]
+  if (!pick) {
+    throw new GloballyBookedError('no-tables-available', 409)
+  }
+
   return gbFetch<CreatedReservation>('POST', restaurantPath('/reservations'), {
+    table_id: pick.id,
     party_size: input.partySize,
     start_datetime: input.startDatetime,
     client_name: input.clientName,
@@ -255,3 +535,4 @@ export function tableLabel(reservation: CreatedReservation): string | null {
   const row = Array.isArray(table) ? table[0] : table
   return row?.label ?? null
 }
+
