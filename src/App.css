@@ -1140,6 +1140,60 @@ h3 {
   flex-direction: column;
   gap: 0.15rem;
   font-size: 0.8rem;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.admin-availability-cell:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.admin-availability-cell.is-selected {
+  outline: 2px solid color-mix(in srgb, var(--accent, #b45309) 80%, transparent);
+  outline-offset: 1px;
+}
+
+.admin-open-rules {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-open-rules li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-open-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.admin-open-rule span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.admin-open-rule small {
+  color: var(--muted, #6b6358);
+}
+
+.admin-open-dates-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
 }
 
 .admin-availability-cell span {

@@ -205,7 +205,7 @@ export const en: Copy = {
     'Phone, address and hours shown on the site and on the booking page.',
   adminAvailabilityHeading: 'Booking availability',
   adminAvailabilityLead:
-    'Opening hours and slot settings for table bookings via Globally Booked. Guests see these times on the reserve page.',
+    'Default hours, slot settings, and open-date calendar for table bookings via Globally Booked.',
   adminAvailabilityOpensAt: 'Opens at',
   adminAvailabilityClosesAt: 'Closes at',
   adminAvailabilitySlotInterval: 'Slot interval (minutes)',
@@ -221,6 +221,27 @@ export const en: Copy = {
   adminAvailabilityClosed: 'Closed',
   adminAvailabilityPrevMonth: 'Previous month',
   adminAvailabilityNextMonth: 'Next month',
+  adminOpenRulesHeading: 'Opening-hour rules',
+  adminOpenRulesLead:
+    'Create service windows like Lunch or Dinner, then paint them onto calendar dates.',
+  adminOpenRulesEmpty: 'No opening rules yet. Create one below.',
+  adminOpenRuleName: 'Rule name',
+  adminOpenRuleCreate: 'Create rule',
+  adminOpenRuleCreated: 'Opening rule created.',
+  adminOpenRuleDelete: 'Delete',
+  adminOpenRuleDeleted: 'Opening rule deleted.',
+  adminOpenDatesHeading: 'Open dates',
+  adminOpenDatesFallbackNote:
+    'Until you apply dates, guests book against the default opens/closes times above.',
+  adminOpenDatesAllowlistNote:
+    'Open-date calendar is active: only painted dates are bookable. Default hours above are ignored for booking.',
+  adminOpenDatesSelectWeekdays: 'Select weekdays',
+  adminOpenDatesClearSelection: 'Clear selection',
+  adminOpenDatesApply: 'Apply rule to dates',
+  adminOpenDatesClear: 'Clear dates',
+  adminOpenDatesApplied: 'Open dates updated.',
+  adminOpenDatesCleared: 'Open dates cleared.',
+  adminOpenDatesSelectedCount: '{count} dates selected',
   adminInstagramHeading: 'Instagram posts',
   adminInstagramLead:
     'Paste up to five Instagram post or reel links (or the full embed HTML). Slot #1 appears first in the homepage carousel.',

@@ -43,9 +43,16 @@ import {
 import { parseAllergens } from '../src/allergens.ts'
 import {
   GloballyBookedError,
+  applyOpenDates,
+  clearOpenDates,
+  createOpeningRule,
+  deleteOpeningRule,
   isDateKey,
   loadMonthDays,
+  loadOpenDates,
+  loadOpeningRules,
   loadRestaurantSettings,
+  updateOpeningRule,
   updateRestaurantSettings,
 } from './globallyBooked.ts'
 import {
@@ -317,14 +324,156 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
         const settings = await loadRestaurantSettings()
         const from = url.searchParams.get('from') ?? ''
         const to = url.searchParams.get('to') ?? ''
+        const [rules, openDates] = await Promise.all([
+          loadOpeningRules(),
+          loadOpenDates(),
+        ])
         if (from && to) {
           if (!isDateKey(from) || !isDateKey(to)) {
             return json({ error: 'invalid-range' }, 400)
           }
           const month = await loadMonthDays(from, to, 2)
-          return json({ settings, days: month.days, timezone: month.timezone })
+          const monthOpenDates = openDates.filter(
+            (row) => row.open_date >= from && row.open_date <= to,
+          )
+          return json({
+            settings,
+            days: month.days,
+            timezone: month.timezone,
+            rules,
+            openDates: monthOpenDates,
+            usesOpenDateCalendar: openDates.length > 0,
+          })
         }
-        return json({ settings })
+        return json({
+          settings,
+          rules,
+          openDates,
+          usesOpenDateCalendar: openDates.length > 0,
+        })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    if (path === '/api/admin/opening-rules' && request.method === 'POST') {
+      const body: unknown = await request.json().catch(() => null)
+      if (!body || typeof body !== 'object') {
+        return json({ error: 'invalid-request' }, 400)
+      }
+      const row = body as {
+        name?: unknown
+        opensAt?: unknown
+        closesAt?: unknown
+        color?: unknown
+      }
+      try {
+        const rule = await createOpeningRule({
+          name: typeof row.name === 'string' ? row.name : '',
+          opensAt: typeof row.opensAt === 'string' ? row.opensAt : '',
+          closesAt: typeof row.closesAt === 'string' ? row.closesAt : '',
+          color: typeof row.color === 'string' ? row.color : undefined,
+        })
+        return json({ rule })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    if (path === '/api/admin/opening-rules' && request.method === 'PUT') {
+      const body: unknown = await request.json().catch(() => null)
+      if (!body || typeof body !== 'object') {
+        return json({ error: 'invalid-request' }, 400)
+      }
+      const row = body as {
+        id?: unknown
+        name?: unknown
+        opensAt?: unknown
+        closesAt?: unknown
+        color?: unknown
+      }
+      try {
+        const rule = await updateOpeningRule({
+          id: typeof row.id === 'string' ? row.id : '',
+          name: typeof row.name === 'string' ? row.name : undefined,
+          opensAt: typeof row.opensAt === 'string' ? row.opensAt : undefined,
+          closesAt: typeof row.closesAt === 'string' ? row.closesAt : undefined,
+          color: typeof row.color === 'string' ? row.color : undefined,
+        })
+        return json({ rule })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    if (path === '/api/admin/opening-rules' && request.method === 'DELETE') {
+      const body: unknown = await request.json().catch(() => null)
+      const id =
+        body && typeof body === 'object' && typeof (body as { id?: unknown }).id === 'string'
+          ? (body as { id: string }).id
+          : url.searchParams.get('id')
+      if (!id) {
+        return json({ error: 'invalid-rule-id' }, 400)
+      }
+      try {
+        await deleteOpeningRule(id)
+        return json({ deleted: true, id })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    if (path === '/api/admin/open-dates' && request.method === 'POST') {
+      const body: unknown = await request.json().catch(() => null)
+      if (!body || typeof body !== 'object') {
+        return json({ error: 'invalid-request' }, 400)
+      }
+      const row = body as { ruleId?: unknown; dates?: unknown }
+      const dates = Array.isArray(row.dates)
+        ? row.dates.filter((value): value is string => typeof value === 'string')
+        : []
+      try {
+        const openDates = await applyOpenDates({
+          ruleId: typeof row.ruleId === 'string' ? row.ruleId : '',
+          dates,
+        })
+        return json({ openDates })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    if (path === '/api/admin/open-dates' && request.method === 'DELETE') {
+      const body: unknown = await request.json().catch(() => null)
+      const fromBody =
+        body && typeof body === 'object' && Array.isArray((body as { dates?: unknown }).dates)
+          ? (body as { dates: unknown[] }).dates.filter(
+              (value): value is string => typeof value === 'string',
+            )
+          : []
+      const fromQuery = (url.searchParams.get('dates') || '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean)
+      const dates = fromBody.length > 0 ? fromBody : fromQuery
+      try {
+        await clearOpenDates(dates)
+        return json({ deleted: true, dates })
       } catch (error) {
         if (error instanceof GloballyBookedError) {
           return json({ error: error.message }, error.status)

@@ -206,7 +206,7 @@ export const es: Copy = {
     'Teléfono, dirección y horario que se muestran en la web y en reservas.',
   adminAvailabilityHeading: 'Disponibilidad de reservas',
   adminAvailabilityLead:
-    'Horario y intervalos de mesa vía Globally Booked. Los clientes ven estas horas en la página de reservas.',
+    'Horario por defecto, intervalos de mesa y calendario de fechas abiertas vía Globally Booked.',
   adminAvailabilityOpensAt: 'Apertura',
   adminAvailabilityClosesAt: 'Cierre',
   adminAvailabilitySlotInterval: 'Intervalo de franjas (minutos)',
@@ -223,6 +223,27 @@ export const es: Copy = {
   adminAvailabilityClosed: 'Cerrado',
   adminAvailabilityPrevMonth: 'Mes anterior',
   adminAvailabilityNextMonth: 'Mes siguiente',
+  adminOpenRulesHeading: 'Reglas de horario',
+  adminOpenRulesLead:
+    'Crea ventanas como Comida o Cena y aplícalas a fechas del calendario.',
+  adminOpenRulesEmpty: 'Aún no hay reglas. Crea una abajo.',
+  adminOpenRuleName: 'Nombre de la regla',
+  adminOpenRuleCreate: 'Crear regla',
+  adminOpenRuleCreated: 'Regla de horario creada.',
+  adminOpenRuleDelete: 'Eliminar',
+  adminOpenRuleDeleted: 'Regla de horario eliminada.',
+  adminOpenDatesHeading: 'Fechas abiertas',
+  adminOpenDatesFallbackNote:
+    'Hasta que apliques fechas, los clientes reservan con el horario por defecto de arriba.',
+  adminOpenDatesAllowlistNote:
+    'El calendario de fechas abiertas está activo: solo las fechas pintadas son reservables. El horario por defecto ya no se usa para reservas.',
+  adminOpenDatesSelectWeekdays: 'Seleccionar laborables',
+  adminOpenDatesClearSelection: 'Quitar selección',
+  adminOpenDatesApply: 'Aplicar regla a fechas',
+  adminOpenDatesClear: 'Borrar fechas',
+  adminOpenDatesApplied: 'Fechas abiertas actualizadas.',
+  adminOpenDatesCleared: 'Fechas abiertas borradas.',
+  adminOpenDatesSelectedCount: '{count} fechas seleccionadas',
   adminInstagramHeading: 'Publicaciones de Instagram',
   adminInstagramLead:
     'Pega hasta cinco enlaces de publicaciones o reels (o el HTML completo del embed). El hueco #1 aparece primero en el carrusel de la portada.',

@@ -206,7 +206,7 @@ export const ptBR: Copy = {
     'Telefone, endereço e horário exibidos no site e nas reservas.',
   adminAvailabilityHeading: 'Disponibilidade de reservas',
   adminAvailabilityLead:
-    'Horário e intervalos de mesa via Globally Booked. Os clientes veem esses horários na página de reservas.',
+    'Horário padrão, intervalos de mesa e calendário de datas abertas via Globally Booked.',
   adminAvailabilityOpensAt: 'Abertura',
   adminAvailabilityClosesAt: 'Fechamento',
   adminAvailabilitySlotInterval: 'Intervalo de horários (minutos)',
@@ -223,6 +223,27 @@ export const ptBR: Copy = {
   adminAvailabilityClosed: 'Fechado',
   adminAvailabilityPrevMonth: 'Mês anterior',
   adminAvailabilityNextMonth: 'Próximo mês',
+  adminOpenRulesHeading: 'Regras de horário',
+  adminOpenRulesLead:
+    'Crie janelas como Almoço ou Jantar e aplique-as às datas do calendário.',
+  adminOpenRulesEmpty: 'Ainda não há regras. Crie uma abaixo.',
+  adminOpenRuleName: 'Nome da regra',
+  adminOpenRuleCreate: 'Criar regra',
+  adminOpenRuleCreated: 'Regra de horário criada.',
+  adminOpenRuleDelete: 'Excluir',
+  adminOpenRuleDeleted: 'Regra de horário excluída.',
+  adminOpenDatesHeading: 'Datas abertas',
+  adminOpenDatesFallbackNote:
+    'Até aplicar datas, os clientes reservam com o horário padrão acima.',
+  adminOpenDatesAllowlistNote:
+    'O calendário de datas abertas está ativo: só as datas pintadas são reserváveis. O horário padrão acima deixa de valer para reservas.',
+  adminOpenDatesSelectWeekdays: 'Selecionar dias úteis',
+  adminOpenDatesClearSelection: 'Limpar seleção',
+  adminOpenDatesApply: 'Aplicar regra às datas',
+  adminOpenDatesClear: 'Limpar datas',
+  adminOpenDatesApplied: 'Datas abertas atualizadas.',
+  adminOpenDatesCleared: 'Datas abertas limpas.',
+  adminOpenDatesSelectedCount: '{count} datas selecionadas',
   adminInstagramHeading: 'Posts do Instagram',
   adminInstagramLead:
     'Cole até cinco links de posts ou reels (ou o HTML completo do embed). O espaço #1 aparece primeiro no carrossel da página inicial.',
