@@ -420,14 +420,13 @@ export default function App() {
                   <p className="kicker">{t.instagram}</p>
                   <h2>{t.instagramCtaTitle}</h2>
                 </header>
-                <InstagramFeed title={restaurant.instagramHandle} />
-                <p className="ig-follow">
-                  <a className="btn btn-instagram" href={restaurant.instagramUrl}>
-                    <InstagramIcon />
-                    {t.instagramCtaButton}{' '}
-                    <span className="ig-handle">{restaurant.instagramHandle}</span>
-                  </a>
-                </p>
+                <InstagramFeed
+                  title={restaurant.instagramHandle}
+                  followHref={restaurant.instagramUrl}
+                  followLabel={t.instagramCtaButton}
+                  followHandle={restaurant.instagramHandle}
+                  followIcon={<InstagramIcon />}
+                />
               </div>
             </section>
 
