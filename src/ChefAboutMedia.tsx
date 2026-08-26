@@ -16,7 +16,7 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
   const frameRef = useRef<HTMLElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoUrl, setVideoUrl] = useState<string | undefined>()
-  const [posterUrl, setPosterUrl] = useState(restaurant.chefPhoto)
+  const [posterUrl, setPosterUrl] = useState<string>(restaurant.chefPhoto)
 
   useEffect(() => {
     let cancelled = false
