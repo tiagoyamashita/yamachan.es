@@ -1423,7 +1423,7 @@ h3 {
 }
 
 .ig-grid-embeds {
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
   gap: 1rem;
   align-items: start;
 }
@@ -1442,6 +1442,7 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 326px;
 }
 
 .ig-post-number {
@@ -1452,11 +1453,42 @@ h3 {
   color: var(--muted, #6b6358);
 }
 
-.ig-post-embed blockquote {
-  margin: 0 !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  width: 100% !important;
+.ig-post-embed .instagram-media {
+  margin: 0 auto !important;
+}
+
+.ig-embed-card {
+  width: 100%;
+  max-width: 540px;
+  min-width: 326px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 3px;
+  box-shadow:
+    0 0 1px 0 rgba(0, 0, 0, 0.5),
+    0 1px 10px 0 rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.ig-embed-card iframe {
+  display: block;
+  width: 100%;
+  min-height: 720px;
+  border: 0;
+  background: #fff;
+}
+
+.ig-embed-open {
+  display: block;
+  padding: 0.65rem 0.85rem 0.85rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #3897f0;
+  text-decoration: none;
+}
+
+.ig-embed-open:hover {
+  text-decoration: underline;
 }
 
 .ig-post-trigger {

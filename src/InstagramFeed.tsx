@@ -1,84 +1,55 @@
-import { useEffect } from 'react'
-
-type InstagramEmbeds = {
-  Embeds: {
-    process: () => void
-  }
-}
-
 /** Numbered placeholders — swap permalinks later as needed. */
 const PLACEHOLDER_POSTS = [
   {
     number: 1,
-    permalink: 'https://www.instagram.com/reel/DMQLKHMs94d/',
+    permalink: 'https://www.instagram.com/reel/Dbs-T-UM7eJ/',
   },
   {
     number: 2,
-    permalink: 'https://www.instagram.com/reel/DMQLKHMs94d/',
+    permalink: 'https://www.instagram.com/reel/Dbs-T-UM7eJ/',
   },
   {
     number: 3,
-    permalink: 'https://www.instagram.com/reel/DMQLKHMs94d/',
+    permalink: 'https://www.instagram.com/reel/Dbs-T-UM7eJ/',
   },
   {
     number: 4,
-    permalink: 'https://www.instagram.com/reel/DMQLKHMs94d/',
+    permalink: 'https://www.instagram.com/reel/Dbs-T-UM7eJ/',
   },
   {
     number: 5,
-    permalink: 'https://www.instagram.com/reel/DMQLKHMs94d/',
+    permalink: 'https://www.instagram.com/reel/Dbs-T-UM7eJ/',
   },
 ] as const
 
-function getInstgrm(): InstagramEmbeds | undefined {
-  const view = window as Window & { instgrm?: InstagramEmbeds }
-  return view.instgrm
-}
-
-function useInstagramEmbed() {
-  useEffect(() => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      'script[data-yamachan-instagram="embed"]',
-    )
-    if (existing) {
-      getInstgrm()?.Embeds.process()
-      return undefined
-    }
-
-    const script = document.createElement('script')
-    script.src = 'https://www.instagram.com/embed.js'
-    script.async = true
-    script.dataset.yamachanInstagram = 'embed'
-    script.onload = () => {
-      getInstgrm()?.Embeds.process()
-    }
-    document.body.appendChild(script)
-    return undefined
-  }, [])
+function embedSrc(permalink: string): string {
+  const base = permalink.endsWith('/') ? permalink : `${permalink}/`
+  return `${base}embed/captioned/`
 }
 
 export function InstagramFeed({ title }: { title: string }) {
-  useInstagramEmbed()
-
   return (
     <ul className="ig-grid ig-grid-embeds" aria-label={title}>
       {PLACEHOLDER_POSTS.map((post) => (
         <li key={post.number} className="ig-post ig-post-embed">
           <p className="ig-post-number">#{post.number}</p>
-          <blockquote
-            className="instagram-media"
-            data-instgrm-captioned
-            data-instgrm-permalink={`${post.permalink}?utm_source=ig_embed&utm_campaign=loading`}
-            data-instgrm-version="14"
-          >
+          <div className="ig-embed-card">
+            <iframe
+              title={`Instagram post #${post.number}`}
+              src={embedSrc(post.permalink)}
+              loading="lazy"
+              allow="encrypted-media; clipboard-write; autoplay; fullscreen"
+              allowFullScreen
+            />
             <a
-              href={`${post.permalink}?utm_source=ig_embed&utm_campaign=loading`}
+              className="ig-embed-open"
+              href={post.permalink}
               target="_blank"
               rel="noreferrer"
             >
-              View this post on Instagram
+              View on Instagram ↗
             </a>
-          </blockquote>
+          </div>
         </li>
       ))}
     </ul>
