@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { loadInstagramPosts } from './server/loadInstagramPosts.ts'
+import { fetchInstagramMedia } from './server/instagramEmbed.ts'
 import { loadGoogleReviews } from './server/loadGoogleReviews.ts'
 import { handleAdminRequest } from './server/adminHttp.ts'
 import { handleReservationsRequest } from './server/reservationsHttp.ts'
@@ -88,6 +89,40 @@ export default defineConfig(({ mode }) => {
             (req: IncomingMessage, res: ServerResponse, next: () => void) => {
               if (req.method && req.method !== 'GET') {
                 next()
+                return
+              }
+
+              const mountedPath = req.url?.split('?')[0] ?? '/'
+              if (mountedPath === '/media' || mountedPath.startsWith('/media/')) {
+                const mediaUrl = new URL(
+                  req.url ?? '/',
+                  'http://localhost',
+                ).searchParams.get('url')
+                if (!mediaUrl) {
+                  res.statusCode = 400
+                  res.end('Missing url')
+                  return
+                }
+                const incomingHeaders = new Headers()
+                if (typeof req.headers.range === 'string') {
+                  incomingHeaders.set('Range', req.headers.range)
+                }
+                const incoming = new Request(`http://localhost${req.url ?? '/'}`, {
+                  headers: incomingHeaders,
+                })
+                void fetchInstagramMedia(mediaUrl, incoming)
+                  .then((media) => {
+                    if (!media) {
+                      res.statusCode = 404
+                      res.end('Not found')
+                      return
+                    }
+                    return sendWebResponse(res, media)
+                  })
+                  .catch(() => {
+                    res.statusCode = 502
+                    res.end('Upstream error')
+                  })
                 return
               }
 

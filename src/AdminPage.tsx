@@ -17,8 +17,10 @@ import { LanguagePicker } from './LanguagePicker.tsx'
 import { type Copy, type Locale } from './i18n/index.ts'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
-type AdminTab = 'menu' | 'account' | 'restaurant' | 'availability'
+type AdminTab = 'menu' | 'account' | 'restaurant' | 'availability' | 'instagram'
 type LoginView = 'sign-in' | 'forgot' | 'reset'
+
+const INSTAGRAM_SLOTS = 5
 
 type BookingAvailabilitySettings = {
   id: string
@@ -47,6 +49,8 @@ function adminHeading(t: Copy, tab: AdminTab): string {
       return t.adminRestaurantHeading
     case 'availability':
       return t.adminAvailabilityHeading
+    case 'instagram':
+      return t.adminInstagramHeading
     default: {
       const _exhaustive: never = tab
       return _exhaustive
@@ -64,6 +68,8 @@ function adminLead(t: Copy, tab: AdminTab): string {
       return t.adminRestaurantLead
     case 'availability':
       return t.adminAvailabilityLead
+    case 'instagram':
+      return t.adminInstagramLead
     default: {
       const _exhaustive: never = tab
       return _exhaustive
@@ -769,6 +775,64 @@ function AvailabilityEditor({
   )
 }
 
+function emptyInstagramSlots(): string[] {
+  return Array.from({ length: INSTAGRAM_SLOTS }, () => '')
+}
+
+function InstagramEditor({
+  urls,
+  busy,
+  t,
+  onChange,
+  onSave,
+}: {
+  urls: string[]
+  busy: boolean
+  t: Copy
+  onChange: (next: string[]) => void
+  onSave: () => void
+}) {
+  const slots = [...urls]
+  while (slots.length < INSTAGRAM_SLOTS) {
+    slots.push('')
+  }
+
+  return (
+    <section className="admin-company takeout-form">
+      <fieldset className="admin-company-block">
+        <legend>{t.adminInstagramHeading}</legend>
+        <p className="muted">{t.adminInstagramLead}</p>
+        {slots.slice(0, INSTAGRAM_SLOTS).map((value, index) => (
+          <label className="takeout-field" key={`ig-slot-${String(index + 1)}`}>
+            <span>
+              {t.adminInstagramPostLabel} #{index + 1}
+            </span>
+            <textarea
+              rows={3}
+              value={value}
+              disabled={busy}
+              placeholder={t.adminInstagramPlaceholder}
+              onChange={(event) => {
+                const next = [...slots]
+                next[index] = event.target.value
+                onChange(next.slice(0, INSTAGRAM_SLOTS))
+              }}
+            />
+          </label>
+        ))}
+        <button
+          className="btn"
+          type="button"
+          disabled={busy}
+          onClick={onSave}
+        >
+          {t.adminInstagramSave}
+        </button>
+      </fieldset>
+    </section>
+  )
+}
+
 function AccountInfoEditor({
   accountUsername,
   resetEmail,
@@ -927,6 +991,8 @@ export function AdminPage({
   const now = new Date()
   const [availabilityYear, setAvailabilityYear] = useState(now.getFullYear())
   const [availabilityMonth, setAvailabilityMonth] = useState(now.getMonth())
+  const [instagramUrls, setInstagramUrls] = useState<string[]>(emptyInstagramSlots)
+  const [instagramBusy, setInstagramBusy] = useState(false)
 
   type AdminAccountResponse = {
     username: string
@@ -953,6 +1019,20 @@ export function AdminPage({
       }
       setAvailabilitySettings(null)
       setAvailabilityDays([])
+    }
+  }
+
+  const loadInstagram = async () => {
+    try {
+      const data = await api<{ urls: string[] }>('/api/admin/instagram')
+      const urls = Array.isArray(data.urls) ? data.urls : []
+      const slots = emptyInstagramSlots()
+      for (let index = 0; index < INSTAGRAM_SLOTS; index += 1) {
+        slots[index] = typeof urls[index] === 'string' ? urls[index] : ''
+      }
+      setInstagramUrls(slots)
+    } catch {
+      setInstagramUrls(emptyInstagramSlots())
     }
   }
 
@@ -1200,6 +1280,37 @@ export function AdminPage({
     }
   }
 
+  const saveInstagram = async () => {
+    setInstagramBusy(true)
+    setMessage(null)
+    try {
+      const data = await api<{ urls: string[]; error?: string }>(
+        '/api/admin/instagram',
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls: instagramUrls }),
+        },
+      )
+      const urls = Array.isArray(data.urls) ? data.urls : []
+      const slots = emptyInstagramSlots()
+      for (let index = 0; index < INSTAGRAM_SLOTS; index += 1) {
+        slots[index] = typeof urls[index] === 'string' ? urls[index] : ''
+      }
+      setInstagramUrls(slots)
+      setMessage(t.adminInstagramSaved)
+    } catch (error) {
+      const err = error instanceof Error ? error.message : ''
+      if (err.startsWith('invalid-url-')) {
+        setMessage(t.adminInstagramInvalid)
+      } else {
+        setMessage(t.adminInstagramError)
+      }
+    } finally {
+      setInstagramBusy(false)
+    }
+  }
+
   const current = (item: StoredMenuItem) => drafts[item.id || 'new'] ?? item
 
   const saveItem = async (item: StoredMenuItem) => {
@@ -1361,6 +1472,18 @@ export function AdminPage({
                   }}
                 >
                   {t.adminTabAvailability}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  className={`admin-tab${tab === 'instagram' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'instagram'}
+                  onClick={() => {
+                    setTab('instagram')
+                    void loadInstagram()
+                  }}
+                >
+                  {t.adminTabInstagram}
                 </button>
               </div>
             ) : null}
@@ -1554,6 +1677,15 @@ export function AdminPage({
                       setAvailabilityMonth(month)
                       void loadAvailability(year, month)
                     }}
+                  />
+                ) : null}
+                {tab === 'instagram' ? (
+                  <InstagramEditor
+                    urls={instagramUrls}
+                    busy={instagramBusy}
+                    t={t}
+                    onChange={setInstagramUrls}
+                    onSave={() => void saveInstagram()}
                   />
                 ) : null}
                 {tab === 'account' ? (

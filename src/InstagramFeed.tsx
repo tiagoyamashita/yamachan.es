@@ -12,6 +12,7 @@ type InstagramPost = {
   permalink: string
   mediaUrl?: string
   thumbnailUrl?: string
+  videoUrl?: string
   mediaType: string
   caption?: string
   comments: InstagramComment[]
@@ -23,28 +24,19 @@ type FeedResponse = {
 
 function isVideoPost(post: InstagramPost): boolean {
   return (
+    Boolean(post.videoUrl) ||
     post.mediaType === 'VIDEO' ||
     post.mediaType === 'REELS' ||
     post.mediaType === 'REEL'
   )
 }
 
-function imageUrl(post: InstagramPost): string {
-  if (isVideoPost(post)) {
-    return post.thumbnailUrl ?? post.mediaUrl ?? ''
-  }
-  return post.mediaUrl ?? post.thumbnailUrl ?? ''
+function posterUrl(post: InstagramPost): string {
+  return post.thumbnailUrl ?? post.mediaUrl ?? ''
 }
 
-function paddedComments(post: InstagramPost): InstagramComment[] {
-  return [
-    ...post.comments.slice(0, 3),
-    ...[1, 2, 3].slice(post.comments.length).map((commentNumber) => ({
-      id: `${post.id}-pad-${String(commentNumber)}`,
-      username: 'comment',
-      text: `Comment ${String(commentNumber)}`,
-    })),
-  ].slice(0, 3)
+function topComments(post: InstagramPost): InstagramComment[] {
+  return post.comments.slice(0, 3)
 }
 
 function InstagramGlyph() {
@@ -73,35 +65,65 @@ function PostCard({
   post: InstagramPost
   title: string
 }) {
-  const image = imageUrl(post)
-  const comments = paddedComments(post)
+  const video = post.videoUrl
+  const poster = posterUrl(post)
+  const image = isVideoPost(post) ? poster : post.mediaUrl ?? post.thumbnailUrl ?? ''
+  const comments = topComments(post)
+  const label = `${title} #${String(post.number)}`
 
   return (
     <article className="ig-card">
       <p className="ig-post-number">#{post.number}</p>
-      <a
-        className="ig-card-media"
-        href={post.permalink}
-        target="_blank"
-        rel="noreferrer"
-        aria-label={`${title} #${String(post.number)}`}
-      >
-        {image ? (
-          <img src={image} alt="" loading="lazy" />
+      <div className="ig-card-media">
+        {video ? (
+          <video
+            key={video}
+            className="ig-card-video"
+            src={video}
+            poster={poster || undefined}
+            controls
+            playsInline
+            preload="metadata"
+            aria-label={label}
+          />
+        ) : image ? (
+          <a
+            href={post.permalink}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={label}
+          >
+            <img src={image} alt="" loading="lazy" referrerPolicy="no-referrer" />
+          </a>
         ) : (
-          <span className="ig-post-fallback">
-            <InstagramGlyph />
-          </span>
+          <a
+            href={post.permalink}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={label}
+          >
+            <span className="ig-post-fallback">
+              <InstagramGlyph />
+            </span>
+          </a>
         )}
-      </a>
-      <ul className="ig-card-comments">
-        {comments.map((comment) => (
-          <li key={comment.id}>
-            <strong>{comment.username}</strong>
-            <span>{comment.text}</span>
-          </li>
-        ))}
-      </ul>
+      </div>
+      {comments.length > 0 ? (
+        <ul className="ig-card-comments">
+          {comments.map((comment) => (
+            <li key={comment.id}>
+              <strong>{comment.username}</strong>
+              <span>{comment.text}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="ig-card-comments-empty">
+          <a href={post.permalink} target="_blank" rel="noreferrer">
+            View on Instagram
+          </a>
+        </p>
+      )}
     </article>
   )
 }
@@ -136,7 +158,7 @@ export function InstagramFeed({ title }: { title: string }) {
     }
   }, [])
 
-  const count = posts?.length ?? 5
+  const count = posts?.length ?? 1
   const goPrev = () => {
     setIndex((current) => (current - 1 + count) % count)
   }
@@ -171,42 +193,48 @@ export function InstagramFeed({ title }: { title: string }) {
   return (
     <div className="ig-carousel" aria-label={title}>
       <div className="ig-carousel-track">
-        <button
-          type="button"
-          className="ig-carousel-nav"
-          onClick={goPrev}
-          aria-label="Previous post"
-        >
-          ‹
-        </button>
+        {posts.length > 1 ? (
+          <button
+            type="button"
+            className="ig-carousel-nav"
+            onClick={goPrev}
+            aria-label="Previous post"
+          >
+            ‹
+          </button>
+        ) : null}
 
         <div className="ig-carousel-stage">
-          <PostCard post={active} title={title} />
+          <PostCard key={active.id} post={active} title={title} />
         </div>
 
-        <button
-          type="button"
-          className="ig-carousel-nav"
-          onClick={goNext}
-          aria-label="Next post"
-        >
-          ›
-        </button>
+        {posts.length > 1 ? (
+          <button
+            type="button"
+            className="ig-carousel-nav"
+            onClick={goNext}
+            aria-label="Next post"
+          >
+            ›
+          </button>
+        ) : null}
       </div>
 
-      <div className="ig-carousel-dots" role="tablist" aria-label={title}>
-        {posts.map((post, postIndex) => (
-          <button
-            key={post.id}
-            type="button"
-            role="tab"
-            className={`ig-carousel-dot${postIndex === index ? ' is-active' : ''}`}
-            aria-selected={postIndex === index}
-            aria-label={`Post #${String(post.number)}`}
-            onClick={() => setIndex(postIndex)}
-          />
-        ))}
-      </div>
+      {posts.length > 1 ? (
+        <div className="ig-carousel-dots" role="tablist" aria-label={title}>
+          {posts.map((post, postIndex) => (
+            <button
+              key={post.id}
+              type="button"
+              role="tab"
+              className={`ig-carousel-dot${postIndex === index ? ' is-active' : ''}`}
+              aria-selected={postIndex === index}
+              aria-label={`Post #${String(post.number)}`}
+              onClick={() => setIndex(postIndex)}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
