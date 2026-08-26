@@ -200,6 +200,7 @@ export const es: Copy = {
   adminTabAccount: 'Cuenta',
   adminTabRestaurant: 'Restaurante',
   adminTabAvailability: 'Disponibilidad',
+  adminTabInstagram: 'Instagram',
   adminRestaurantHeading: 'Datos del restaurante',
   adminRestaurantLead:
     'Teléfono, dirección y horario que se muestran en la web y en reservas.',
@@ -222,6 +223,16 @@ export const es: Copy = {
   adminAvailabilityClosed: 'Cerrado',
   adminAvailabilityPrevMonth: 'Mes anterior',
   adminAvailabilityNextMonth: 'Mes siguiente',
+  adminInstagramHeading: 'Publicaciones de Instagram',
+  adminInstagramLead:
+    'Pega hasta cinco enlaces de publicaciones o reels (o el HTML completo del embed). El hueco #1 aparece primero en el carrusel de la portada.',
+  adminInstagramPostLabel: 'Publicación',
+  adminInstagramPlaceholder:
+    'https://www.instagram.com/p/…/ o pega el código embed de Instagram',
+  adminInstagramSave: 'Guardar publicaciones',
+  adminInstagramSaved: 'Publicaciones de Instagram actualizadas.',
+  adminInstagramError: 'No se pudieron guardar las publicaciones. Inténtalo de nuevo.',
+  adminInstagramInvalid: 'Uno o más huecos no son enlaces válidos de Instagram.',
   adminCompanyPhone: 'Teléfono (para enlaces)',
   adminCompanyPhoneDisplay: 'Teléfono (visible)',
   adminCompanyAddress: 'Dirección',

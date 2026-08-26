@@ -1,67 +1,42 @@
 import { useEffect, useState } from 'react'
-import { restaurant } from './content.ts'
 
-export type InstagramPost = {
+type InstagramComment = {
   id: string
+  username: string
+  text: string
+}
+
+type InstagramPost = {
+  id: string
+  number: number
   permalink: string
   mediaUrl?: string
   thumbnailUrl?: string
+  videoUrl?: string
   mediaType: string
   caption?: string
+  comments: InstagramComment[]
 }
 
 type FeedResponse = {
   posts: InstagramPost[]
 }
 
-type InstagramEmbeds = {
-  Embeds: {
-    process: () => void
-  }
-}
-
-const POST_COUNT = 10
-const SKELETON_KEYS = [
-  's1',
-  's2',
-  's3',
-  's4',
-  's5',
-  's6',
-  's7',
-  's8',
-  's9',
-  's10',
-] as const
-
-function getInstgrm(): InstagramEmbeds | undefined {
-  const view = window as Window & { instgrm?: InstagramEmbeds }
-  return view.instgrm
-}
-
 function isVideoPost(post: InstagramPost): boolean {
-  return post.mediaType === 'VIDEO' || post.mediaType === 'REEL'
-}
-
-function thumbnailUrl(post: InstagramPost): string {
-  if (isVideoPost(post)) {
-    return post.thumbnailUrl ?? post.mediaUrl ?? ''
-  }
-  return post.mediaUrl ?? post.thumbnailUrl ?? ''
-}
-
-function embedUrl(permalink: string): string {
-  const withSlash = permalink.endsWith('/') ? permalink : `${permalink}/`
-  return `${withSlash}embed/captioned/`
-}
-
-function PlayGlyph() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="ig-play-glyph">
-      <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.45)" />
-      <path d="M9.5 7.5v9l7-4.5z" fill="#fff" />
-    </svg>
+    Boolean(post.videoUrl) ||
+    post.mediaType === 'VIDEO' ||
+    post.mediaType === 'REELS' ||
+    post.mediaType === 'REEL'
   )
+}
+
+function posterUrl(post: InstagramPost): string {
+  return post.thumbnailUrl ?? post.mediaUrl ?? ''
+}
+
+function topComments(post: InstagramPost): InstagramComment[] {
+  return post.comments.slice(0, 3)
 }
 
 function InstagramGlyph() {
@@ -83,94 +58,79 @@ function InstagramGlyph() {
   )
 }
 
-function useInstagramEmbed(enabled: boolean) {
-  useEffect(() => {
-    if (!enabled) {
-      return undefined
-    }
-
-    const existing = document.querySelector<HTMLScriptElement>(
-      'script[data-yamachan-instagram="embed"]',
-    )
-    if (existing) {
-      getInstgrm()?.Embeds.process()
-      return undefined
-    }
-
-    const script = document.createElement('script')
-    script.src = 'https://www.instagram.com/embed.js'
-    script.async = true
-    script.dataset.yamachanInstagram = 'embed'
-    script.onload = () => {
-      getInstgrm()?.Embeds.process()
-    }
-    document.body.appendChild(script)
-    return undefined
-  }, [enabled])
-}
-
-function PostModal({
+function PostCard({
   post,
-  onClose,
+  title,
 }: {
   post: InstagramPost
-  onClose: () => void
+  title: string
 }) {
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    const { overflow } = document.body.style
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = overflow
-    }
-  }, [onClose])
+  const video = post.videoUrl
+  const poster = posterUrl(post)
+  const image = isVideoPost(post) ? poster : post.mediaUrl ?? post.thumbnailUrl ?? ''
+  const comments = topComments(post)
+  const label = `${title} #${String(post.number)}`
 
   return (
-    <div
-      className="ig-modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      onClick={onClose}
-    >
-      <div className="ig-modal" onClick={(event) => event.stopPropagation()}>
-        <button
-          type="button"
-          className="ig-modal-close"
-          onClick={onClose}
-          aria-label="Cerrar"
-        >
-          ×
-        </button>
-        <iframe
-          key={post.id}
-          title={post.caption?.trim() || 'Instagram post'}
-          src={embedUrl(post.permalink)}
-          loading="lazy"
-          allow="encrypted-media; clipboard-write; autoplay"
-          allowFullScreen
-        />
-        <a
-          className="ig-modal-fallback-link"
-          href={post.permalink}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Ver en Instagram ↗
-        </a>
+    <article className="ig-card">
+      <p className="ig-post-number">#{post.number}</p>
+      <div className="ig-card-media">
+        {video ? (
+          <video
+            key={video}
+            className="ig-card-video"
+            src={video}
+            poster={poster || undefined}
+            controls
+            playsInline
+            preload="metadata"
+            aria-label={label}
+          />
+        ) : image ? (
+          <a
+            href={post.permalink}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={label}
+          >
+            <img src={image} alt="" loading="lazy" referrerPolicy="no-referrer" />
+          </a>
+        ) : (
+          <a
+            href={post.permalink}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={label}
+          >
+            <span className="ig-post-fallback">
+              <InstagramGlyph />
+            </span>
+          </a>
+        )}
       </div>
-    </div>
+      {comments.length > 0 ? (
+        <ul className="ig-card-comments">
+          {comments.map((comment) => (
+            <li key={comment.id}>
+              <strong>{comment.username}</strong>
+              <span>{comment.text}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="ig-card-comments-empty">
+          <a href={post.permalink} target="_blank" rel="noreferrer">
+            View on Instagram
+          </a>
+        </p>
+      )}
+    </article>
   )
 }
 
 export function InstagramFeed({ title }: { title: string }) {
   const [posts, setPosts] = useState<InstagramPost[] | null>(null)
-  const [activePost, setActivePost] = useState<InstagramPost | null>(null)
+  const [index, setIndex] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -183,7 +143,10 @@ export function InstagramFeed({ title }: { title: string }) {
           return
         }
         const data = (await response.json()) as FeedResponse
-        if (!cancelled) setPosts(data.posts.slice(0, POST_COUNT))
+        if (!cancelled) {
+          setPosts(data.posts.slice(0, 5))
+          setIndex(0)
+        }
       } catch {
         if (!cancelled) setPosts([])
       }
@@ -195,64 +158,83 @@ export function InstagramFeed({ title }: { title: string }) {
     }
   }, [])
 
-  const showProfileEmbed = posts !== null && posts.length === 0
-  useInstagramEmbed(showProfileEmbed)
+  const count = posts?.length ?? 1
+  const goPrev = () => {
+    setIndex((current) => (current - 1 + count) % count)
+  }
+  const goNext = () => {
+    setIndex((current) => (current + 1) % count)
+  }
 
   if (posts === null) {
     return (
-      <ul className="ig-grid" aria-busy="true">
-        {SKELETON_KEYS.map((key) => (
-          <li key={key} className="ig-post ig-post-skeleton" />
-        ))}
-      </ul>
-    )
-  }
-
-  if (posts.length === 0) {
-    return (
-      <div className="ig-embed-frame">
-        <blockquote
-          className="instagram-media"
-          data-instgrm-permalink={restaurant.instagramUrl}
-          data-instgrm-version="14"
-        />
+      <div className="ig-carousel" aria-busy="true" aria-label={title}>
+        <div className="ig-carousel-stage">
+          <div className="ig-card ig-card-skeleton">
+            <p className="ig-post-number">#1</p>
+            <div className="ig-card-media" />
+            <ul className="ig-card-comments">
+              <li />
+              <li />
+              <li />
+            </ul>
+          </div>
+        </div>
       </div>
     )
   }
 
+  if (posts.length === 0) {
+    return null
+  }
+
+  const active = posts[index] ?? posts[0]
+
   return (
-    <>
-      <ul className="ig-grid">
-        {posts.map((post) => {
-          const image = thumbnailUrl(post)
-          const caption = post.caption?.trim() || title
-          const video = isVideoPost(post)
-          return (
-            <li key={post.id} className="ig-post">
-              <button
-                type="button"
-                className="ig-post-trigger"
-                onClick={() => setActivePost(post)}
-                aria-label={caption}
-              >
-                {image ? (
-                  <>
-                    <img src={image} alt={caption} loading="lazy" />
-                    {video ? <PlayGlyph /> : null}
-                  </>
-                ) : (
-                  <span className="ig-post-fallback">
-                    <InstagramGlyph />
-                  </span>
-                )}
-              </button>
-            </li>
-          )
-        })}
-      </ul>
-      {activePost ? (
-        <PostModal post={activePost} onClose={() => setActivePost(null)} />
+    <div className="ig-carousel" aria-label={title}>
+      <div className="ig-carousel-track">
+        {posts.length > 1 ? (
+          <button
+            type="button"
+            className="ig-carousel-nav"
+            onClick={goPrev}
+            aria-label="Previous post"
+          >
+            ‹
+          </button>
+        ) : null}
+
+        <div className="ig-carousel-stage">
+          <PostCard key={active.id} post={active} title={title} />
+        </div>
+
+        {posts.length > 1 ? (
+          <button
+            type="button"
+            className="ig-carousel-nav"
+            onClick={goNext}
+            aria-label="Next post"
+          >
+            ›
+          </button>
+        ) : null}
+      </div>
+
+      {posts.length > 1 ? (
+        <div className="ig-carousel-dots" role="tablist" aria-label={title}>
+          {posts.map((post, postIndex) => (
+            <button
+              key={post.id}
+              type="button"
+              role="tab"
+              className={`ig-carousel-dot${postIndex === index ? ' is-active' : ''}`}
+              aria-selected={postIndex === index}
+              aria-label={`Post #${String(post.number)}`}
+              onClick={() => setIndex(postIndex)}
+            />
+          ))}
+        </div>
       ) : null}
-    </>
+    </div>
   )
 }

@@ -48,6 +48,11 @@ import {
   loadRestaurantSettings,
   updateRestaurantSettings,
 } from './globallyBooked.ts'
+import {
+  getStoredInstagramPostUrls,
+  padInstagramSlots,
+  setStoredInstagramPostUrls,
+} from './adminInstagram.ts'
 
 function json(
   data: unknown,
@@ -358,6 +363,35 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
       } catch (error) {
         if (error instanceof GloballyBookedError) {
           return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    if (path === '/api/admin/instagram' && request.method === 'GET') {
+      const urls = padInstagramSlots(await getStoredInstagramPostUrls())
+      return json({ urls })
+    }
+
+    if (path === '/api/admin/instagram' && request.method === 'PUT') {
+      const body: unknown = await request.json().catch(() => null)
+      if (!body || typeof body !== 'object') {
+        return json({ error: 'invalid-request' }, 400)
+      }
+      const rawUrls = (body as { urls?: unknown }).urls
+      if (!Array.isArray(rawUrls)) {
+        return json({ error: 'invalid-urls' }, 400)
+      }
+      const inputs = rawUrls.map((entry) =>
+        typeof entry === 'string' ? entry : '',
+      )
+      try {
+        const saved = await setStoredInstagramPostUrls(inputs)
+        return json({ urls: padInstagramSlots(saved) })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'error'
+        if (message.startsWith('invalid-url-')) {
+          return json({ error: message }, 400)
         }
         throw error
       }

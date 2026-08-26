@@ -200,6 +200,7 @@ export const ptBR: Copy = {
   adminTabAccount: 'Conta',
   adminTabRestaurant: 'Restaurante',
   adminTabAvailability: 'Disponibilidade',
+  adminTabInstagram: 'Instagram',
   adminRestaurantHeading: 'Dados do restaurante',
   adminRestaurantLead:
     'Telefone, endereço e horário exibidos no site e nas reservas.',
@@ -222,6 +223,16 @@ export const ptBR: Copy = {
   adminAvailabilityClosed: 'Fechado',
   adminAvailabilityPrevMonth: 'Mês anterior',
   adminAvailabilityNextMonth: 'Próximo mês',
+  adminInstagramHeading: 'Posts do Instagram',
+  adminInstagramLead:
+    'Cole até cinco links de posts ou reels (ou o HTML completo do embed). O espaço #1 aparece primeiro no carrossel da página inicial.',
+  adminInstagramPostLabel: 'Post',
+  adminInstagramPlaceholder:
+    'https://www.instagram.com/p/…/ ou cole o código embed do Instagram',
+  adminInstagramSave: 'Salvar posts do Instagram',
+  adminInstagramSaved: 'Posts do Instagram atualizados.',
+  adminInstagramError: 'Não foi possível salvar os posts. Tente de novo.',
+  adminInstagramInvalid: 'Um ou mais espaços não são links válidos do Instagram.',
   adminCompanyPhone: 'Telefone (para links)',
   adminCompanyPhoneDisplay: 'Telefone (visível)',
   adminCompanyAddress: 'Endereço',

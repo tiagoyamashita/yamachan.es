@@ -162,6 +162,7 @@ export type Copy = {
   adminTabAccount: string
   adminTabRestaurant: string
   adminTabAvailability: string
+  adminTabInstagram: string
   adminRestaurantHeading: string
   adminRestaurantLead: string
   adminAvailabilityHeading: string
@@ -180,6 +181,14 @@ export type Copy = {
   adminAvailabilityClosed: string
   adminAvailabilityPrevMonth: string
   adminAvailabilityNextMonth: string
+  adminInstagramHeading: string
+  adminInstagramLead: string
+  adminInstagramPostLabel: string
+  adminInstagramPlaceholder: string
+  adminInstagramSave: string
+  adminInstagramSaved: string
+  adminInstagramError: string
+  adminInstagramInvalid: string
   adminCompanyPhone: string
   adminCompanyPhoneDisplay: string
   adminCompanyAddress: string

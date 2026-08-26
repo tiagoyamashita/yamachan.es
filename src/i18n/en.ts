@@ -199,6 +199,7 @@ export const en: Copy = {
   adminTabAccount: 'Account',
   adminTabRestaurant: 'Restaurant',
   adminTabAvailability: 'Availability',
+  adminTabInstagram: 'Instagram',
   adminRestaurantHeading: 'Restaurant info',
   adminRestaurantLead:
     'Phone, address and hours shown on the site and on the booking page.',
@@ -220,6 +221,16 @@ export const en: Copy = {
   adminAvailabilityClosed: 'Closed',
   adminAvailabilityPrevMonth: 'Previous month',
   adminAvailabilityNextMonth: 'Next month',
+  adminInstagramHeading: 'Instagram posts',
+  adminInstagramLead:
+    'Paste up to five Instagram post or reel links (or the full embed HTML). Slot #1 appears first in the homepage carousel.',
+  adminInstagramPostLabel: 'Post',
+  adminInstagramPlaceholder:
+    'https://www.instagram.com/p/…/ or paste Instagram embed code',
+  adminInstagramSave: 'Save Instagram posts',
+  adminInstagramSaved: 'Instagram posts updated.',
+  adminInstagramError: 'Could not save Instagram posts. Try again.',
+  adminInstagramInvalid: 'One or more slots are not valid Instagram links.',
   adminCompanyPhone: 'Phone (for links)',
   adminCompanyPhoneDisplay: 'Phone (display)',
   adminCompanyAddress: 'Address',
