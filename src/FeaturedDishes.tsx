@@ -46,14 +46,14 @@ function dishCopy(dish: FeaturedDish, locale: Locale) {
       }
     case 'ja':
       return {
-        name: firstNonEmpty(dish.name_ja, fromCatalog?.name, dish.name_es),
-        blurb: firstNonEmpty(fromCatalog?.blurb, dish.blurb_en, dish.blurb_es),
+        name: firstNonEmpty(dish.name_ja, dish.name_es, fromCatalog?.name),
+        blurb: firstNonEmpty(dish.blurb_en, dish.blurb_es, fromCatalog?.blurb),
         quote: firstNonEmpty(dish.review_quote_en, dish.review_quote_es),
       }
     case 'pt-BR':
       return {
-        name: firstNonEmpty(fromCatalog?.name, dish.name_es, dish.name_en),
-        blurb: firstNonEmpty(fromCatalog?.blurb, dish.blurb_es, dish.blurb_en),
+        name: firstNonEmpty(dish.name_es, dish.name_en, fromCatalog?.name),
+        blurb: firstNonEmpty(dish.blurb_es, dish.blurb_en, fromCatalog?.blurb),
         quote: firstNonEmpty(dish.review_quote_es, dish.review_quote_en),
       }
     default: {

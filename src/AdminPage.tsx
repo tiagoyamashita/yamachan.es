@@ -200,6 +200,16 @@ function DishEditor({
   onPhoto: (file: File) => void
   busy: boolean
 }) {
+  const [priceInput, setPriceInput] = useState(
+    item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '',
+  )
+
+  useEffect(() => {
+    setPriceInput(
+      item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '',
+    )
+  }, [item.id, item.price_cents])
+
   const set = (patch: Partial<StoredMenuItem>) => {
     onChange({ ...item, ...patch })
   }
@@ -308,11 +318,11 @@ function DishEditor({
               type="number"
               min="0"
               step="0.01"
-              value={
-                item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : ''
-              }
+              value={priceInput}
               onChange={(event) => {
-                const euros = Number(event.target.value.replace(',', '.'))
+                const raw = event.target.value
+                setPriceInput(raw)
+                const euros = Number(raw.replace(',', '.'))
                 set({
                   price_cents:
                     Number.isFinite(euros) && euros >= 0
