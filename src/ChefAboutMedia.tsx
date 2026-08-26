@@ -55,25 +55,46 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
       return
     }
 
+    video.muted = false
+
     const play = () => {
-      void video.play().catch(() => {
-        // Autoplay can be blocked until the tab is visible / unmuted policies change.
-      })
+      video.muted = false
+      return video.play()
     }
 
-    play()
+    const onGesture = () => {
+      void play().catch(() => undefined)
+    }
+
+    let waitingForGesture = false
+    const requestGestureUnlock = () => {
+      if (waitingForGesture) {
+        return
+      }
+      waitingForGesture = true
+      document.addEventListener('pointerdown', onGesture, { once: true })
+      document.addEventListener('keydown', onGesture, { once: true })
+    }
+
+    void play().catch(() => {
+      requestGestureUnlock()
+    })
 
     const onVisibility = () => {
       if (document.hidden) {
         video.pause()
       } else {
-        play()
+        void play().catch(() => {
+          requestGestureUnlock()
+        })
       }
     }
 
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
       document.removeEventListener('visibilitychange', onVisibility)
+      document.removeEventListener('pointerdown', onGesture)
+      document.removeEventListener('keydown', onGesture)
     }
   }, [videoUrl])
 
@@ -93,7 +114,6 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
             src={videoUrl}
             poster={posterUrl}
             autoPlay
-            muted
             loop
             playsInline
             preload="auto"
