@@ -23,6 +23,7 @@ import { ReservasPage } from './ReservasPage.tsx'
 import { AdminPage } from './AdminPage.tsx'
 import { InstagramFeed } from './InstagramFeed.tsx'
 import { GoogleReviews } from './GoogleReviews.tsx'
+import { ChefAboutMedia } from './ChefAboutMedia.tsx'
 import './App.css'
 
 type Route = '/' | '/carta' | '/para-llevar' | '/reservas' | '/admin'
@@ -383,14 +384,7 @@ export default function App() {
                   ))}
                   <p className="about-note">{t.aboutNote}</p>
                 </div>
-                <figure className="about-frame">
-                  <img
-                    src="/images/chef-masashi.png"
-                    alt={t.chefPhotoAlt}
-                    loading="lazy"
-                  />
-                  <figcaption>{t.aboutCaption}</figcaption>
-                </figure>
+                <ChefAboutMedia alt={t.chefPhotoAlt} caption={t.aboutCaption} />
               </div>
             </section>
 
