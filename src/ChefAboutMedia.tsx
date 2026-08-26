@@ -13,6 +13,7 @@ type ChefAboutMediaProps = {
 }
 
 export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
+  const frameRef = useRef<HTMLElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoUrl, setVideoUrl] = useState<string | undefined>()
   const [posterUrl, setPosterUrl] = useState(restaurant.chefPhoto)
@@ -50,12 +51,15 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
   }, [])
 
   useEffect(() => {
+    const frame = frameRef.current
     const video = videoRef.current
-    if (!video || !videoUrl) {
+    if (!frame || !video || !videoUrl) {
       return
     }
 
     video.muted = false
+    let inView = false
+    let waitingForGesture = false
 
     const play = () => {
       video.muted = false
@@ -63,10 +67,12 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
     }
 
     const onGesture = () => {
+      if (!inView) {
+        return
+      }
       void play().catch(() => undefined)
     }
 
-    let waitingForGesture = false
     const requestGestureUnlock = () => {
       if (waitingForGesture) {
         return
@@ -76,22 +82,34 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
       document.addEventListener('keydown', onGesture, { once: true })
     }
 
-    void play().catch(() => {
-      requestGestureUnlock()
-    })
-
-    const onVisibility = () => {
-      if (document.hidden) {
+    const syncPlayback = () => {
+      if (!inView || document.hidden) {
         video.pause()
-      } else {
-        void play().catch(() => {
-          requestGestureUnlock()
-        })
+        return
       }
+      // pause() keeps currentTime, so play() resumes where it left off.
+      void play().catch(() => {
+        requestGestureUnlock()
+      })
     }
 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        inView = Boolean(entry?.isIntersecting)
+        syncPlayback()
+      },
+      { threshold: 0.35 },
+    )
+    observer.observe(frame)
+
+    const onVisibility = () => {
+      syncPlayback()
+    }
     document.addEventListener('visibilitychange', onVisibility)
+
     return () => {
+      observer.disconnect()
       document.removeEventListener('visibilitychange', onVisibility)
       document.removeEventListener('pointerdown', onGesture)
       document.removeEventListener('keydown', onGesture)
@@ -99,7 +117,7 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
   }, [videoUrl])
 
   return (
-    <figure className="about-frame">
+    <figure className="about-frame" ref={frameRef}>
       <a
         className="about-frame-media"
         href={restaurant.chefReelUrl}
