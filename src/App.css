@@ -291,13 +291,21 @@ h3 {
   box-shadow: var(--shadow);
 }
 
-.about-frame img {
+.about-frame-media {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.about-frame img,
+.about-frame-video {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 9 / 16;
   object-fit: cover;
   object-position: center top;
+  background: rgba(0, 0, 0, 0.08);
 }
 
 .about-frame figcaption {
@@ -306,6 +314,16 @@ h3 {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.about-frame figcaption a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.about-frame figcaption a:hover,
+.about-frame figcaption a:focus-visible {
+  color: var(--ink);
 }
 
 .section-head {

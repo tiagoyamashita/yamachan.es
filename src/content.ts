@@ -1,6 +1,8 @@
 export const restaurant = {
   name: 'Yama-Chan',
   nameJa: '山ちゃん',
+  chefPhoto: '/images/chef-masashi.png',
+  chefReelUrl: 'https://www.instagram.com/reel/DMQLKHMs94d/',
   instagramUrl: 'https://www.instagram.com/yamachan.es/',
   instagramHandle: '@yamachan.es',
   phone: '+34604949252',
