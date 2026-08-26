@@ -1422,11 +1422,41 @@ h3 {
   gap: 0.55rem;
 }
 
+.ig-grid-embeds {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
 .ig-post {
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
   background: var(--ink);
+}
+
+.ig-post-embed {
+  aspect-ratio: auto;
+  overflow: visible;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ig-post-number {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted, #6b6358);
+}
+
+.ig-post-embed blockquote {
+  margin: 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
 }
 
 .ig-post-trigger {
@@ -1797,6 +1827,10 @@ h3 {
 
   .ig-grid {
     grid-template-columns: repeat(5, 1fr);
+  }
+
+  .ig-grid-embeds {
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
   }
 
   .review-grid {
