@@ -49,13 +49,17 @@ const FALLBACK_ALLERGENS: Record<MenuItemId, AllergenId[]> = {
 }
 
 function parsePriceCents(row: Record<string, unknown>, slug: string): number {
-  const fromCents = Number(row.price_cents)
-  if (Number.isFinite(fromCents) && fromCents > 0) {
-    return Math.round(fromCents)
+  if ('price_cents' in row && row.price_cents !== null && row.price_cents !== undefined) {
+    const fromCents = Number(row.price_cents)
+    if (Number.isFinite(fromCents) && fromCents >= 0) {
+      return Math.round(fromCents)
+    }
   }
-  const fromEuros = Number(row.price)
-  if (Number.isFinite(fromEuros) && fromEuros > 0) {
-    return Math.round(fromEuros * 100)
+  if ('price' in row && row.price !== null && row.price !== undefined) {
+    const fromEuros = Number(row.price)
+    if (Number.isFinite(fromEuros) && fromEuros >= 0) {
+      return Math.round(fromEuros * 100)
+    }
   }
   return priceCentsForSlug(slug)
 }
@@ -175,13 +179,13 @@ export function displayMenuItem(item: StoredMenuItem, locale: Locale) {
       }
     case 'ja':
       return {
-        name: firstNonEmpty(item.name_ja, fromCatalog?.name, item.name_es),
-        blurb: firstNonEmpty(fromCatalog?.blurb, item.blurb_en, item.blurb_es),
+        name: firstNonEmpty(item.name_ja, item.name_es, fromCatalog?.name),
+        blurb: firstNonEmpty(item.blurb_en, item.blurb_es, fromCatalog?.blurb),
       }
     case 'pt-BR':
       return {
-        name: firstNonEmpty(fromCatalog?.name, item.name_es, item.name_en),
-        blurb: firstNonEmpty(fromCatalog?.blurb, item.blurb_es, item.blurb_en),
+        name: firstNonEmpty(item.name_es, item.name_en, fromCatalog?.name),
+        blurb: firstNonEmpty(item.blurb_es, item.blurb_en, fromCatalog?.blurb),
       }
     default: {
       const _exhaustive: never = locale
