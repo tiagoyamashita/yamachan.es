@@ -39,6 +39,23 @@ type BookingDayPreview = {
   slot_count: number
 }
 
+type OpeningRule = {
+  id: string
+  name: string
+  opens_at: string
+  closes_at: string
+  color: string
+}
+
+type OpenDateEntry = {
+  id?: string
+  open_date: string
+  rule_id?: string
+  opens_at: string
+  closes_at: string
+  restaurant_opening_rules?: { id?: string; name?: string; color?: string } | null
+}
+
 function adminHeading(t: Copy, tab: AdminTab): string {
   switch (tab) {
     case 'menu':
@@ -594,6 +611,9 @@ function shiftMonth(year: number, month: number, delta: number) {
 function AvailabilityEditor({
   settings,
   days,
+  rules,
+  openDates,
+  usesOpenDateCalendar,
   year,
   month,
   busy,
@@ -602,9 +622,16 @@ function AvailabilityEditor({
   onChange,
   onSave,
   onMonthChange,
+  onCreateRule,
+  onDeleteRule,
+  onApplyDates,
+  onClearDates,
 }: {
   settings: BookingAvailabilitySettings | null
   days: BookingDayPreview[]
+  rules: OpeningRule[]
+  openDates: OpenDateEntry[]
+  usesOpenDateCalendar: boolean
   year: number
   month: number
   busy: boolean
@@ -613,8 +640,42 @@ function AvailabilityEditor({
   onChange: (next: BookingAvailabilitySettings) => void
   onSave: () => void
   onMonthChange: (year: number, month: number) => void
+  onCreateRule: (input: {
+    name: string
+    opensAt: string
+    closesAt: string
+  }) => Promise<void>
+  onDeleteRule: (id: string) => Promise<void>
+  onApplyDates: (ruleId: string, dates: string[]) => Promise<void>
+  onClearDates: (dates: string[]) => Promise<void>
 }) {
+  const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null)
+  const [selectedDates, setSelectedDates] = useState<string[]>([])
+  const [ruleName, setRuleName] = useState('Lunch')
+  const [ruleOpensAt, setRuleOpensAt] = useState('13:00')
+  const [ruleClosesAt, setRuleClosesAt] = useState('16:30')
+
+  useEffect(() => {
+    if (selectedRuleId && !rules.some((rule) => rule.id === selectedRuleId)) {
+      setSelectedRuleId(null)
+    }
+    if (!selectedRuleId && rules[0]) {
+      setSelectedRuleId(rules[0].id)
+    }
+  }, [rules, selectedRuleId])
+
+  useEffect(() => {
+    setSelectedDates([])
+  }, [year, month])
+
   const dayMap = new Map(days.map((day) => [day.date, day]))
+  const openByDate = new Map<string, OpenDateEntry[]>()
+  for (const row of openDates) {
+    const list = openByDate.get(row.open_date) ?? []
+    list.push(row)
+    openByDate.set(row.open_date, list)
+  }
+  const selectedSet = new Set(selectedDates)
   const firstWeekday = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const cells: Array<number | null> = [
@@ -654,13 +715,35 @@ function AvailabilityEditor({
     onChange({ ...settings, ...partial })
   }
 
+  const toggleDate = (dateKey: string) => {
+    setSelectedDates((current) =>
+      current.includes(dateKey)
+        ? current.filter((value) => value !== dateKey)
+        : [...current, dateKey].sort(),
+    )
+  }
+
+  const selectWeekdays = () => {
+    const dates: string[] = []
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const weekday = new Date(year, month, day).getDay()
+      if (weekday === 0 || weekday === 6) {
+        continue
+      }
+      dates.push(
+        `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      )
+    }
+    setSelectedDates(dates)
+  }
+
   return (
     <section className="admin-company takeout-form">
-      {loadError ? <p className="takeout-error">{loadError}</p> : null}
-
       <fieldset className="admin-company-block">
         <legend>{t.adminAvailabilityHeading}</legend>
-        <p className="muted">{settings.name} · {settings.slug}</p>
+        <p className="muted">
+          {settings.name} · {settings.slug}
+        </p>
         <div className="admin-company-grid">
           <label className="takeout-field">
             <span>{t.adminAvailabilityOpensAt}</span>
@@ -717,7 +800,90 @@ function AvailabilityEditor({
       </div>
 
       <fieldset className="admin-company-block">
-        <legend>{t.adminAvailabilityPreview}</legend>
+        <legend>{t.adminOpenRulesHeading}</legend>
+        <p className="muted">{t.adminOpenRulesLead}</p>
+        {rules.length === 0 ? (
+          <p className="muted">{t.adminOpenRulesEmpty}</p>
+        ) : (
+          <ul className="admin-open-rules">
+            {rules.map((rule) => (
+              <li key={rule.id}>
+                <label className="admin-open-rule">
+                  <input
+                    type="radio"
+                    name="opening-rule"
+                    checked={selectedRuleId === rule.id}
+                    onChange={() => setSelectedRuleId(rule.id)}
+                  />
+                  <span>
+                    <strong>{rule.name}</strong>
+                    <small>
+                      {rule.opens_at} – {rule.closes_at}
+                    </small>
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-small"
+                  disabled={busy}
+                  onClick={() => void onDeleteRule(rule.id)}
+                >
+                  {t.adminOpenRuleDelete}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="admin-company-grid">
+          <label className="takeout-field">
+            <span>{t.adminOpenRuleName}</span>
+            <input
+              value={ruleName}
+              onChange={(event) => setRuleName(event.target.value)}
+            />
+          </label>
+          <label className="takeout-field">
+            <span>{t.adminAvailabilityOpensAt}</span>
+            <input
+              type="time"
+              value={ruleOpensAt}
+              onChange={(event) => setRuleOpensAt(event.target.value)}
+            />
+          </label>
+          <label className="takeout-field">
+            <span>{t.adminAvailabilityClosesAt}</span>
+            <input
+              type="time"
+              value={ruleClosesAt}
+              onChange={(event) => setRuleClosesAt(event.target.value)}
+            />
+          </label>
+        </div>
+        <div className="admin-dish-actions">
+          <button
+            className="btn"
+            type="button"
+            disabled={busy || !ruleName.trim()}
+            onClick={() =>
+              void onCreateRule({
+                name: ruleName,
+                opensAt: ruleOpensAt,
+                closesAt: ruleClosesAt,
+              })
+            }
+          >
+            {t.adminOpenRuleCreate}
+          </button>
+        </div>
+      </fieldset>
+
+      <fieldset className="admin-company-block">
+        <legend>{t.adminOpenDatesHeading}</legend>
+        <p className="muted">
+          {usesOpenDateCalendar
+            ? t.adminOpenDatesAllowlistNote
+            : t.adminOpenDatesFallbackNote}
+        </p>
         <div className="admin-availability-cal-head">
           <button
             type="button"
@@ -760,24 +926,93 @@ function AvailabilityEditor({
             }
             const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
             const row = dayMap.get(key)
-            const closed = row?.closed ?? true
+            const dayOpenRows = openByDate.get(key) ?? []
+            const closed = usesOpenDateCalendar
+              ? dayOpenRows.length === 0
+              : (row?.closed ?? true)
             const slots = row?.slot_count ?? 0
+            const selected = selectedSet.has(key)
+            const ruleLabel =
+              dayOpenRows
+                .map(
+                  (entry) =>
+                    entry.restaurant_opening_rules?.name ||
+                    rules.find((rule) => rule.id === entry.rule_id)?.name ||
+                    `${entry.opens_at}-${entry.closes_at}`,
+                )
+                .join(', ') || null
             return (
-              <div
-                className={`admin-availability-cell${closed ? ' is-closed' : ' is-open'}`}
+              <button
+                type="button"
+                className={`admin-availability-cell${closed ? ' is-closed' : ' is-open'}${selected ? ' is-selected' : ''}`}
                 key={key}
+                disabled={busy}
                 title={
                   closed
                     ? t.adminAvailabilityClosed
-                    : `${t.adminAvailabilityOpen} · ${slots}`
+                    : `${t.adminAvailabilityOpen} · ${slots}${ruleLabel ? ` · ${ruleLabel}` : ''}`
                 }
+                onClick={() => toggleDate(key)}
               >
                 <span>{day}</span>
-                <small>{closed ? t.adminAvailabilityClosed : slots}</small>
-              </div>
+                <small>
+                  {closed
+                    ? t.adminAvailabilityClosed
+                    : ruleLabel || String(slots)}
+                </small>
+              </button>
             )
           })}
         </div>
+        <div className="admin-open-dates-actions">
+          <button
+            type="button"
+            className="btn btn-outline btn-small"
+            disabled={busy}
+            onClick={selectWeekdays}
+          >
+            {t.adminOpenDatesSelectWeekdays}
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline btn-small"
+            disabled={busy || selectedDates.length === 0}
+            onClick={() => setSelectedDates([])}
+          >
+            {t.adminOpenDatesClearSelection}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            disabled={busy || !selectedRuleId || selectedDates.length === 0}
+            onClick={() => {
+              if (!selectedRuleId) {
+                return
+              }
+              void onApplyDates(selectedRuleId, selectedDates).then(() =>
+                setSelectedDates([]),
+              )
+            }}
+          >
+            {t.adminOpenDatesApply}
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline"
+            disabled={busy || selectedDates.length === 0}
+            onClick={() => {
+              void onClearDates(selectedDates).then(() => setSelectedDates([]))
+            }}
+          >
+            {t.adminOpenDatesClear}
+          </button>
+        </div>
+        <p className="muted">
+          {t.adminOpenDatesSelectedCount.replace(
+            '{count}',
+            String(selectedDates.length),
+          )}
+        </p>
       </fieldset>
     </section>
   )
@@ -994,6 +1229,11 @@ export function AdminPage({
   const [availabilityDays, setAvailabilityDays] = useState<BookingDayPreview[]>(
     [],
   )
+  const [availabilityRules, setAvailabilityRules] = useState<OpeningRule[]>([])
+  const [availabilityOpenDates, setAvailabilityOpenDates] = useState<
+    OpenDateEntry[]
+  >([])
+  const [usesOpenDateCalendar, setUsesOpenDateCalendar] = useState(false)
   const [availabilityBusy, setAvailabilityBusy] = useState(false)
   const [availabilityError, setAvailabilityError] = useState<string | null>(null)
   const now = new Date()
@@ -1014,10 +1254,16 @@ export function AdminPage({
       const data = await api<{
         settings: BookingAvailabilitySettings
         days?: BookingDayPreview[]
+        rules?: OpeningRule[]
+        openDates?: OpenDateEntry[]
+        usesOpenDateCalendar?: boolean
         error?: string
       }>(`/api/admin/availability?from=${from}&to=${to}`)
       setAvailabilitySettings(data.settings)
       setAvailabilityDays(data.days ?? [])
+      setAvailabilityRules(data.rules ?? [])
+      setAvailabilityOpenDates(data.openDates ?? [])
+      setUsesOpenDateCalendar(Boolean(data.usesOpenDateCalendar))
       setAvailabilityError(null)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'error'
@@ -1028,6 +1274,9 @@ export function AdminPage({
       }
       setAvailabilitySettings(null)
       setAvailabilityDays([])
+      setAvailabilityRules([])
+      setAvailabilityOpenDates([])
+      setUsesOpenDateCalendar(false)
     } finally {
       setAvailabilityBusy(false)
     }
@@ -1283,6 +1532,82 @@ export function AdminPage({
       )
       setAvailabilitySettings(data.settings)
       setMessage(t.adminAvailabilitySaved)
+      await loadAvailability(availabilityYear, availabilityMonth)
+    } catch {
+      setMessage(t.adminAvailabilityError)
+    } finally {
+      setAvailabilityBusy(false)
+    }
+  }
+
+  const createOpeningRule = async (input: {
+    name: string
+    opensAt: string
+    closesAt: string
+  }) => {
+    setAvailabilityBusy(true)
+    setMessage(null)
+    try {
+      await api('/api/admin/opening-rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      })
+      setMessage(t.adminOpenRuleCreated)
+      await loadAvailability(availabilityYear, availabilityMonth)
+    } catch {
+      setMessage(t.adminAvailabilityError)
+    } finally {
+      setAvailabilityBusy(false)
+    }
+  }
+
+  const deleteOpeningRule = async (id: string) => {
+    setAvailabilityBusy(true)
+    setMessage(null)
+    try {
+      await api('/api/admin/opening-rules', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      setMessage(t.adminOpenRuleDeleted)
+      await loadAvailability(availabilityYear, availabilityMonth)
+    } catch {
+      setMessage(t.adminAvailabilityError)
+    } finally {
+      setAvailabilityBusy(false)
+    }
+  }
+
+  const applyOpenDates = async (ruleId: string, dates: string[]) => {
+    setAvailabilityBusy(true)
+    setMessage(null)
+    try {
+      await api('/api/admin/open-dates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ruleId, dates }),
+      })
+      setMessage(t.adminOpenDatesApplied)
+      await loadAvailability(availabilityYear, availabilityMonth)
+    } catch {
+      setMessage(t.adminAvailabilityError)
+    } finally {
+      setAvailabilityBusy(false)
+    }
+  }
+
+  const clearOpenDates = async (dates: string[]) => {
+    setAvailabilityBusy(true)
+    setMessage(null)
+    try {
+      await api('/api/admin/open-dates', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dates }),
+      })
+      setMessage(t.adminOpenDatesCleared)
       await loadAvailability(availabilityYear, availabilityMonth)
     } catch {
       setMessage(t.adminAvailabilityError)
@@ -1676,6 +2001,9 @@ export function AdminPage({
                   <AvailabilityEditor
                     settings={availabilitySettings}
                     days={availabilityDays}
+                    rules={availabilityRules}
+                    openDates={availabilityOpenDates}
+                    usesOpenDateCalendar={usesOpenDateCalendar}
                     year={availabilityYear}
                     month={availabilityMonth}
                     busy={availabilityBusy}
@@ -1688,6 +2016,10 @@ export function AdminPage({
                       setAvailabilityMonth(month)
                       void loadAvailability(year, month)
                     }}
+                    onCreateRule={createOpeningRule}
+                    onDeleteRule={deleteOpeningRule}
+                    onApplyDates={applyOpenDates}
+                    onClearDates={clearOpenDates}
                   />
                 ) : null}
                 {tab === 'instagram' ? (

@@ -191,11 +191,31 @@ export function isDateKey(value: string): boolean {
   return DATE_RE.test(value)
 }
 
-type OpenDateRow = {
-  open_date: string
+export type OpeningRule = {
+  id: string
+  name: string
   opens_at: string
   closes_at: string
+  color: string
 }
+
+export type OpenDateRow = {
+  id?: string
+  open_date: string
+  rule_id?: string
+  opens_at: string
+  closes_at: string
+  restaurant_opening_rules?: { id?: string; name?: string; color?: string } | null
+}
+
+const OPENING_RULE_COLORS = [
+  'emerald',
+  'sky',
+  'violet',
+  'amber',
+  'rose',
+  'slate',
+] as const
 
 type RestaurantTable = {
   id: string
@@ -332,9 +352,156 @@ function localDateTimeToUtcIso(
   return new Date(utc).toISOString()
 }
 
-async function loadOpenDates(): Promise<OpenDateRow[]> {
+export async function loadOpeningRules(): Promise<OpeningRule[]> {
+  const data = await gbFetch<OpeningRule[]>('GET', restaurantPath('/opening-rules'))
+  return (Array.isArray(data) ? data : []).map((rule) => ({
+    id: rule.id,
+    name: rule.name,
+    opens_at: normalizeTime(rule.opens_at) ?? rule.opens_at,
+    closes_at: normalizeTime(rule.closes_at) ?? rule.closes_at,
+    color: rule.color || 'emerald',
+  }))
+}
+
+export async function createOpeningRule(input: {
+  name: string
+  opensAt: string
+  closesAt: string
+  color?: string
+}): Promise<OpeningRule> {
+  const name = input.name.trim()
+  if (!name) {
+    throw new GloballyBookedError('invalid-rule-name', 400)
+  }
+  const opensAt = normalizeTime(input.opensAt)
+  const closesAt = normalizeTime(input.closesAt)
+  if (!opensAt || !closesAt) {
+    throw new GloballyBookedError('invalid-rule-hours', 400)
+  }
+  if (opensAt === closesAt) {
+    throw new GloballyBookedError('invalid-rule-hours', 400)
+  }
+  const color =
+    input.color &&
+    (OPENING_RULE_COLORS as readonly string[]).includes(input.color)
+      ? input.color
+      : 'emerald'
+  const data = await gbFetch<OpeningRule>('POST', restaurantPath('/opening-rules'), {
+    name,
+    opens_at: opensAt,
+    closes_at: closesAt,
+    color,
+  })
+  return {
+    id: data.id,
+    name: data.name,
+    opens_at: normalizeTime(data.opens_at) ?? data.opens_at,
+    closes_at: normalizeTime(data.closes_at) ?? data.closes_at,
+    color: data.color || color,
+  }
+}
+
+export async function updateOpeningRule(input: {
+  id: string
+  name?: string
+  opensAt?: string
+  closesAt?: string
+  color?: string
+}): Promise<OpeningRule> {
+  if (!input.id.trim()) {
+    throw new GloballyBookedError('invalid-rule-id', 400)
+  }
+  const body: Record<string, unknown> = {}
+  if (input.name !== undefined) {
+    const name = input.name.trim()
+    if (!name) {
+      throw new GloballyBookedError('invalid-rule-name', 400)
+    }
+    body.name = name
+  }
+  if (input.opensAt !== undefined) {
+    const opensAt = normalizeTime(input.opensAt)
+    if (!opensAt) {
+      throw new GloballyBookedError('invalid-rule-hours', 400)
+    }
+    body.opens_at = opensAt
+  }
+  if (input.closesAt !== undefined) {
+    const closesAt = normalizeTime(input.closesAt)
+    if (!closesAt) {
+      throw new GloballyBookedError('invalid-rule-hours', 400)
+    }
+    body.closes_at = closesAt
+  }
+  if (input.color !== undefined) {
+    if (!(OPENING_RULE_COLORS as readonly string[]).includes(input.color)) {
+      throw new GloballyBookedError('invalid-rule-color', 400)
+    }
+    body.color = input.color
+  }
+  if (Object.keys(body).length === 0) {
+    throw new GloballyBookedError('no-fields', 400)
+  }
+  const data = await gbFetch<OpeningRule>(
+    'PATCH',
+    restaurantPath(`/opening-rules/${encodeURIComponent(input.id)}`),
+    body,
+  )
+  return {
+    id: data.id,
+    name: data.name,
+    opens_at: normalizeTime(data.opens_at) ?? data.opens_at,
+    closes_at: normalizeTime(data.closes_at) ?? data.closes_at,
+    color: data.color || 'emerald',
+  }
+}
+
+export async function deleteOpeningRule(id: string): Promise<void> {
+  if (!id.trim()) {
+    throw new GloballyBookedError('invalid-rule-id', 400)
+  }
+  await gbFetch<{ id: string }>('DELETE', restaurantPath(`/opening-rules/${encodeURIComponent(id)}`))
+}
+
+export async function loadOpenDates(): Promise<OpenDateRow[]> {
   const data = await gbFetch<OpenDateRow[]>('GET', restaurantPath('/open-dates'))
+  return (Array.isArray(data) ? data : []).map((row) => ({
+    id: row.id,
+    open_date: row.open_date.slice(0, 10),
+    rule_id: row.rule_id,
+    opens_at: normalizeTime(row.opens_at) ?? row.opens_at,
+    closes_at: normalizeTime(row.closes_at) ?? row.closes_at,
+    restaurant_opening_rules: row.restaurant_opening_rules ?? null,
+  }))
+}
+
+export async function applyOpenDates(input: {
+  ruleId: string
+  dates: string[]
+}): Promise<OpenDateRow[]> {
+  if (!input.ruleId.trim()) {
+    throw new GloballyBookedError('invalid-rule-id', 400)
+  }
+  const dates = [...new Set(input.dates.filter(isDateKey))]
+  if (dates.length === 0) {
+    throw new GloballyBookedError('invalid-dates', 400)
+  }
+  const data = await gbFetch<OpenDateRow[]>('POST', restaurantPath('/open-dates'), {
+    rule_id: input.ruleId,
+    dates,
+  })
   return Array.isArray(data) ? data : []
+}
+
+export async function clearOpenDates(dates: string[]): Promise<void> {
+  const unique = [...new Set(dates.filter(isDateKey))]
+  if (unique.length === 0) {
+    throw new GloballyBookedError('invalid-dates', 400)
+  }
+  await gbFetch<{ dates: string[] }>(
+    'DELETE',
+    `${restaurantPath('/open-dates')}?dates=${encodeURIComponent(unique.join(','))}`,
+  )
 }
 
 async function loadTables(): Promise<RestaurantTable[]> {

@@ -181,6 +181,24 @@ export type Copy = {
   adminAvailabilityClosed: string
   adminAvailabilityPrevMonth: string
   adminAvailabilityNextMonth: string
+  adminOpenRulesHeading: string
+  adminOpenRulesLead: string
+  adminOpenRulesEmpty: string
+  adminOpenRuleName: string
+  adminOpenRuleCreate: string
+  adminOpenRuleCreated: string
+  adminOpenRuleDelete: string
+  adminOpenRuleDeleted: string
+  adminOpenDatesHeading: string
+  adminOpenDatesFallbackNote: string
+  adminOpenDatesAllowlistNote: string
+  adminOpenDatesSelectWeekdays: string
+  adminOpenDatesClearSelection: string
+  adminOpenDatesApply: string
+  adminOpenDatesClear: string
+  adminOpenDatesApplied: string
+  adminOpenDatesCleared: string
+  adminOpenDatesSelectedCount: string
   adminInstagramHeading: string
   adminInstagramLead: string
   adminInstagramPostLabel: string

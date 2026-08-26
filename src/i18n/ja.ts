@@ -203,7 +203,7 @@ export const ja: Copy = {
   adminRestaurantLead: 'サイトと予約ページに表示される電話・住所・営業時間です。',
   adminAvailabilityHeading: '予約の空き状況',
   adminAvailabilityLead:
-    'Globally Booked 経由の予約用の開店時間と枠設定です。お客様は予約ページでこの時間を見ます。',
+    'Globally Booked 用の既定営業時間・枠設定と、営業日カレンダーです。',
   adminAvailabilityOpensAt: '開店',
   adminAvailabilityClosesAt: '閉店',
   adminAvailabilitySlotInterval: '枠の間隔（分）',
@@ -220,6 +220,27 @@ export const ja: Copy = {
   adminAvailabilityClosed: '休業',
   adminAvailabilityPrevMonth: '前の月',
   adminAvailabilityNextMonth: '次の月',
+  adminOpenRulesHeading: '営業時間ルール',
+  adminOpenRulesLead:
+    'ランチやディナーなどの時間帯を作り、カレンダーの日付に適用します。',
+  adminOpenRulesEmpty: 'ルールがまだありません。下で作成してください。',
+  adminOpenRuleName: 'ルール名',
+  adminOpenRuleCreate: 'ルールを作成',
+  adminOpenRuleCreated: '営業時間ルールを作成しました。',
+  adminOpenRuleDelete: '削除',
+  adminOpenRuleDeleted: '営業時間ルールを削除しました。',
+  adminOpenDatesHeading: '営業日',
+  adminOpenDatesFallbackNote:
+    '日付を適用するまでは、上の既定の開店・閉店時間で予約できます。',
+  adminOpenDatesAllowlistNote:
+    '営業日カレンダーが有効です。塗った日付だけ予約できます。上の既定時間は予約には使われません。',
+  adminOpenDatesSelectWeekdays: '平日を選択',
+  adminOpenDatesClearSelection: '選択を解除',
+  adminOpenDatesApply: 'ルールを日付に適用',
+  adminOpenDatesClear: '日付をクリア',
+  adminOpenDatesApplied: '営業日を更新しました。',
+  adminOpenDatesCleared: '営業日をクリアしました。',
+  adminOpenDatesSelectedCount: '{count} 日選択中',
   adminInstagramHeading: 'Instagram投稿',
   adminInstagramLead:
     '投稿またはリールのリンク（または埋め込みHTML）を最大5件まで貼り付けます。#1 がトップページのカルーセル先頭になります。',
