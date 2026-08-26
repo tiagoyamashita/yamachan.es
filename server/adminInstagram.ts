@@ -1,21 +1,18 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import {
+  adminSupabaseKey,
+  adminSupabaseUrl,
+  adminWriteSecret,
+} from './adminEnv.ts'
 
 export const INSTAGRAM_POST_SLOTS = 5
 
 const PERMALINK_RE =
   /(?:https?:\/\/)?(?:www\.)?instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/i
 
-function writeSecret(): string {
-  return process.env.ADMIN_WRITE_SECRET || ''
-}
-
 function getSupabase(): SupabaseClient | null {
-  const url =
-    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
-  const key =
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    ''
+  const url = adminSupabaseUrl()
+  const key = adminSupabaseKey()
   if (!url || !key) {
     return null
   }
@@ -128,7 +125,7 @@ export async function getStoredInstagramPostUrls(): Promise<string[]> {
 export async function setStoredInstagramPostUrls(
   inputs: string[],
 ): Promise<string[]> {
-  const secret = writeSecret()
+  const secret = adminWriteSecret()
   const supabase = getSupabase()
   if (!secret || !supabase) {
     throw new Error('missing-admin-config')

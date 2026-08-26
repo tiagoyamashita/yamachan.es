@@ -5,18 +5,15 @@ import {
   parseStoredCompanyInfo,
   type StoredCompanyInfo,
 } from '../src/companyInfo.ts'
-
-function writeSecret(): string {
-  return process.env.ADMIN_WRITE_SECRET || ''
-}
+import {
+  adminSupabaseKey,
+  adminSupabaseUrl,
+  adminWriteSecret,
+} from './adminEnv.ts'
 
 function getAdminSupabase(): SupabaseClient | null {
-  const url =
-    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
-  const key =
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    ''
+  const url = adminSupabaseUrl()
+  const key = adminSupabaseKey()
   if (!url || !key) {
     return null
   }
@@ -30,7 +27,7 @@ function getAdminSupabase(): SupabaseClient | null {
 }
 
 export async function getAdminCompanyInfo(): Promise<StoredCompanyInfo> {
-  const secret = writeSecret()
+  const secret = adminWriteSecret()
   const supabase = getAdminSupabase()
   if (!secret || !supabase) {
     throw new Error('missing-admin-config')
@@ -48,7 +45,7 @@ export async function getAdminCompanyInfo(): Promise<StoredCompanyInfo> {
 export async function upsertAdminCompanyInfo(
   info: StoredCompanyInfo,
 ): Promise<StoredCompanyInfo> {
-  const secret = writeSecret()
+  const secret = adminWriteSecret()
   const supabase = getAdminSupabase()
   if (!secret || !supabase) {
     throw new Error('missing-admin-config')

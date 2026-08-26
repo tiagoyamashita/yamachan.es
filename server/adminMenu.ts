@@ -3,20 +3,17 @@ import {
   parseStoredMenuItem,
   type StoredMenuItem,
 } from '../src/menu.ts'
+import {
+  adminSupabaseKey,
+  adminSupabaseUrl,
+  adminWriteSecret,
+} from './adminEnv.ts'
 
 const MENU_BUCKET = 'yamachan-menu'
 
-function writeSecret(): string {
-  return process.env.ADMIN_WRITE_SECRET || ''
-}
-
 function getAdminSupabase(): SupabaseClient | null {
-  const url =
-    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
-  const key =
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    ''
+  const url = adminSupabaseUrl()
+  const key = adminSupabaseKey()
   if (!url || !key) {
     return null
   }
@@ -30,7 +27,7 @@ function getAdminSupabase(): SupabaseClient | null {
 }
 
 export async function listAdminMenu(): Promise<StoredMenuItem[]> {
-  const secret = writeSecret()
+  const secret = adminWriteSecret()
   const supabase = getAdminSupabase()
   if (!secret || !supabase) {
     throw new Error('missing-admin-config')
@@ -53,7 +50,7 @@ export async function listAdminMenu(): Promise<StoredMenuItem[]> {
 export async function upsertAdminMenuItem(
   item: StoredMenuItem,
 ): Promise<StoredMenuItem> {
-  const secret = writeSecret()
+  const secret = adminWriteSecret()
   const supabase = getAdminSupabase()
   if (!secret || !supabase) {
     throw new Error('missing-admin-config')
@@ -76,7 +73,7 @@ export async function upsertAdminMenuItem(
 }
 
 export async function deleteAdminMenuItem(id: string): Promise<void> {
-  const secret = writeSecret()
+  const secret = adminWriteSecret()
   const supabase = getAdminSupabase()
   if (!secret || !supabase) {
     throw new Error('missing-admin-config')
