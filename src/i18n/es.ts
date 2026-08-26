@@ -155,6 +155,10 @@ export const es: Copy = {
   reservePickDate: 'Elige un día en el calendario.',
   reserveNoTimes: 'Ese día no hay horas libres para este número de personas.',
   reserveLoading: 'Cargando horas…',
+  reserveBack: 'Atrás',
+  reserveContinue: 'Seguir',
+  reserveDetailsHeading: 'Tus datos',
+  reserveStepsAria: 'Pasos de la reserva',
   reserveUnavailable:
     'Las reservas online no están listas. Llama o escribe por WhatsApp para pedir mesa.',
   reserveConfirmTitle: 'Mesa reservada.',
@@ -206,7 +210,12 @@ export const es: Copy = {
     'Teléfono, dirección y horario que se muestran en la web y en reservas.',
   adminAvailabilityHeading: 'Disponibilidad de reservas',
   adminAvailabilityLead:
-    'Horario por defecto, intervalos de mesa y calendario de fechas abiertas vía Globally Booked.',
+    'Valores por defecto, reglas de horario y fechas abiertas vía Globally Booked.',
+  adminAvailabilitySubtabDefaults: 'Por defecto',
+  adminAvailabilitySubtabRules: 'Reglas',
+  adminAvailabilitySubtabOpenDates: 'Fechas',
+  adminAvailabilityDefaultsLead:
+    'Horario e intervalos de reserva usados mientras no haya fechas abiertas pintadas.',
   adminAvailabilityOpensAt: 'Apertura',
   adminAvailabilityClosesAt: 'Cierre',
   adminAvailabilitySlotInterval: 'Intervalo de franjas (minutos)',
@@ -233,6 +242,7 @@ export const es: Copy = {
   adminOpenRuleDelete: 'Eliminar',
   adminOpenRuleDeleted: 'Regla de horario eliminada.',
   adminOpenDatesHeading: 'Fechas abiertas',
+  adminOpenDatesActiveRule: 'Regla a aplicar',
   adminOpenDatesFallbackNote:
     'Hasta que apliques fechas, los clientes reservan con el horario por defecto de arriba.',
   adminOpenDatesAllowlistNote:

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type MouseEvent } from 'react'
+import { useEffect, useState, type FormEvent, type MouseEvent, type ReactNode } from 'react'
 import {
   MENU_CATEGORY_IDS,
   isMenuCategoryId,
@@ -18,6 +18,7 @@ import { type Copy, type Locale } from './i18n/index.ts'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
 type AdminTab = 'menu' | 'account' | 'restaurant' | 'availability' | 'instagram'
+type AvailabilitySubtab = 'defaults' | 'rules' | 'open-dates'
 type LoginView = 'sign-in' | 'forgot' | 'reset'
 
 const INSTAGRAM_SLOTS = 5
@@ -654,6 +655,7 @@ function AvailabilityEditor({
   const [ruleName, setRuleName] = useState('Lunch')
   const [ruleOpensAt, setRuleOpensAt] = useState('13:00')
   const [ruleClosesAt, setRuleClosesAt] = useState('16:30')
+  const [subtab, setSubtab] = useState<AvailabilitySubtab>('defaults')
 
   useEffect(() => {
     if (selectedRuleId && !rules.some((rule) => rule.id === selectedRuleId)) {
@@ -737,283 +739,370 @@ function AvailabilityEditor({
     setSelectedDates(dates)
   }
 
-  return (
-    <section className="admin-company takeout-form">
-      <fieldset className="admin-company-block">
-        <legend>{t.adminAvailabilityHeading}</legend>
-        <p className="muted">
-          {settings.name} · {settings.slug}
-        </p>
-        <div className="admin-company-grid">
-          <label className="takeout-field">
-            <span>{t.adminAvailabilityOpensAt}</span>
-            <input
-              type="time"
-              value={settings.opens_at}
-              onChange={(event) => patch({ opens_at: event.target.value })}
-            />
-          </label>
-          <label className="takeout-field">
-            <span>{t.adminAvailabilityClosesAt}</span>
-            <input
-              type="time"
-              value={settings.closes_at}
-              onChange={(event) => patch({ closes_at: event.target.value })}
-            />
-          </label>
-          <label className="takeout-field">
-            <span>{t.adminAvailabilitySlotInterval}</span>
-            <input
-              type="number"
-              min={1}
-              value={settings.slot_interval_minutes}
-              onChange={(event) =>
-                patch({ slot_interval_minutes: Number(event.target.value) || 1 })
-              }
-            />
-          </label>
-          <label className="takeout-field">
-            <span>{t.adminAvailabilityTurnMinutes}</span>
-            <input
-              type="number"
-              min={1}
-              value={settings.default_turn_minutes}
-              onChange={(event) =>
-                patch({ default_turn_minutes: Number(event.target.value) || 1 })
-              }
-            />
-          </label>
-          <label className="takeout-field">
-            <span>{t.adminAvailabilityTimezone}</span>
-            <input
-              value={settings.timezone}
-              onChange={(event) => patch({ timezone: event.target.value })}
-            />
-          </label>
-        </div>
-      </fieldset>
+  const selectedRule = rules.find((rule) => rule.id === selectedRuleId) ?? null
 
-      <div className="admin-dish-actions">
-        <button className="btn" type="button" disabled={busy} onClick={onSave}>
-          {t.adminAvailabilitySave}
-        </button>
-      </div>
-
-      <fieldset className="admin-company-block">
-        <legend>{t.adminOpenRulesHeading}</legend>
-        <p className="muted">{t.adminOpenRulesLead}</p>
-        {rules.length === 0 ? (
-          <p className="muted">{t.adminOpenRulesEmpty}</p>
-        ) : (
-          <ul className="admin-open-rules">
-            {rules.map((rule) => (
-              <li key={rule.id}>
-                <label className="admin-open-rule">
-                  <input
-                    type="radio"
-                    name="opening-rule"
-                    checked={selectedRuleId === rule.id}
-                    onChange={() => setSelectedRuleId(rule.id)}
+  let panel: ReactNode
+  switch (subtab) {
+    case 'defaults':
+      panel = (
+        <fieldset className="admin-company-block">
+          <legend>{t.adminAvailabilitySubtabDefaults}</legend>
+          <p className="muted">
+            {settings.name} · {settings.slug}
+          </p>
+          <p className="muted">{t.adminAvailabilityDefaultsLead}</p>
+          <div className="admin-company-grid">
+            <label className="takeout-field">
+              <span>{t.adminAvailabilityOpensAt}</span>
+              <input
+                type="time"
+                value={settings.opens_at}
+                onChange={(event) => patch({ opens_at: event.target.value })}
+              />
+            </label>
+            <label className="takeout-field">
+              <span>{t.adminAvailabilityClosesAt}</span>
+              <input
+                type="time"
+                value={settings.closes_at}
+                onChange={(event) => patch({ closes_at: event.target.value })}
+              />
+            </label>
+            <label className="takeout-field">
+              <span>{t.adminAvailabilitySlotInterval}</span>
+              <input
+                type="number"
+                min={1}
+                value={settings.slot_interval_minutes}
+                onChange={(event) =>
+                  patch({
+                    slot_interval_minutes: Number(event.target.value) || 1,
+                  })
+                }
+              />
+            </label>
+            <label className="takeout-field">
+              <span>{t.adminAvailabilityTurnMinutes}</span>
+              <input
+                type="number"
+                min={1}
+                value={settings.default_turn_minutes}
+                onChange={(event) =>
+                  patch({
+                    default_turn_minutes: Number(event.target.value) || 1,
+                  })
+                }
+              />
+            </label>
+            <label className="takeout-field">
+              <span>{t.adminAvailabilityTimezone}</span>
+              <input
+                value={settings.timezone}
+                onChange={(event) => patch({ timezone: event.target.value })}
+              />
+            </label>
+          </div>
+          <div className="admin-dish-actions">
+            <button className="btn" type="button" disabled={busy} onClick={onSave}>
+              {t.adminAvailabilitySave}
+            </button>
+          </div>
+        </fieldset>
+      )
+      break
+    case 'rules':
+      panel = (
+        <fieldset className="admin-company-block">
+          <legend>{t.adminOpenRulesHeading}</legend>
+          <p className="muted">{t.adminOpenRulesLead}</p>
+          {rules.length === 0 ? (
+            <p className="muted">{t.adminOpenRulesEmpty}</p>
+          ) : (
+            <ul className="admin-open-rules">
+              {rules.map((rule) => (
+                <li key={rule.id}>
+                  <label className="admin-open-rule">
+                    <input
+                      type="radio"
+                      name="opening-rule"
+                      checked={selectedRuleId === rule.id}
+                      onChange={() => setSelectedRuleId(rule.id)}
+                    />
+                    <span>
+                      <strong>{rule.name}</strong>
+                      <small>
+                        {rule.opens_at} – {rule.closes_at}
+                      </small>
+                    </span>
+                  </label>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-small"
+                    disabled={busy}
+                    onClick={() => void onDeleteRule(rule.id)}
+                  >
+                    {t.adminOpenRuleDelete}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="admin-company-grid">
+            <label className="takeout-field">
+              <span>{t.adminOpenRuleName}</span>
+              <input
+                value={ruleName}
+                onChange={(event) => setRuleName(event.target.value)}
+              />
+            </label>
+            <label className="takeout-field">
+              <span>{t.adminAvailabilityOpensAt}</span>
+              <input
+                type="time"
+                value={ruleOpensAt}
+                onChange={(event) => setRuleOpensAt(event.target.value)}
+              />
+            </label>
+            <label className="takeout-field">
+              <span>{t.adminAvailabilityClosesAt}</span>
+              <input
+                type="time"
+                value={ruleClosesAt}
+                onChange={(event) => setRuleClosesAt(event.target.value)}
+              />
+            </label>
+          </div>
+          <div className="admin-dish-actions">
+            <button
+              className="btn"
+              type="button"
+              disabled={busy || !ruleName.trim()}
+              onClick={() =>
+                void onCreateRule({
+                  name: ruleName,
+                  opensAt: ruleOpensAt,
+                  closesAt: ruleClosesAt,
+                })
+              }
+            >
+              {t.adminOpenRuleCreate}
+            </button>
+          </div>
+        </fieldset>
+      )
+      break
+    case 'open-dates':
+      panel = (
+        <fieldset className="admin-company-block">
+          <legend>{t.adminOpenDatesHeading}</legend>
+          <p className="muted">
+            {usesOpenDateCalendar
+              ? t.adminOpenDatesAllowlistNote
+              : t.adminOpenDatesFallbackNote}
+          </p>
+          <label className="takeout-field">
+            <span>{t.adminOpenDatesActiveRule}</span>
+            <select
+              value={selectedRuleId ?? ''}
+              disabled={busy || rules.length === 0}
+              onChange={(event) =>
+                setSelectedRuleId(event.target.value || null)
+              }
+            >
+              {rules.length === 0 ? (
+                <option value="">{t.adminOpenRulesEmpty}</option>
+              ) : (
+                rules.map((rule) => (
+                  <option key={rule.id} value={rule.id}>
+                    {rule.name} ({rule.opens_at} – {rule.closes_at})
+                  </option>
+                ))
+              )}
+            </select>
+          </label>
+          {selectedRule ? (
+            <p className="muted">
+              {selectedRule.name}: {selectedRule.opens_at} –{' '}
+              {selectedRule.closes_at}
+            </p>
+          ) : null}
+          <div className="admin-availability-cal-head">
+            <button
+              type="button"
+              className="btn btn-outline btn-small"
+              aria-label={t.adminAvailabilityPrevMonth}
+              onClick={() => {
+                const next = shiftMonth(year, month, -1)
+                onMonthChange(next.year, next.month)
+              }}
+            >
+              ‹
+            </button>
+            <p>{monthLabel}</p>
+            <button
+              type="button"
+              className="btn btn-outline btn-small"
+              aria-label={t.adminAvailabilityNextMonth}
+              onClick={() => {
+                const next = shiftMonth(year, month, 1)
+                onMonthChange(next.year, next.month)
+              }}
+            >
+              ›
+            </button>
+          </div>
+          <div className="admin-availability-grid" role="grid">
+            {WEEKDAY_LABELS_ES.map((label) => (
+              <div className="admin-availability-dow" key={label}>
+                {label.slice(0, 2)}
+              </div>
+            ))}
+            {cells.map((day, index) => {
+              if (day === null) {
+                return (
+                  <div
+                    className="admin-availability-cell is-empty"
+                    key={`e-${index}`}
                   />
-                  <span>
-                    <strong>{rule.name}</strong>
-                    <small>
-                      {rule.opens_at} – {rule.closes_at}
-                    </small>
-                  </span>
-                </label>
+                )
+              }
+              const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+              const row = dayMap.get(key)
+              const dayOpenRows = openByDate.get(key) ?? []
+              const closed = usesOpenDateCalendar
+                ? dayOpenRows.length === 0
+                : (row?.closed ?? true)
+              const slots = row?.slot_count ?? 0
+              const selected = selectedSet.has(key)
+              const ruleLabel =
+                dayOpenRows
+                  .map(
+                    (entry) =>
+                      entry.restaurant_opening_rules?.name ||
+                      rules.find((rule) => rule.id === entry.rule_id)?.name ||
+                      `${entry.opens_at}-${entry.closes_at}`,
+                  )
+                  .join(', ') || null
+              return (
                 <button
                   type="button"
-                  className="btn btn-outline btn-small"
+                  className={`admin-availability-cell${closed ? ' is-closed' : ' is-open'}${selected ? ' is-selected' : ''}`}
+                  key={key}
                   disabled={busy}
-                  onClick={() => void onDeleteRule(rule.id)}
+                  title={
+                    closed
+                      ? t.adminAvailabilityClosed
+                      : `${t.adminAvailabilityOpen} · ${slots}${ruleLabel ? ` · ${ruleLabel}` : ''}`
+                  }
+                  onClick={() => toggleDate(key)}
                 >
-                  {t.adminOpenRuleDelete}
+                  <span>{day}</span>
+                  <small>
+                    {closed
+                      ? t.adminAvailabilityClosed
+                      : ruleLabel || String(slots)}
+                  </small>
                 </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="admin-company-grid">
-          <label className="takeout-field">
-            <span>{t.adminOpenRuleName}</span>
-            <input
-              value={ruleName}
-              onChange={(event) => setRuleName(event.target.value)}
-            />
-          </label>
-          <label className="takeout-field">
-            <span>{t.adminAvailabilityOpensAt}</span>
-            <input
-              type="time"
-              value={ruleOpensAt}
-              onChange={(event) => setRuleOpensAt(event.target.value)}
-            />
-          </label>
-          <label className="takeout-field">
-            <span>{t.adminAvailabilityClosesAt}</span>
-            <input
-              type="time"
-              value={ruleClosesAt}
-              onChange={(event) => setRuleClosesAt(event.target.value)}
-            />
-          </label>
-        </div>
-        <div className="admin-dish-actions">
-          <button
-            className="btn"
-            type="button"
-            disabled={busy || !ruleName.trim()}
-            onClick={() =>
-              void onCreateRule({
-                name: ruleName,
-                opensAt: ruleOpensAt,
-                closesAt: ruleClosesAt,
-              })
-            }
-          >
-            {t.adminOpenRuleCreate}
-          </button>
-        </div>
-      </fieldset>
-
-      <fieldset className="admin-company-block">
-        <legend>{t.adminOpenDatesHeading}</legend>
-        <p className="muted">
-          {usesOpenDateCalendar
-            ? t.adminOpenDatesAllowlistNote
-            : t.adminOpenDatesFallbackNote}
-        </p>
-        <div className="admin-availability-cal-head">
-          <button
-            type="button"
-            className="btn btn-outline btn-small"
-            aria-label={t.adminAvailabilityPrevMonth}
-            onClick={() => {
-              const next = shiftMonth(year, month, -1)
-              onMonthChange(next.year, next.month)
-            }}
-          >
-            ‹
-          </button>
-          <p>{monthLabel}</p>
-          <button
-            type="button"
-            className="btn btn-outline btn-small"
-            aria-label={t.adminAvailabilityNextMonth}
-            onClick={() => {
-              const next = shiftMonth(year, month, 1)
-              onMonthChange(next.year, next.month)
-            }}
-          >
-            ›
-          </button>
-        </div>
-        <div className="admin-availability-grid" role="grid">
-          {WEEKDAY_LABELS_ES.map((label) => (
-            <div className="admin-availability-dow" key={label}>
-              {label.slice(0, 2)}
-            </div>
-          ))}
-          {cells.map((day, index) => {
-            if (day === null) {
-              return (
-                <div
-                  className="admin-availability-cell is-empty"
-                  key={`e-${index}`}
-                />
               )
-            }
-            const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-            const row = dayMap.get(key)
-            const dayOpenRows = openByDate.get(key) ?? []
-            const closed = usesOpenDateCalendar
-              ? dayOpenRows.length === 0
-              : (row?.closed ?? true)
-            const slots = row?.slot_count ?? 0
-            const selected = selectedSet.has(key)
-            const ruleLabel =
-              dayOpenRows
-                .map(
-                  (entry) =>
-                    entry.restaurant_opening_rules?.name ||
-                    rules.find((rule) => rule.id === entry.rule_id)?.name ||
-                    `${entry.opens_at}-${entry.closes_at}`,
-                )
-                .join(', ') || null
-            return (
-              <button
-                type="button"
-                className={`admin-availability-cell${closed ? ' is-closed' : ' is-open'}${selected ? ' is-selected' : ''}`}
-                key={key}
-                disabled={busy}
-                title={
-                  closed
-                    ? t.adminAvailabilityClosed
-                    : `${t.adminAvailabilityOpen} · ${slots}${ruleLabel ? ` · ${ruleLabel}` : ''}`
+            })}
+          </div>
+          <div className="admin-open-dates-actions">
+            <button
+              type="button"
+              className="btn btn-outline btn-small"
+              disabled={busy}
+              onClick={selectWeekdays}
+            >
+              {t.adminOpenDatesSelectWeekdays}
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline btn-small"
+              disabled={busy || selectedDates.length === 0}
+              onClick={() => setSelectedDates([])}
+            >
+              {t.adminOpenDatesClearSelection}
+            </button>
+            <button
+              type="button"
+              className="btn"
+              disabled={busy || !selectedRuleId || selectedDates.length === 0}
+              onClick={() => {
+                if (!selectedRuleId) {
+                  return
                 }
-                onClick={() => toggleDate(key)}
-              >
-                <span>{day}</span>
-                <small>
-                  {closed
-                    ? t.adminAvailabilityClosed
-                    : ruleLabel || String(slots)}
-                </small>
-              </button>
-            )
-          })}
-        </div>
-        <div className="admin-open-dates-actions">
-          <button
-            type="button"
-            className="btn btn-outline btn-small"
-            disabled={busy}
-            onClick={selectWeekdays}
-          >
-            {t.adminOpenDatesSelectWeekdays}
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline btn-small"
-            disabled={busy || selectedDates.length === 0}
-            onClick={() => setSelectedDates([])}
-          >
-            {t.adminOpenDatesClearSelection}
-          </button>
-          <button
-            type="button"
-            className="btn"
-            disabled={busy || !selectedRuleId || selectedDates.length === 0}
-            onClick={() => {
-              if (!selectedRuleId) {
-                return
-              }
-              void onApplyDates(selectedRuleId, selectedDates).then(() =>
-                setSelectedDates([]),
-              )
-            }}
-          >
-            {t.adminOpenDatesApply}
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline"
-            disabled={busy || selectedDates.length === 0}
-            onClick={() => {
-              void onClearDates(selectedDates).then(() => setSelectedDates([]))
-            }}
-          >
-            {t.adminOpenDatesClear}
-          </button>
-        </div>
-        <p className="muted">
-          {t.adminOpenDatesSelectedCount.replace(
-            '{count}',
-            String(selectedDates.length),
-          )}
-        </p>
-      </fieldset>
+                void onApplyDates(selectedRuleId, selectedDates).then(() =>
+                  setSelectedDates([]),
+                )
+              }}
+            >
+              {t.adminOpenDatesApply}
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              disabled={busy || selectedDates.length === 0}
+              onClick={() => {
+                void onClearDates(selectedDates).then(() =>
+                  setSelectedDates([]),
+                )
+              }}
+            >
+              {t.adminOpenDatesClear}
+            </button>
+          </div>
+          <p className="muted">
+            {t.adminOpenDatesSelectedCount.replace(
+              '{count}',
+              String(selectedDates.length),
+            )}
+          </p>
+        </fieldset>
+      )
+      break
+    default: {
+      const _exhaustive: never = subtab
+      panel = _exhaustive
+      break
+    }
+  }
+
+  return (
+    <section className="admin-company takeout-form">
+      <div
+        className="admin-tabs admin-subtabs"
+        role="tablist"
+        aria-label={t.adminAvailabilityHeading}
+      >
+        <button
+          type="button"
+          role="tab"
+          className={`admin-tab${subtab === 'defaults' ? ' is-active' : ''}`}
+          aria-selected={subtab === 'defaults'}
+          onClick={() => setSubtab('defaults')}
+        >
+          {t.adminAvailabilitySubtabDefaults}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className={`admin-tab${subtab === 'rules' ? ' is-active' : ''}`}
+          aria-selected={subtab === 'rules'}
+          onClick={() => setSubtab('rules')}
+        >
+          {t.adminAvailabilitySubtabRules}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className={`admin-tab${subtab === 'open-dates' ? ' is-active' : ''}`}
+          aria-selected={subtab === 'open-dates'}
+          onClick={() => setSubtab('open-dates')}
+        >
+          {t.adminAvailabilitySubtabOpenDates}
+        </button>
+      </div>
+      {panel}
     </section>
   )
 }
