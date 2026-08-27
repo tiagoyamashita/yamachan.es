@@ -213,6 +213,7 @@ export const en: Copy = {
   adminAvailabilitySubtabDefaults: 'Defaults',
   adminAvailabilitySubtabRules: 'Rules',
   adminAvailabilitySubtabOpenDates: 'Open dates',
+  adminAvailabilitySubtabBookingStatus: 'Booking status',
   adminAvailabilityDefaultsLead:
     'Fallback hours and slot settings used when no open dates are painted yet.',
   adminAvailabilityOpensAt: 'Opens at',
@@ -252,6 +253,13 @@ export const en: Copy = {
   adminOpenDatesApplied: 'Open dates updated.',
   adminOpenDatesCleared: 'Open dates cleared.',
   adminOpenDatesSelectedCount: '{count} dates selected',
+  adminBookingStatusHeading: 'Booking status',
+  adminBookingStatusLead:
+    'Checked = open for bookings. Uncheck a day to block new reservation requests for that date.',
+  adminBookingStatusOpen: 'Open',
+  adminBookingStatusClosed: 'Closed',
+  adminBookingStatusOpened: 'Day opened for bookings.',
+  adminBookingStatusClosedSaved: 'Day closed — no new bookings.',
   adminInstagramHeading: 'Instagram posts',
   adminInstagramLead:
     'Paste up to five Instagram post or reel links (or the full embed HTML). Slot #1 appears first in the homepage carousel.',

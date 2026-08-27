@@ -211,6 +211,7 @@ export const ja: Copy = {
   adminAvailabilitySubtabDefaults: '既定',
   adminAvailabilitySubtabRules: 'ルール',
   adminAvailabilitySubtabOpenDates: '営業日',
+  adminAvailabilitySubtabBookingStatus: '予約ステータス',
   adminAvailabilityDefaultsLead:
     '営業日を塗る前に使う既定の開店時間と枠設定です。',
   adminAvailabilityOpensAt: '開店',
@@ -251,6 +252,13 @@ export const ja: Copy = {
   adminOpenDatesApplied: '営業日を更新しました。',
   adminOpenDatesCleared: '営業日をクリアしました。',
   adminOpenDatesSelectedCount: '{count} 日選択中',
+  adminBookingStatusHeading: '予約ステータス',
+  adminBookingStatusLead:
+    'チェックあり＝予約受付。チェックを外すとその日の新規予約をブロックします。',
+  adminBookingStatusOpen: '受付中',
+  adminBookingStatusClosed: '休業',
+  adminBookingStatusOpened: 'その日を予約受付にしました。',
+  adminBookingStatusClosedSaved: 'その日を休業にしました。新規予約はありません。',
   adminInstagramHeading: 'Instagram投稿',
   adminInstagramLead:
     '投稿またはリールのリンク（または埋め込みHTML）を最大5件まで貼り付けます。#1 がトップページのカルーセル先頭になります。',

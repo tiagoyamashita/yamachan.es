@@ -1144,6 +1144,54 @@ h3 {
   gap: 0.35rem;
 }
 
+.admin-booking-status-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.admin-booking-status-cell {
+  min-height: 4rem;
+  border: 1px solid color-mix(in srgb, var(--ink, #1c1917) 12%, transparent);
+  border-radius: 0.4rem;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.admin-booking-status-cell.is-empty {
+  border: 0;
+  min-height: 0;
+  pointer-events: none;
+}
+
+.admin-booking-status-cell.is-open {
+  background: color-mix(in srgb, #15803d 10%, transparent);
+}
+
+.admin-booking-status-cell.is-closed {
+  background: color-mix(in srgb, var(--ink, #1c1917) 6%, transparent);
+  opacity: 0.85;
+}
+
+.admin-booking-status-day {
+  font-weight: 600;
+}
+
+.admin-booking-status-cell small {
+  color: var(--muted, #6b6358);
+}
+
+.admin-booking-status-cell input[type='checkbox'] {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: #15803d;
+}
+
 .admin-availability-dow {
   text-align: center;
   font-size: 0.75rem;
