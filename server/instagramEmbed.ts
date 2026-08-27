@@ -6,7 +6,8 @@ export type InstagramEmbedPreview = {
   isVideo: boolean
 }
 
-const EMBED_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+const EMBED_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
 function decodeJsonString(value: string): string {
   let text = value
@@ -73,7 +74,10 @@ export async function fetchEmbedPreview(
   const response = await fetch(embedUrl, {
     headers: {
       'User-Agent': EMBED_UA,
-      Accept: 'text/html',
+      Accept:
+        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+      Referer: 'https://www.instagram.com/',
     },
     redirect: 'follow',
   })
