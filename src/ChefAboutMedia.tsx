@@ -71,9 +71,11 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
       return
     }
 
-    // Browsers only allow autoplay when muted; unmute after a user gesture.
+    // Playback is controlled by visibility only (no HTML autoPlay).
     video.muted = true
     video.defaultMuted = true
+    video.pause()
+
     let inView = false
     let unlocked = false
     let waitingForGesture = false
@@ -107,6 +109,7 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
         video.pause()
         return
       }
+      // pause() keeps currentTime, so play() resumes where it left off.
       void play().catch(() => {
         requestGestureUnlock()
       })
@@ -130,10 +133,13 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0]
-        inView = Boolean(entry?.isIntersecting)
+        // Play while roughly a quarter of the frame is visible; pause when it leaves.
+        inView = Boolean(
+          entry?.isIntersecting && (entry.intersectionRatio ?? 0) >= 0.25,
+        )
         syncPlayback()
       },
-      { threshold: 0.35 },
+      { threshold: [0, 0.25, 0.5, 0.75, 1] },
     )
     observer.observe(frame)
 
@@ -144,6 +150,7 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
 
     return () => {
       observer.disconnect()
+      video.pause()
       video.removeEventListener('error', onVideoError)
       document.removeEventListener('visibilitychange', onVisibility)
       document.removeEventListener('pointerdown', onGesture)
@@ -167,11 +174,10 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
             className="about-frame-video"
             src={videoUrl}
             poster={posterUrl}
-            autoPlay
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             aria-label={alt}
           />
         ) : (
