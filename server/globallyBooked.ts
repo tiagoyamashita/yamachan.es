@@ -232,6 +232,11 @@ type RestaurantReservation = {
   turn_minutes?: number
   status?: string
   party_size?: number
+  client_name?: string
+  client_email?: string | null
+  client_phone?: string | null
+  client_notes?: string | null
+  restaurant_tables?: { label?: string } | { label?: string }[] | null
 }
 
 const MINUTES_PER_DAY = 24 * 60
@@ -701,5 +706,107 @@ export function tableLabel(reservation: CreatedReservation): string | null {
   }
   const row = Array.isArray(table) ? table[0] : table
   return row?.label ?? null
+}
+
+export type AdminBooking = {
+  id: string
+  date: string
+  startDatetime: string
+  endDatetime: string | null
+  timeLabel: string
+  partySize: number
+  status: string
+  clientName: string
+  clientPhone: string | null
+  clientEmail: string | null
+  tableLabel: string | null
+  notes: string | null
+}
+
+export type AdminBookingDay = {
+  date: string
+  bookingCount: number
+}
+
+function dateKeyInTimeZone(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(iso))
+}
+
+function timeLabelInTimeZone(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(iso))
+}
+
+function reservationTableLabel(
+  reservation: RestaurantReservation,
+): string | null {
+  const table = reservation.restaurant_tables
+  if (!table) {
+    return null
+  }
+  const row = Array.isArray(table) ? table[0] : table
+  return row?.label ?? null
+}
+
+export async function loadAdminBookings(
+  from: string,
+  to: string,
+): Promise<{
+  timezone: string
+  bookings: AdminBooking[]
+  days: AdminBookingDay[]
+}> {
+  if (!isDateKey(from) || !isDateKey(to)) {
+    throw new GloballyBookedError('invalid-range', 400)
+  }
+  const settings = await loadRestaurantSettings()
+  const timeZone = settings.timezone || 'UTC'
+  const fromIso = localDateTimeToUtcIso(from, 0, timeZone)
+  const toIso = localDateTimeToUtcIso(to, MINUTES_PER_DAY, timeZone)
+  const raw = await loadReservationsBetween(fromIso, toIso)
+
+  const bookings = raw
+    .map((reservation): AdminBooking => {
+      const start = reservation.start_datetime
+      return {
+        id: reservation.id,
+        date: dateKeyInTimeZone(start, timeZone),
+        startDatetime: start,
+        endDatetime: reservation.end_datetime ?? null,
+        timeLabel: timeLabelInTimeZone(start, timeZone),
+        partySize: reservation.party_size ?? 0,
+        status: reservation.status ?? 'confirmed',
+        clientName: reservation.client_name?.trim() || '—',
+        clientPhone: reservation.client_phone?.trim() || null,
+        clientEmail: reservation.client_email?.trim() || null,
+        tableLabel: reservationTableLabel(reservation),
+        notes: reservation.client_notes?.trim() || null,
+      }
+    })
+    .sort((a, b) => a.startDatetime.localeCompare(b.startDatetime))
+
+  const countByDate = new Map<string, number>()
+  for (const booking of bookings) {
+    if (booking.status === 'cancelled') {
+      continue
+    }
+    countByDate.set(booking.date, (countByDate.get(booking.date) ?? 0) + 1)
+  }
+
+  const days = eachDateKey(from, to).map((date) => ({
+    date,
+    bookingCount: countByDate.get(date) ?? 0,
+  }))
+
+  return { timezone: timeZone, bookings, days }
 }
 
