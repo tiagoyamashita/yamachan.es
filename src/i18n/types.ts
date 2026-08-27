@@ -181,6 +181,7 @@ export type Copy = {
   adminAvailabilitySubtabDefaults: string
   adminAvailabilitySubtabRules: string
   adminAvailabilitySubtabOpenDates: string
+  adminAvailabilitySubtabBookingStatus: string
   adminAvailabilityDefaultsLead: string
   adminAvailabilityOpensAt: string
   adminAvailabilityClosesAt: string
@@ -215,6 +216,12 @@ export type Copy = {
   adminOpenDatesApplied: string
   adminOpenDatesCleared: string
   adminOpenDatesSelectedCount: string
+  adminBookingStatusHeading: string
+  adminBookingStatusLead: string
+  adminBookingStatusOpen: string
+  adminBookingStatusClosed: string
+  adminBookingStatusOpened: string
+  adminBookingStatusClosedSaved: string
   adminInstagramHeading: string
   adminInstagramLead: string
   adminInstagramPostLabel: string
