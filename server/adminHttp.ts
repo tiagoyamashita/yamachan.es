@@ -56,6 +56,10 @@ import {
   updateRestaurantSettings,
 } from './globallyBooked.ts'
 import {
+  loadClosedBookingDates,
+  setBookingDayOpen,
+} from './closedBookingDates.ts'
+import {
   getStoredInstagramPostUrls,
   padInstagramSlots,
   setStoredInstagramPostUrls,
@@ -324,9 +328,10 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
         const settings = await loadRestaurantSettings()
         const from = url.searchParams.get('from') ?? ''
         const to = url.searchParams.get('to') ?? ''
-        const [rules, openDates] = await Promise.all([
+        const [rules, openDates, closedDates] = await Promise.all([
           loadOpeningRules(),
           loadOpenDates(),
+          loadClosedBookingDates().catch(() => [] as string[]),
         ])
         if (from && to) {
           if (!isDateKey(from) || !isDateKey(to)) {
@@ -336,12 +341,16 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
           const monthOpenDates = openDates.filter(
             (row) => row.open_date >= from && row.open_date <= to,
           )
+          const monthClosedDates = closedDates.filter(
+            (date) => date >= from && date <= to,
+          )
           return json({
             settings,
             days: month.days,
             timezone: month.timezone,
             rules,
             openDates: monthOpenDates,
+            closedDates: monthClosedDates,
             usesOpenDateCalendar: openDates.length > 0,
           })
         }
@@ -349,6 +358,7 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
           settings,
           rules,
           openDates,
+          closedDates,
           usesOpenDateCalendar: openDates.length > 0,
         })
       } catch (error) {
@@ -356,6 +366,31 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
           return json({ error: error.message }, error.status)
         }
         throw error
+      }
+    }
+
+    if (path === '/api/admin/booking-status' && request.method === 'PUT') {
+      const body: unknown = await request.json().catch(() => null)
+      if (!body || typeof body !== 'object') {
+        return json({ error: 'invalid-request' }, 400)
+      }
+      const row = body as { date?: unknown; open?: unknown }
+      const date = typeof row.date === 'string' ? row.date : ''
+      if (!isDateKey(date) || typeof row.open !== 'boolean') {
+        return json({ error: 'invalid-booking-status' }, 400)
+      }
+      try {
+        const closedDates = await setBookingDayOpen(date, row.open)
+        return json({ closedDates, date, open: row.open })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'error'
+        if (message === 'missing-admin-config') {
+          return json({ error: message }, 503)
+        }
+        if (message === 'invalid-date') {
+          return json({ error: message }, 400)
+        }
+        return json({ error: message }, 500)
       }
     }
 

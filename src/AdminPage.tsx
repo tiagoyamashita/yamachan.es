@@ -18,7 +18,7 @@ import { type Copy, type Locale } from './i18n/index.ts'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
 type AdminTab = 'menu' | 'account' | 'restaurant' | 'availability' | 'instagram'
-type AvailabilitySubtab = 'defaults' | 'rules' | 'open-dates'
+type AvailabilitySubtab = 'defaults' | 'rules' | 'open-dates' | 'booking-status'
 type LoginView = 'sign-in' | 'forgot' | 'reset'
 
 const INSTAGRAM_SLOTS = 5
@@ -624,6 +624,7 @@ function AvailabilityEditor({
   days,
   rules,
   openDates,
+  closedDates,
   usesOpenDateCalendar,
   year,
   month,
@@ -637,11 +638,13 @@ function AvailabilityEditor({
   onDeleteRule,
   onApplyDates,
   onClearDates,
+  onToggleBookingStatus,
 }: {
   settings: BookingAvailabilitySettings | null
   days: BookingDayPreview[]
   rules: OpeningRule[]
   openDates: OpenDateEntry[]
+  closedDates: string[]
   usesOpenDateCalendar: boolean
   year: number
   month: number
@@ -659,6 +662,7 @@ function AvailabilityEditor({
   onDeleteRule: (id: string) => Promise<void>
   onApplyDates: (ruleId: string, dates: string[]) => Promise<void>
   onClearDates: (dates: string[]) => Promise<void>
+  onToggleBookingStatus: (date: string, open: boolean) => Promise<void>
 }) {
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null)
   const [selectedDates, setSelectedDates] = useState<string[]>([])
@@ -681,6 +685,7 @@ function AvailabilityEditor({
   }, [year, month])
 
   const dayMap = new Map(days.map((day) => [day.date, day]))
+  const closedSet = new Set(closedDates)
   const openByDate = new Map<string, OpenDateEntry[]>()
   for (const row of openDates) {
     const list = openByDate.get(row.open_date) ?? []
@@ -1070,6 +1075,87 @@ function AvailabilityEditor({
         </fieldset>
       )
       break
+    case 'booking-status':
+      panel = (
+        <fieldset className="admin-company-block">
+          <legend>{t.adminBookingStatusHeading}</legend>
+          <p className="muted">{t.adminBookingStatusLead}</p>
+          <div className="admin-availability-cal-head">
+            <button
+              type="button"
+              className="btn btn-outline btn-small"
+              aria-label={t.adminAvailabilityPrevMonth}
+              onClick={() => {
+                const next = shiftMonth(year, month, -1)
+                onMonthChange(next.year, next.month)
+              }}
+            >
+              ‹
+            </button>
+            <p>{monthLabel}</p>
+            <button
+              type="button"
+              className="btn btn-outline btn-small"
+              aria-label={t.adminAvailabilityNextMonth}
+              onClick={() => {
+                const next = shiftMonth(year, month, 1)
+                onMonthChange(next.year, next.month)
+              }}
+            >
+              ›
+            </button>
+          </div>
+          <div className="admin-booking-status-grid" role="grid">
+            {WEEKDAY_LABELS_ES.map((label) => (
+              <div className="admin-availability-dow" key={label}>
+                {label.slice(0, 2)}
+              </div>
+            ))}
+            {cells.map((day, index) => {
+              if (day === null) {
+                return (
+                  <div
+                    className="admin-booking-status-cell is-empty"
+                    key={`e-${index}`}
+                  />
+                )
+              }
+              const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+              const open = !closedSet.has(key)
+              const id = `booking-status-${key}`
+              return (
+                <label
+                  className={`admin-booking-status-cell${open ? ' is-open' : ' is-closed'}`}
+                  key={key}
+                  htmlFor={id}
+                >
+                  <span className="admin-booking-status-day">{day}</span>
+                  <input
+                    id={id}
+                    type="checkbox"
+                    checked={open}
+                    disabled={busy}
+                    aria-label={
+                      open
+                        ? `${key}: ${t.adminBookingStatusOpen}`
+                        : `${key}: ${t.adminBookingStatusClosed}`
+                    }
+                    onChange={(event) => {
+                      void onToggleBookingStatus(key, event.target.checked)
+                    }}
+                  />
+                  <small>
+                    {open
+                      ? t.adminBookingStatusOpen
+                      : t.adminBookingStatusClosed}
+                  </small>
+                </label>
+              )
+            })}
+          </div>
+        </fieldset>
+      )
+      break
     default: {
       const _exhaustive: never = subtab
       panel = _exhaustive
@@ -1110,6 +1196,15 @@ function AvailabilityEditor({
           onClick={() => setSubtab('open-dates')}
         >
           {t.adminAvailabilitySubtabOpenDates}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className={`admin-tab${subtab === 'booking-status' ? ' is-active' : ''}`}
+          aria-selected={subtab === 'booking-status'}
+          onClick={() => setSubtab('booking-status')}
+        >
+          {t.adminAvailabilitySubtabBookingStatus}
         </button>
       </div>
       {panel}
@@ -1332,6 +1427,9 @@ export function AdminPage({
   const [availabilityOpenDates, setAvailabilityOpenDates] = useState<
     OpenDateEntry[]
   >([])
+  const [availabilityClosedDates, setAvailabilityClosedDates] = useState<
+    string[]
+  >([])
   const [usesOpenDateCalendar, setUsesOpenDateCalendar] = useState(false)
   const [availabilityBusy, setAvailabilityBusy] = useState(false)
   const [availabilityError, setAvailabilityError] = useState<string | null>(null)
@@ -1355,6 +1453,7 @@ export function AdminPage({
         days?: BookingDayPreview[]
         rules?: OpeningRule[]
         openDates?: OpenDateEntry[]
+        closedDates?: string[]
         usesOpenDateCalendar?: boolean
         error?: string
       }>(`/api/admin/availability?from=${from}&to=${to}`)
@@ -1362,6 +1461,7 @@ export function AdminPage({
       setAvailabilityDays(data.days ?? [])
       setAvailabilityRules(data.rules ?? [])
       setAvailabilityOpenDates(data.openDates ?? [])
+      setAvailabilityClosedDates(data.closedDates ?? [])
       setUsesOpenDateCalendar(Boolean(data.usesOpenDateCalendar))
       setAvailabilityError(null)
     } catch (error) {
@@ -1375,6 +1475,7 @@ export function AdminPage({
       setAvailabilityDays([])
       setAvailabilityRules([])
       setAvailabilityOpenDates([])
+      setAvailabilityClosedDates([])
       setUsesOpenDateCalendar(false)
     } finally {
       setAvailabilityBusy(false)
@@ -1707,6 +1808,30 @@ export function AdminPage({
         body: JSON.stringify({ dates }),
       })
       setMessage(t.adminOpenDatesCleared)
+      await loadAvailability(availabilityYear, availabilityMonth)
+    } catch {
+      setMessage(t.adminAvailabilityError)
+    } finally {
+      setAvailabilityBusy(false)
+    }
+  }
+
+  const toggleBookingStatus = async (date: string, open: boolean) => {
+    setAvailabilityBusy(true)
+    setMessage(null)
+    try {
+      const data = await api<{ closedDates: string[] }>(
+        '/api/admin/booking-status',
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date, open }),
+        },
+      )
+      setAvailabilityClosedDates(data.closedDates ?? [])
+      setMessage(
+        open ? t.adminBookingStatusOpened : t.adminBookingStatusClosedSaved,
+      )
       await loadAvailability(availabilityYear, availabilityMonth)
     } catch {
       setMessage(t.adminAvailabilityError)
@@ -2102,6 +2227,7 @@ export function AdminPage({
                     days={availabilityDays}
                     rules={availabilityRules}
                     openDates={availabilityOpenDates}
+                    closedDates={availabilityClosedDates}
                     usesOpenDateCalendar={usesOpenDateCalendar}
                     year={availabilityYear}
                     month={availabilityMonth}
@@ -2119,6 +2245,7 @@ export function AdminPage({
                     onDeleteRule={deleteOpeningRule}
                     onApplyDates={applyOpenDates}
                     onClearDates={clearOpenDates}
+                    onToggleBookingStatus={toggleBookingStatus}
                   />
                 ) : null}
                 {tab === 'instagram' ? (

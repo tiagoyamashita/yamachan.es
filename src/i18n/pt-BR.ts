@@ -214,6 +214,7 @@ export const ptBR: Copy = {
   adminAvailabilitySubtabDefaults: 'Padrões',
   adminAvailabilitySubtabRules: 'Regras',
   adminAvailabilitySubtabOpenDates: 'Datas',
+  adminAvailabilitySubtabBookingStatus: 'Status reserva',
   adminAvailabilityDefaultsLead:
     'Horário e intervalos usados enquanto nenhuma data aberta estiver pintada.',
   adminAvailabilityOpensAt: 'Abertura',
@@ -254,6 +255,13 @@ export const ptBR: Copy = {
   adminOpenDatesApplied: 'Datas abertas atualizadas.',
   adminOpenDatesCleared: 'Datas abertas limpas.',
   adminOpenDatesSelectedCount: '{count} datas selecionadas',
+  adminBookingStatusHeading: 'Status de reserva',
+  adminBookingStatusLead:
+    'Marcado = aberto para reservas. Desmarque um dia para bloquear novos pedidos nessa data.',
+  adminBookingStatusOpen: 'Aberto',
+  adminBookingStatusClosed: 'Fechado',
+  adminBookingStatusOpened: 'Dia aberto para reservas.',
+  adminBookingStatusClosedSaved: 'Dia fechado — sem novas reservas.',
   adminInstagramHeading: 'Posts do Instagram',
   adminInstagramLead:
     'Cole até cinco links de posts ou reels (ou o HTML completo do embed). O espaço #1 aparece primeiro no carrossel da página inicial.',
