@@ -15,6 +15,9 @@ type ChefAboutMediaProps = {
 /**
  * Native video only — Instagram iframes cannot be play/paused on scroll.
  * Sources tried in order: Graph/CDN preview, then local /videos/chef-reel.mp4.
+ *
+ * Prefers unmuted playback. Browsers may block that until any page gesture;
+ * after the first click/tap/key we keep sound on for later scroll-ins.
  */
 export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
   const frameRef = useRef<HTMLElement | null>(null)
@@ -66,19 +69,37 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
       return
     }
 
-    // Always start muted so browsers allow autoplay.
-    video.defaultMuted = true
-    video.muted = true
-    video.setAttribute('muted', '')
-
     let inView = false
-    let soundUnlocked = false
+    // Prefer sound on; only fall back to mute if the browser blocks unmuted autoplay.
+    let allowSound = true
 
-    const tryPlay = () => {
-      if (!soundUnlocked) {
-        video.muted = true
+    const applyMuteState = () => {
+      video.muted = !allowSound
+      video.defaultMuted = !allowSound
+      if (allowSound) {
+        video.removeAttribute('muted')
+      } else {
+        video.setAttribute('muted', '')
       }
-      return video.play()
+    }
+
+    const tryPlay = async () => {
+      applyMuteState()
+      try {
+        await video.play()
+        return
+      } catch {
+        // Unmuted autoplay blocked — retry muted, then unlock sound on next gesture.
+        if (allowSound) {
+          allowSound = false
+          applyMuteState()
+          try {
+            await video.play()
+          } catch {
+            // Still blocked (rare); wait for a gesture.
+          }
+        }
+      }
     }
 
     const syncPlayback = () => {
@@ -88,20 +109,20 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
         }
         return
       }
-      void tryPlay().catch(() => undefined)
+      void tryPlay()
     }
 
-    const onGesture = () => {
-      if (!inView) {
-        return
+    const unlockSound = () => {
+      allowSound = true
+      applyMuteState()
+      if (inView && !document.hidden) {
+        void video.play().catch(() => undefined)
       }
-      soundUnlocked = true
-      video.muted = false
-      void tryPlay().catch(() => undefined)
     }
 
-    document.addEventListener('pointerdown', onGesture, { once: true })
-    document.addEventListener('keydown', onGesture, { once: true })
+    // Any page interaction unlocks sound — not only a click on the video.
+    document.addEventListener('pointerdown', unlockSound)
+    document.addEventListener('keydown', unlockSound)
 
     const onVideoError = () => {
       if (videoUrl !== restaurant.chefVideo) {
@@ -137,14 +158,18 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
     }
     document.addEventListener('visibilitychange', onVisibility)
 
+    // Attempt unmuted play immediately if already on screen.
+    applyMuteState()
+    syncPlayback()
+
     return () => {
       observer.disconnect()
       video.pause()
       video.removeEventListener('error', onVideoError)
       video.removeEventListener('loadeddata', onLoaded)
       document.removeEventListener('visibilitychange', onVisibility)
-      document.removeEventListener('pointerdown', onGesture)
-      document.removeEventListener('keydown', onGesture)
+      document.removeEventListener('pointerdown', unlockSound)
+      document.removeEventListener('keydown', unlockSound)
     }
   }, [failed, videoUrl])
 
@@ -158,7 +183,6 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
             className="about-frame-video"
             src={videoUrl}
             poster={posterUrl}
-            muted
             loop
             playsInline
             preload="auto"
