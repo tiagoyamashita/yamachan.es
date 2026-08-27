@@ -154,6 +154,10 @@ export const en: Copy = {
   reservePickDate: 'Choose a day on the calendar.',
   reserveNoTimes: 'No times are free that day for this party size.',
   reserveLoading: 'Loading times…',
+  reserveBack: 'Back',
+  reserveContinue: 'Continue',
+  reserveDetailsHeading: 'Your details',
+  reserveStepsAria: 'Reservation steps',
   reserveUnavailable:
     'Online booking is not ready yet. Call or write on WhatsApp to reserve a table.',
   reserveConfirmTitle: 'Table booked.',
@@ -205,7 +209,12 @@ export const en: Copy = {
     'Phone, address and hours shown on the site and on the booking page.',
   adminAvailabilityHeading: 'Booking availability',
   adminAvailabilityLead:
-    'Default hours, slot settings, and open-date calendar for table bookings via Globally Booked.',
+    'Defaults, opening rules, and open dates for table bookings via Globally Booked.',
+  adminAvailabilitySubtabDefaults: 'Defaults',
+  adminAvailabilitySubtabRules: 'Rules',
+  adminAvailabilitySubtabOpenDates: 'Open dates',
+  adminAvailabilityDefaultsLead:
+    'Fallback hours and slot settings used when no open dates are painted yet.',
   adminAvailabilityOpensAt: 'Opens at',
   adminAvailabilityClosesAt: 'Closes at',
   adminAvailabilitySlotInterval: 'Slot interval (minutes)',
@@ -231,6 +240,7 @@ export const en: Copy = {
   adminOpenRuleDelete: 'Delete',
   adminOpenRuleDeleted: 'Opening rule deleted.',
   adminOpenDatesHeading: 'Open dates',
+  adminOpenDatesActiveRule: 'Rule to apply',
   adminOpenDatesFallbackNote:
     'Until you apply dates, guests book against the default opens/closes times above.',
   adminOpenDatesAllowlistNote:

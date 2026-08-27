@@ -90,9 +90,18 @@
   letter-spacing: 0.06em;
 }
 
-.desktop-nav a[aria-current='page'],
+.desktop-nav a:not(.btn)[aria-current='page'],
 .header-carta[aria-current='page'] {
   color: var(--vermillion);
+}
+
+.desktop-nav a.btn,
+.desktop-nav a.btn[aria-current='page'],
+.desktop-nav a.btn:hover,
+.header-actions a.btn,
+.header-actions a.btn[aria-current='page'],
+.header-actions a.btn:hover {
+  color: #fff;
 }
 
 .lang-btn {
@@ -792,7 +801,8 @@ h3 {
 }
 
 .takeout-field input,
-.takeout-field textarea {
+.takeout-field textarea,
+.takeout-field select {
   width: 100%;
   font: inherit;
   color: var(--ink);
@@ -1065,6 +1075,16 @@ h3 {
   background: var(--ink);
   border-color: var(--ink);
   color: var(--white);
+}
+
+.admin-subtabs {
+  margin-bottom: 1rem;
+}
+
+.admin-subtabs .admin-tab {
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.92rem;
 }
 
 .admin-company {
@@ -1963,6 +1983,140 @@ h3 {
 .reserve-slot:hover {
   background: var(--ink);
   color: var(--paper);
+}
+
+
+.reserve-steps {
+  margin: 0 0 1.25rem;
+}
+
+.reserve-steps ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.reserve-steps li {
+  flex: 1;
+  min-width: 0;
+}
+
+.reserve-steps button {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.2rem;
+  border: 0;
+  border-bottom: 2px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.reserve-steps button:disabled {
+  cursor: default;
+}
+
+.reserve-steps .is-current button,
+.reserve-steps .is-done button {
+  color: var(--ink);
+  border-bottom-color: var(--vermillion);
+}
+
+.reserve-step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--paper-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.reserve-steps .is-current .reserve-step-index,
+.reserve-steps .is-done .reserve-step-index {
+  background: var(--vermillion);
+  color: #fff;
+}
+
+.reserve-choice {
+  margin: 0 0 1.1rem;
+}
+
+.reserve-carousel {
+  overflow: hidden;
+  width: 100%;
+}
+
+.reserve-carousel-track {
+  display: flex;
+  width: 300%;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reserve-carousel-frame {
+  width: 33.333%;
+  box-sizing: border-box;
+  padding-right: 0.75rem;
+  overflow: hidden;
+  height: 0;
+}
+
+.reserve-carousel-frame.is-active {
+  height: auto;
+  overflow: visible;
+}
+
+.reserve-guests {
+  margin-bottom: 1.25rem;
+}
+
+.reserve-details-heading {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+.reserve-frame-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0 0 1.1rem;
+}
+
+.reserve-back {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.reserve-alt {
+  margin-top: 1.25rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.reserve-alt a {
+  color: var(--ink);
 }
 
 .site-footer {

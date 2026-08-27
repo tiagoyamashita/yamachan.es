@@ -153,6 +153,10 @@ export const ja: Copy = {
   reservePickDate: 'カレンダーから日付を選んでください。',
   reserveNoTimes: 'この人数では、その日に空いている時間がありません。',
   reserveLoading: '時間を読み込み中…',
+  reserveBack: '戻る',
+  reserveContinue: '次へ',
+  reserveDetailsHeading: 'ご予約者情報',
+  reserveStepsAria: '予約の手順',
   reserveUnavailable:
     'オンライン予約はまだ使えません。お電話かWhatsAppでご予約ください。',
   reserveConfirmTitle: 'ご予約を受け付けました。',
@@ -203,7 +207,12 @@ export const ja: Copy = {
   adminRestaurantLead: 'サイトと予約ページに表示される電話・住所・営業時間です。',
   adminAvailabilityHeading: '予約の空き状況',
   adminAvailabilityLead:
-    'Globally Booked 用の既定営業時間・枠設定と、営業日カレンダーです。',
+    'Globally Booked の既定設定・営業時間ルール・営業日カレンダーです。',
+  adminAvailabilitySubtabDefaults: '既定',
+  adminAvailabilitySubtabRules: 'ルール',
+  adminAvailabilitySubtabOpenDates: '営業日',
+  adminAvailabilityDefaultsLead:
+    '営業日を塗る前に使う既定の開店時間と枠設定です。',
   adminAvailabilityOpensAt: '開店',
   adminAvailabilityClosesAt: '閉店',
   adminAvailabilitySlotInterval: '枠の間隔（分）',
@@ -230,6 +239,7 @@ export const ja: Copy = {
   adminOpenRuleDelete: '削除',
   adminOpenRuleDeleted: '営業時間ルールを削除しました。',
   adminOpenDatesHeading: '営業日',
+  adminOpenDatesActiveRule: '適用するルール',
   adminOpenDatesFallbackNote:
     '日付を適用するまでは、上の既定の開店・閉店時間で予約できます。',
   adminOpenDatesAllowlistNote:

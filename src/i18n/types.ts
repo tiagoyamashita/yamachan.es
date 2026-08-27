@@ -119,6 +119,10 @@ export type Copy = {
   reservePickDate: string
   reserveNoTimes: string
   reserveLoading: string
+  reserveBack: string
+  reserveContinue: string
+  reserveDetailsHeading: string
+  reserveStepsAria: string
   reserveUnavailable: string
   reserveConfirmTitle: string
   reserveConfirmLead: string
@@ -167,6 +171,10 @@ export type Copy = {
   adminRestaurantLead: string
   adminAvailabilityHeading: string
   adminAvailabilityLead: string
+  adminAvailabilitySubtabDefaults: string
+  adminAvailabilitySubtabRules: string
+  adminAvailabilitySubtabOpenDates: string
+  adminAvailabilityDefaultsLead: string
   adminAvailabilityOpensAt: string
   adminAvailabilityClosesAt: string
   adminAvailabilitySlotInterval: string
@@ -190,6 +198,7 @@ export type Copy = {
   adminOpenRuleDelete: string
   adminOpenRuleDeleted: string
   adminOpenDatesHeading: string
+  adminOpenDatesActiveRule: string
   adminOpenDatesFallbackNote: string
   adminOpenDatesAllowlistNote: string
   adminOpenDatesSelectWeekdays: string

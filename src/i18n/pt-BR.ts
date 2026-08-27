@@ -154,6 +154,10 @@ export const ptBR: Copy = {
   reservePickDate: 'Escolha um dia no calendário.',
   reserveNoTimes: 'Nesse dia não há horários livres para esse número de pessoas.',
   reserveLoading: 'Carregando horários…',
+  reserveBack: 'Voltar',
+  reserveContinue: 'Continuar',
+  reserveDetailsHeading: 'Seus dados',
+  reserveStepsAria: 'Etapas da reserva',
   reserveUnavailable:
     'As reservas online ainda não estão prontas. Ligue ou escreva no WhatsApp para pedir mesa.',
   reserveConfirmTitle: 'Mesa reservada.',
@@ -206,7 +210,12 @@ export const ptBR: Copy = {
     'Telefone, endereço e horário exibidos no site e nas reservas.',
   adminAvailabilityHeading: 'Disponibilidade de reservas',
   adminAvailabilityLead:
-    'Horário padrão, intervalos de mesa e calendário de datas abertas via Globally Booked.',
+    'Padrões, regras de horário e datas abertas via Globally Booked.',
+  adminAvailabilitySubtabDefaults: 'Padrões',
+  adminAvailabilitySubtabRules: 'Regras',
+  adminAvailabilitySubtabOpenDates: 'Datas',
+  adminAvailabilityDefaultsLead:
+    'Horário e intervalos usados enquanto nenhuma data aberta estiver pintada.',
   adminAvailabilityOpensAt: 'Abertura',
   adminAvailabilityClosesAt: 'Fechamento',
   adminAvailabilitySlotInterval: 'Intervalo de horários (minutos)',
@@ -233,6 +242,7 @@ export const ptBR: Copy = {
   adminOpenRuleDelete: 'Excluir',
   adminOpenRuleDeleted: 'Regra de horário excluída.',
   adminOpenDatesHeading: 'Datas abertas',
+  adminOpenDatesActiveRule: 'Regra a aplicar',
   adminOpenDatesFallbackNote:
     'Até aplicar datas, os clientes reservam com o horário padrão acima.',
   adminOpenDatesAllowlistNote:
