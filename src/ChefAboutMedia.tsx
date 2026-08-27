@@ -12,6 +12,13 @@ type ChefAboutMediaProps = {
   caption: string
 }
 
+type MediaMode = 'loading' | 'video' | 'embed' | 'photo'
+
+function embedSrc(permalink: string): string {
+  const base = permalink.endsWith('/') ? permalink : `${permalink}/`
+  return `${base}embed/`
+}
+
 async function localChefVideoUrl(): Promise<string | undefined> {
   try {
     const response = await fetch(restaurant.chefVideo, { method: 'HEAD' })
@@ -26,35 +33,46 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoUrl, setVideoUrl] = useState<string | undefined>()
   const [posterUrl, setPosterUrl] = useState<string>(restaurant.chefPhoto)
+  const [mode, setMode] = useState<MediaMode>('loading')
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
       const localVideo = await localChefVideoUrl()
-      if (!cancelled && localVideo) {
+      if (cancelled) {
+        return
+      }
+      if (localVideo) {
         setVideoUrl(localVideo)
+        setMode('video')
       }
 
       try {
         const response = await fetch(
           `/api/instagram/preview?url=${encodeURIComponent(restaurant.chefReelUrl)}`,
         )
-        if (!response.ok || cancelled) {
-          return
-        }
-        const data = (await response.json()) as PreviewResponse
         if (cancelled) {
           return
         }
-        if (data.mediaUrl) {
-          setPosterUrl(data.mediaUrl)
-        }
-        if (data.videoUrl) {
-          setVideoUrl(data.videoUrl)
+        if (response.ok) {
+          const data = (await response.json()) as PreviewResponse
+          if (data.mediaUrl) {
+            setPosterUrl(data.mediaUrl)
+          }
+          if (data.videoUrl) {
+            setVideoUrl(data.videoUrl)
+            setMode('video')
+            return
+          }
         }
       } catch {
-        // Keep local video / static photo — never Instagram embed chrome.
+        // Fall through to cropped embed / photo.
+      }
+
+      if (!cancelled && !localVideo) {
+        // No CDN/local mp4 — use a cropped Instagram embed (chrome clipped in CSS).
+        setMode('embed')
       }
     }
 
@@ -67,20 +85,22 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
   useEffect(() => {
     const frame = frameRef.current
     const video = videoRef.current
-    if (!frame || !video || !videoUrl) {
+    if (!frame || !video || !videoUrl || mode !== 'video') {
       return
     }
 
-    // Playback is controlled by visibility only (no HTML autoPlay).
     video.muted = true
     video.defaultMuted = true
-    video.pause()
+    video.setAttribute('muted', '')
 
     let inView = false
     let unlocked = false
     let waitingForGesture = false
 
-    const play = () => video.play()
+    const play = () => {
+      video.muted = true
+      return video.play()
+    }
 
     const unmute = () => {
       unlocked = true
@@ -109,7 +129,6 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
         video.pause()
         return
       }
-      // pause() keeps currentTime, so play() resumes where it left off.
       void play().catch(() => {
         requestGestureUnlock()
       })
@@ -121,11 +140,16 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
     const onVideoError = () => {
       if (videoUrl !== restaurant.chefVideo) {
         void localChefVideoUrl().then((localVideo) => {
-          setVideoUrl(localVideo)
+          if (localVideo) {
+            setVideoUrl(localVideo)
+            setMode('video')
+            return
+          }
+          setMode('embed')
         })
         return
       }
-      setVideoUrl(undefined)
+      setMode('embed')
     }
 
     video.addEventListener('error', onVideoError)
@@ -133,15 +157,16 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0]
-        // Play while roughly a quarter of the frame is visible; pause when it leaves.
         inView = Boolean(
-          entry?.isIntersecting && (entry.intersectionRatio ?? 0) >= 0.25,
+          entry?.isIntersecting && (entry.intersectionRatio ?? 0) >= 0.2,
         )
         syncPlayback()
       },
-      { threshold: [0, 0.25, 0.5, 0.75, 1] },
+      { threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] },
     )
     observer.observe(frame)
+    // In case the frame is already visible when the effect mounts.
+    syncPlayback()
 
     const onVisibility = () => {
       syncPlayback()
@@ -156,18 +181,18 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
       document.removeEventListener('pointerdown', onGesture)
       document.removeEventListener('keydown', onGesture)
     }
-  }, [videoUrl])
+  }, [mode, videoUrl])
 
   return (
     <figure className="about-frame" ref={frameRef}>
-      <a
-        className="about-frame-media"
-        href={restaurant.chefReelUrl}
-        target="_blank"
-        rel="noreferrer"
-        aria-label={alt}
-      >
-        {videoUrl ? (
+      {mode === 'video' && videoUrl ? (
+        <a
+          className="about-frame-media"
+          href={restaurant.chefReelUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={alt}
+        >
           <video
             key={videoUrl}
             ref={videoRef}
@@ -177,13 +202,33 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
             muted
             loop
             playsInline
-            preload="metadata"
+            autoPlay
+            preload="auto"
             aria-label={alt}
           />
-        ) : (
+        </a>
+      ) : mode === 'embed' ? (
+        <div className="about-frame-embed-wrap">
+          <iframe
+            className="about-frame-embed"
+            title={alt}
+            src={embedSrc(restaurant.chefReelUrl)}
+            loading="lazy"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        </div>
+      ) : (
+        <a
+          className="about-frame-media"
+          href={restaurant.chefReelUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={alt}
+        >
           <img src={posterUrl} alt={alt} loading="lazy" />
-        )}
-      </a>
+        </a>
+      )}
       <figcaption>
         <a href={restaurant.chefReelUrl} target="_blank" rel="noreferrer">
           {caption}
