@@ -17,7 +17,13 @@ import { LanguagePicker } from './LanguagePicker.tsx'
 import { type Copy, type Locale } from './i18n/index.ts'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
-type AdminTab = 'menu' | 'account' | 'restaurant' | 'availability' | 'instagram'
+type AdminTab =
+  | 'menu'
+  | 'account'
+  | 'restaurant'
+  | 'availability'
+  | 'calendar'
+  | 'instagram'
 type AvailabilitySubtab = 'defaults' | 'rules' | 'open-dates' | 'booking-status'
 type LoginView = 'sign-in' | 'forgot' | 'reset'
 
@@ -57,6 +63,26 @@ type OpenDateEntry = {
   restaurant_opening_rules?: { id?: string; name?: string; color?: string } | null
 }
 
+type AdminBooking = {
+  id: string
+  date: string
+  startDatetime: string
+  endDatetime: string | null
+  timeLabel: string
+  partySize: number
+  status: string
+  clientName: string
+  clientPhone: string | null
+  clientEmail: string | null
+  tableLabel: string | null
+  notes: string | null
+}
+
+type AdminBookingDay = {
+  date: string
+  bookingCount: number
+}
+
 function adminHeading(t: Copy, tab: AdminTab): string {
   switch (tab) {
     case 'menu':
@@ -67,6 +93,8 @@ function adminHeading(t: Copy, tab: AdminTab): string {
       return t.adminRestaurantHeading
     case 'availability':
       return t.adminAvailabilityHeading
+    case 'calendar':
+      return t.adminCalendarHeading
     case 'instagram':
       return t.adminInstagramHeading
     default: {
@@ -86,6 +114,8 @@ function adminLead(t: Copy, tab: AdminTab): string {
       return t.adminRestaurantLead
     case 'availability':
       return t.adminAvailabilityLead
+    case 'calendar':
+      return t.adminCalendarLead
     case 'instagram':
       return t.adminInstagramLead
     default: {
@@ -617,6 +647,205 @@ function monthBounds(year: number, month: number): { from: string; to: string } 
 function shiftMonth(year: number, month: number, delta: number) {
   const next = new Date(year, month + delta, 1)
   return { year: next.getFullYear(), month: next.getMonth() }
+}
+
+function BookingsCalendarEditor({
+  days,
+  bookings,
+  year,
+  month,
+  selectedDate,
+  busy,
+  loadError,
+  t,
+  onMonthChange,
+  onSelectDate,
+}: {
+  days: AdminBookingDay[]
+  bookings: AdminBooking[]
+  year: number
+  month: number
+  selectedDate: string | null
+  busy: boolean
+  loadError: string | null
+  t: Copy
+  onMonthChange: (year: number, month: number) => void
+  onSelectDate: (date: string) => void
+}) {
+  const dayMap = new Map(days.map((day) => [day.date, day]))
+  const firstWeekday = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const cells: Array<number | null> = [
+    ...Array.from({ length: firstWeekday }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+  ]
+  const monthLabel = new Intl.DateTimeFormat(undefined, {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(year, month, 1))
+  const selectedBookings = selectedDate
+    ? bookings.filter((booking) => booking.date === selectedDate)
+    : []
+  const selectedLabel = selectedDate
+    ? new Intl.DateTimeFormat(undefined, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(new Date(`${selectedDate}T12:00:00`))
+    : null
+
+  if (loadError === 'not-configured') {
+    return (
+      <section className="admin-company takeout-form">
+        <p className="takeout-error">{t.adminCalendarNotConfigured}</p>
+      </section>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <section className="admin-company takeout-form">
+        <p className="takeout-error">{loadError}</p>
+      </section>
+    )
+  }
+
+  return (
+    <section className="admin-company takeout-form">
+      <fieldset className="admin-company-block">
+        <legend>{t.adminCalendarHeading}</legend>
+        <div className="admin-availability-cal-head">
+          <button
+            type="button"
+            className="btn btn-outline btn-small"
+            aria-label={t.adminCalendarPrevMonth}
+            disabled={busy}
+            onClick={() => {
+              const next = shiftMonth(year, month, -1)
+              onMonthChange(next.year, next.month)
+            }}
+          >
+            ‹
+          </button>
+          <p>{monthLabel}</p>
+          <button
+            type="button"
+            className="btn btn-outline btn-small"
+            aria-label={t.adminCalendarNextMonth}
+            disabled={busy}
+            onClick={() => {
+              const next = shiftMonth(year, month, 1)
+              onMonthChange(next.year, next.month)
+            }}
+          >
+            ›
+          </button>
+        </div>
+        <div className="admin-availability-grid admin-bookings-grid" role="grid">
+          {WEEKDAY_LABELS_ES.map((label) => (
+            <div className="admin-availability-dow" key={label}>
+              {label.slice(0, 2)}
+            </div>
+          ))}
+          {cells.map((day, index) => {
+            if (day === null) {
+              return (
+                <div
+                  className="admin-availability-cell is-empty"
+                  key={`e-${index}`}
+                />
+              )
+            }
+            const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+            const count = dayMap.get(key)?.bookingCount ?? 0
+            const hasBookings = count > 0
+            const selected = selectedDate === key
+            return (
+              <button
+                type="button"
+                className={`admin-availability-cell${hasBookings ? ' is-booked' : ''}${selected ? ' is-selected' : ''}`}
+                key={key}
+                disabled={busy}
+                aria-pressed={selected}
+                onClick={() => onSelectDate(key)}
+              >
+                <span>{day}</span>
+                <small>{hasBookings ? String(count) : '·'}</small>
+              </button>
+            )
+          })}
+        </div>
+      </fieldset>
+
+      <fieldset className="admin-company-block">
+        <legend>
+          {selectedLabel
+            ? `${t.adminCalendarBookingsFor} ${selectedLabel}`
+            : t.adminCalendarPickDate}
+        </legend>
+        {!selectedDate ? (
+          <p className="muted">{t.adminCalendarPickDate}</p>
+        ) : selectedBookings.length === 0 ? (
+          <p className="muted">{t.adminCalendarNoBookings}</p>
+        ) : (
+          <ul className="admin-bookings-list">
+            {selectedBookings.map((booking) => (
+              <li
+                key={booking.id}
+                className={`admin-booking-card${booking.status === 'cancelled' ? ' is-cancelled' : ''}`}
+              >
+                <div className="admin-booking-head">
+                  <strong>{booking.timeLabel}</strong>
+                  <span>{booking.clientName}</span>
+                </div>
+                <dl className="admin-booking-meta">
+                  <div>
+                    <dt>{t.adminCalendarGuests}</dt>
+                    <dd>{booking.partySize || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>{t.adminCalendarTable}</dt>
+                    <dd>{booking.tableLabel || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>{t.adminCalendarStatus}</dt>
+                    <dd>{booking.status}</dd>
+                  </div>
+                  {booking.clientPhone ? (
+                    <div>
+                      <dt>{t.adminCalendarPhone}</dt>
+                      <dd>
+                        <a href={`tel:${booking.clientPhone}`}>
+                          {booking.clientPhone}
+                        </a>
+                      </dd>
+                    </div>
+                  ) : null}
+                  {booking.clientEmail ? (
+                    <div>
+                      <dt>{t.adminCalendarEmail}</dt>
+                      <dd>
+                        <a href={`mailto:${booking.clientEmail}`}>
+                          {booking.clientEmail}
+                        </a>
+                      </dd>
+                    </div>
+                  ) : null}
+                  {booking.notes ? (
+                    <div className="admin-booking-notes">
+                      <dt>{t.adminCalendarNotes}</dt>
+                      <dd>{booking.notes}</dd>
+                    </div>
+                  ) : null}
+                </dl>
+              </li>
+            ))}
+          </ul>
+        )}
+      </fieldset>
+    </section>
+  )
 }
 
 function AvailabilityEditor({
@@ -1436,6 +1665,15 @@ export function AdminPage({
   const now = new Date()
   const [availabilityYear, setAvailabilityYear] = useState(now.getFullYear())
   const [availabilityMonth, setAvailabilityMonth] = useState(now.getMonth())
+  const [bookingsDays, setBookingsDays] = useState<AdminBookingDay[]>([])
+  const [bookingsList, setBookingsList] = useState<AdminBooking[]>([])
+  const [bookingsBusy, setBookingsBusy] = useState(false)
+  const [bookingsError, setBookingsError] = useState<string | null>(null)
+  const [bookingsYear, setBookingsYear] = useState(now.getFullYear())
+  const [bookingsMonth, setBookingsMonth] = useState(now.getMonth())
+  const [bookingsSelectedDate, setBookingsSelectedDate] = useState<string | null>(
+    null,
+  )
   const [instagramUrls, setInstagramUrls] = useState<string[]>(emptyInstagramSlots)
   const [instagramBusy, setInstagramBusy] = useState(false)
 
@@ -1479,6 +1717,38 @@ export function AdminPage({
       setUsesOpenDateCalendar(false)
     } finally {
       setAvailabilityBusy(false)
+    }
+  }
+
+  const loadBookings = async (year: number, month: number) => {
+    const { from, to } = monthBounds(year, month)
+    setBookingsBusy(true)
+    try {
+      const data = await api<{
+        days?: AdminBookingDay[]
+        bookings?: AdminBooking[]
+        error?: string
+      }>(`/api/admin/bookings?from=${from}&to=${to}`)
+      setBookingsDays(data.days ?? [])
+      setBookingsList(data.bookings ?? [])
+      setBookingsError(null)
+      setBookingsSelectedDate((current) => {
+        if (current && current >= from && current <= to) {
+          return current
+        }
+        return null
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'error'
+      if (message === 'not-configured') {
+        setBookingsError('not-configured')
+      } else {
+        setBookingsError(t.adminCalendarError)
+      }
+      setBookingsDays([])
+      setBookingsList([])
+    } finally {
+      setBookingsBusy(false)
     }
   }
 
@@ -2036,6 +2306,18 @@ export function AdminPage({
                 <button
                   type="button"
                   role="tab"
+                  className={`admin-tab${tab === 'calendar' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'calendar'}
+                  onClick={() => {
+                    setTab('calendar')
+                    void loadBookings(bookingsYear, bookingsMonth)
+                  }}
+                >
+                  {t.adminTabCalendar}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
                   className={`admin-tab${tab === 'instagram' ? ' is-active' : ''}`}
                   aria-selected={tab === 'instagram'}
                   onClick={() => {
@@ -2246,6 +2528,24 @@ export function AdminPage({
                     onApplyDates={applyOpenDates}
                     onClearDates={clearOpenDates}
                     onToggleBookingStatus={toggleBookingStatus}
+                  />
+                ) : null}
+                {tab === 'calendar' ? (
+                  <BookingsCalendarEditor
+                    days={bookingsDays}
+                    bookings={bookingsList}
+                    year={bookingsYear}
+                    month={bookingsMonth}
+                    selectedDate={bookingsSelectedDate}
+                    busy={bookingsBusy}
+                    loadError={bookingsError}
+                    t={t}
+                    onMonthChange={(year, month) => {
+                      setBookingsYear(year)
+                      setBookingsMonth(month)
+                      void loadBookings(year, month)
+                    }}
+                    onSelectDate={setBookingsSelectedDate}
                   />
                 ) : null}
                 {tab === 'instagram' ? (

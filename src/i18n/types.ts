@@ -173,9 +173,25 @@ export type Copy = {
   adminTabAccount: string
   adminTabRestaurant: string
   adminTabAvailability: string
+  adminTabCalendar: string
   adminTabInstagram: string
   adminRestaurantHeading: string
   adminRestaurantLead: string
+  adminCalendarHeading: string
+  adminCalendarLead: string
+  adminCalendarError: string
+  adminCalendarNotConfigured: string
+  adminCalendarPrevMonth: string
+  adminCalendarNextMonth: string
+  adminCalendarNoBookings: string
+  adminCalendarPickDate: string
+  adminCalendarBookingsFor: string
+  adminCalendarGuests: string
+  adminCalendarTable: string
+  adminCalendarStatus: string
+  adminCalendarNotes: string
+  adminCalendarPhone: string
+  adminCalendarEmail: string
   adminAvailabilityHeading: string
   adminAvailabilityLead: string
   adminAvailabilitySubtabDefaults: string

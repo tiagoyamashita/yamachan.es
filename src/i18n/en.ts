@@ -212,10 +212,28 @@ export const en: Copy = {
   adminTabAccount: 'Account',
   adminTabRestaurant: 'Restaurant',
   adminTabAvailability: 'Availability',
+  adminTabCalendar: 'Calendar',
   adminTabInstagram: 'Instagram',
   adminRestaurantHeading: 'Restaurant info',
   adminRestaurantLead:
     'Phone, address and hours shown on the site and on the booking page.',
+  adminCalendarHeading: 'Bookings calendar',
+  adminCalendarLead:
+    'Days with bookings are marked. Click a day to load that day’s reservations.',
+  adminCalendarError: 'Could not load bookings.',
+  adminCalendarNotConfigured:
+    'Globally Booked is not configured (restaurant token) so bookings cannot load.',
+  adminCalendarPrevMonth: 'Previous month',
+  adminCalendarNextMonth: 'Next month',
+  adminCalendarNoBookings: 'No bookings on this day.',
+  adminCalendarPickDate: 'Pick a day on the calendar.',
+  adminCalendarBookingsFor: 'Bookings for',
+  adminCalendarGuests: 'Guests',
+  adminCalendarTable: 'Table',
+  adminCalendarStatus: 'Status',
+  adminCalendarNotes: 'Notes',
+  adminCalendarPhone: 'Phone',
+  adminCalendarEmail: 'Email',
   adminAvailabilityHeading: 'Booking availability',
   adminAvailabilityLead:
     'Defaults, opening rules, and open dates for table bookings via Globally Booked.',

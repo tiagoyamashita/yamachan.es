@@ -48,6 +48,7 @@ import {
   createOpeningRule,
   deleteOpeningRule,
   isDateKey,
+  loadAdminBookings,
   loadMonthDays,
   loadOpenDates,
   loadOpeningRules,
@@ -321,6 +322,22 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
         return json({ error: 'invalid-company-info' }, 400)
       }
       return json({ info: await upsertAdminCompanyInfo(info) })
+    }
+
+    if (path === '/api/admin/bookings' && request.method === 'GET') {
+      try {
+        const from = url.searchParams.get('from') ?? ''
+        const to = url.searchParams.get('to') ?? ''
+        if (!isDateKey(from) || !isDateKey(to)) {
+          return json({ error: 'invalid-range' }, 400)
+        }
+        return json(await loadAdminBookings(from, to))
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
     }
 
     if (path === '/api/admin/availability' && request.method === 'GET') {

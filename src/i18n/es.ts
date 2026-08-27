@@ -213,10 +213,28 @@ export const es: Copy = {
   adminTabAccount: 'Cuenta',
   adminTabRestaurant: 'Restaurante',
   adminTabAvailability: 'Disponibilidad',
+  adminTabCalendar: 'Calendario',
   adminTabInstagram: 'Instagram',
   adminRestaurantHeading: 'Datos del restaurante',
   adminRestaurantLead:
     'Teléfono, dirección y horario que se muestran en la web y en reservas.',
+  adminCalendarHeading: 'Calendario de reservas',
+  adminCalendarLead:
+    'Días con reservas marcados. Pulsa un día para ver las mesas de ese día.',
+  adminCalendarError: 'No se han podido cargar las reservas.',
+  adminCalendarNotConfigured:
+    'Falta configurar Globally Booked (token del restaurante) para ver reservas.',
+  adminCalendarPrevMonth: 'Mes anterior',
+  adminCalendarNextMonth: 'Mes siguiente',
+  adminCalendarNoBookings: 'No hay reservas este día.',
+  adminCalendarPickDate: 'Elige un día del calendario.',
+  adminCalendarBookingsFor: 'Reservas del',
+  adminCalendarGuests: 'Comensales',
+  adminCalendarTable: 'Mesa',
+  adminCalendarStatus: 'Estado',
+  adminCalendarNotes: 'Notas',
+  adminCalendarPhone: 'Teléfono',
+  adminCalendarEmail: 'Email',
   adminAvailabilityHeading: 'Disponibilidad de reservas',
   adminAvailabilityLead:
     'Valores por defecto, reglas de horario y fechas abiertas vía Globally Booked.',
