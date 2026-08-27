@@ -232,6 +232,7 @@ export const es: Copy = {
   adminAvailabilitySubtabDefaults: 'Por defecto',
   adminAvailabilitySubtabRules: 'Reglas',
   adminAvailabilitySubtabOpenDates: 'Fechas',
+  adminAvailabilitySubtabBookingStatus: 'Estado reserva',
   adminAvailabilityDefaultsLead:
     'Horario e intervalos de reserva usados mientras no haya fechas abiertas pintadas.',
   adminAvailabilityOpensAt: 'Apertura',
@@ -272,6 +273,13 @@ export const es: Copy = {
   adminOpenDatesApplied: 'Fechas abiertas actualizadas.',
   adminOpenDatesCleared: 'Fechas abiertas borradas.',
   adminOpenDatesSelectedCount: '{count} fechas seleccionadas',
+  adminBookingStatusHeading: 'Estado de reserva',
+  adminBookingStatusLead:
+    'Marcado = abierto a reservas. Desmarca un día para bloquear nuevas peticiones ese día.',
+  adminBookingStatusOpen: 'Abierto',
+  adminBookingStatusClosed: 'Cerrado',
+  adminBookingStatusOpened: 'Día abierto a reservas.',
+  adminBookingStatusClosedSaved: 'Día cerrado: sin nuevas reservas.',
   adminInstagramHeading: 'Publicaciones de Instagram',
   adminInstagramLead:
     'Pega hasta cinco enlaces de publicaciones o reels (o el HTML completo del embed). El hueco #1 aparece primero en el carrusel de la portada.',

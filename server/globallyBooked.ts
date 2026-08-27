@@ -1,3 +1,5 @@
+import { loadClosedBookingDates } from './closedBookingDates.ts'
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
 export class GloballyBookedError extends Error {
@@ -566,11 +568,21 @@ export async function loadDaySlots(date: string, partySize: number) {
   const timeZone = settings.timezone || 'UTC'
   const dayStartIso = localDateTimeToUtcIso(date, 0, timeZone)
   const dayEndIso = localDateTimeToUtcIso(date, MINUTES_PER_DAY, timeZone)
-  const [openDates, tables, reservations] = await Promise.all([
+  const [openDates, tables, reservations, closedDates] = await Promise.all([
     loadOpenDates(),
     loadTables(),
     loadReservationsBetween(dayStartIso, dayEndIso),
+    loadClosedBookingDates().catch(() => [] as string[]),
   ])
+  if (closedDates.includes(date)) {
+    return {
+      date,
+      timezone: settings.timezone,
+      partySize,
+      dayClosed: true,
+      slots: [] as AvailabilitySlot[],
+    }
+  }
   const windows = windowsForDate(settings, date, openDates)
   const interval = settings.slot_interval_minutes || 15
   const turn = settings.default_turn_minutes || 90
@@ -617,11 +629,22 @@ export async function loadDaySlots(date: string, partySize: number) {
 
 export async function loadMonthDays(from: string, to: string, partySize: number) {
   const settings = await loadRestaurantSettings()
-  const openDates = await loadOpenDates()
+  const [openDates, closedDates] = await Promise.all([
+    loadOpenDates(),
+    loadClosedBookingDates().catch(() => [] as string[]),
+  ])
+  const closedSet = new Set(closedDates)
   const interval = settings.slot_interval_minutes || 15
   const turn = settings.default_turn_minutes || 90
 
   const days: DayAvailability[] = eachDateKey(from, to).map((date) => {
+    if (closedSet.has(date)) {
+      return {
+        date,
+        closed: true,
+        slot_count: 0,
+      }
+    }
     const windows = windowsForDate(settings, date, openDates)
     return {
       date,
