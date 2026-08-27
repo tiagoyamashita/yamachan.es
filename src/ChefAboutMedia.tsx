@@ -12,67 +12,44 @@ type ChefAboutMediaProps = {
   caption: string
 }
 
-type MediaMode = 'loading' | 'video' | 'embed' | 'photo'
-
-function embedSrc(permalink: string): string {
-  const base = permalink.endsWith('/') ? permalink : `${permalink}/`
-  return `${base}embed/`
-}
-
-async function localChefVideoUrl(): Promise<string | undefined> {
-  try {
-    const response = await fetch(restaurant.chefVideo, { method: 'HEAD' })
-    return response.ok ? restaurant.chefVideo : undefined
-  } catch {
-    return undefined
-  }
-}
-
+/**
+ * Native video only — Instagram iframes cannot be play/paused on scroll.
+ * Sources tried in order: Graph/CDN preview, then local /videos/chef-reel.mp4.
+ */
 export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
   const frameRef = useRef<HTMLElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoUrl, setVideoUrl] = useState<string | undefined>()
   const [posterUrl, setPosterUrl] = useState<string>(restaurant.chefPhoto)
-  const [mode, setMode] = useState<MediaMode>('loading')
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
-      const localVideo = await localChefVideoUrl()
-      if (cancelled) {
-        return
-      }
-      if (localVideo) {
-        setVideoUrl(localVideo)
-        setMode('video')
-      }
+      // Start with the local file so scroll playback works offline / without API.
+      setVideoUrl(restaurant.chefVideo)
 
       try {
         const response = await fetch(
           `/api/instagram/preview?url=${encodeURIComponent(restaurant.chefReelUrl)}`,
         )
+        if (!response.ok || cancelled) {
+          return
+        }
+        const data = (await response.json()) as PreviewResponse
         if (cancelled) {
           return
         }
-        if (response.ok) {
-          const data = (await response.json()) as PreviewResponse
-          if (data.mediaUrl) {
-            setPosterUrl(data.mediaUrl)
-          }
-          if (data.videoUrl) {
-            setVideoUrl(data.videoUrl)
-            setMode('video')
-            return
-          }
+        if (data.mediaUrl) {
+          setPosterUrl(data.mediaUrl)
+        }
+        if (data.videoUrl) {
+          setVideoUrl(data.videoUrl)
+          setFailed(false)
         }
       } catch {
-        // Fall through to cropped embed / photo.
-      }
-
-      if (!cancelled && !localVideo) {
-        // No CDN/local mp4 — use a cropped Instagram embed (chrome clipped in CSS).
-        setMode('embed')
+        // Keep local video path.
       }
     }
 
@@ -85,88 +62,75 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
   useEffect(() => {
     const frame = frameRef.current
     const video = videoRef.current
-    if (!frame || !video || !videoUrl || mode !== 'video') {
+    if (!frame || !video || !videoUrl || failed) {
       return
     }
 
-    video.muted = true
+    // Always start muted so browsers allow autoplay.
     video.defaultMuted = true
+    video.muted = true
     video.setAttribute('muted', '')
 
     let inView = false
-    let unlocked = false
-    let waitingForGesture = false
+    let soundUnlocked = false
 
-    const play = () => {
-      video.muted = true
+    const tryPlay = () => {
+      if (!soundUnlocked) {
+        video.muted = true
+      }
       return video.play()
     }
 
-    const unmute = () => {
-      unlocked = true
-      video.muted = false
+    const syncPlayback = () => {
+      if (!inView || document.hidden) {
+        if (!video.paused) {
+          video.pause()
+        }
+        return
+      }
+      void tryPlay().catch(() => undefined)
     }
 
     const onGesture = () => {
       if (!inView) {
         return
       }
-      unmute()
-      void play().catch(() => undefined)
+      soundUnlocked = true
+      video.muted = false
+      void tryPlay().catch(() => undefined)
     }
 
-    const requestGestureUnlock = () => {
-      if (waitingForGesture || unlocked) {
-        return
-      }
-      waitingForGesture = true
-      document.addEventListener('pointerdown', onGesture, { once: true })
-      document.addEventListener('keydown', onGesture, { once: true })
-    }
-
-    const syncPlayback = () => {
-      if (!inView || document.hidden) {
-        video.pause()
-        return
-      }
-      void play().catch(() => {
-        requestGestureUnlock()
-      })
-      if (!unlocked) {
-        requestGestureUnlock()
-      }
-    }
+    document.addEventListener('pointerdown', onGesture, { once: true })
+    document.addEventListener('keydown', onGesture, { once: true })
 
     const onVideoError = () => {
       if (videoUrl !== restaurant.chefVideo) {
-        void localChefVideoUrl().then((localVideo) => {
-          if (localVideo) {
-            setVideoUrl(localVideo)
-            setMode('video')
-            return
-          }
-          setMode('embed')
-        })
+        setVideoUrl(restaurant.chefVideo)
+        setFailed(false)
         return
       }
-      setMode('embed')
+      setFailed(true)
+      setVideoUrl(undefined)
+    }
+
+    const onLoaded = () => {
+      syncPlayback()
     }
 
     video.addEventListener('error', onVideoError)
+    video.addEventListener('loadeddata', onLoaded)
 
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0]
         inView = Boolean(
-          entry?.isIntersecting && (entry.intersectionRatio ?? 0) >= 0.2,
+          entry?.isIntersecting && (entry.intersectionRatio ?? 0) >= 0.25,
         )
         syncPlayback()
       },
-      { threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] },
+      { threshold: [0, 0.25, 0.5, 0.75, 1] },
     )
     observer.observe(frame)
-    // In case the frame is already visible when the effect mounts.
-    syncPlayback()
 
     const onVisibility = () => {
       syncPlayback()
@@ -177,22 +141,17 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
       observer.disconnect()
       video.pause()
       video.removeEventListener('error', onVideoError)
+      video.removeEventListener('loadeddata', onLoaded)
       document.removeEventListener('visibilitychange', onVisibility)
       document.removeEventListener('pointerdown', onGesture)
       document.removeEventListener('keydown', onGesture)
     }
-  }, [mode, videoUrl])
+  }, [failed, videoUrl])
 
   return (
     <figure className="about-frame" ref={frameRef}>
-      {mode === 'video' && videoUrl ? (
-        <a
-          className="about-frame-media"
-          href={restaurant.chefReelUrl}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={alt}
-        >
+      {videoUrl && !failed ? (
+        <div className="about-frame-media">
           <video
             key={videoUrl}
             ref={videoRef}
@@ -202,20 +161,8 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
             muted
             loop
             playsInline
-            autoPlay
             preload="auto"
             aria-label={alt}
-          />
-        </a>
-      ) : mode === 'embed' ? (
-        <div className="about-frame-embed-wrap">
-          <iframe
-            className="about-frame-embed"
-            title={alt}
-            src={embedSrc(restaurant.chefReelUrl)}
-            loading="lazy"
-            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-            allowFullScreen
           />
         </div>
       ) : (
