@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from 'react'
+import { lazy, Suspense, useEffect, useState, type MouseEvent } from 'react'
 import { restaurant } from './content.ts'
 import {
   contactFromCompanyInfo,
@@ -16,11 +16,28 @@ import {
   type Locale,
 } from './i18n/index.ts'
 import { LanguagePicker } from './LanguagePicker.tsx'
-import { CartaPage } from './CartaPage.tsx'
 import { FeaturedDishes } from './FeaturedDishes.tsx'
 // import { TakeoutPage } from './TakeoutPage.tsx'
-import { ReservasPage } from './ReservasPage.tsx'
-import { AdminPage } from './AdminPage.tsx'
+
+const CartaPage = lazy(() =>
+  import('./CartaPage.tsx').then((module) => ({ default: module.CartaPage })),
+)
+const ReservasPage = lazy(() =>
+  import('./ReservasPage.tsx').then((module) => ({
+    default: module.ReservasPage,
+  })),
+)
+const AdminPage = lazy(() =>
+  import('./AdminPage.tsx').then((module) => ({ default: module.AdminPage })),
+)
+
+function PageLoading() {
+  return (
+    <div className="page-loading" aria-busy="true" aria-live="polite">
+      <span className="visually-hidden">Loading…</span>
+    </div>
+  )
+}
 import { InstagramFeed } from './InstagramFeed.tsx'
 import { GoogleReviews } from './GoogleReviews.tsx'
 import { ChefAboutMedia } from './ChefAboutMedia.tsx'
@@ -236,12 +253,14 @@ export default function App() {
   return (
     <>
       {onAdmin ? (
-        <AdminPage
-          t={t}
-          locale={locale}
-          onHome={(event) => go(event, '/')}
-          onLocaleChange={setLocale}
-        />
+        <Suspense fallback={<PageLoading />}>
+          <AdminPage
+            t={t}
+            locale={locale}
+            onHome={(event) => go(event, '/')}
+            onLocaleChange={setLocale}
+          />
+        </Suspense>
       ) : (
         <>
       <a className="skip-link" href="#contenido">
@@ -324,11 +343,13 @@ export default function App() {
 
       <main id="contenido">
         {onCarta ? (
-          <CartaPage
-            t={t}
-            locale={locale}
-            onHome={(event) => go(event, '/')}
-          />
+          <Suspense fallback={<PageLoading />}>
+            <CartaPage
+              t={t}
+              locale={locale}
+              onHome={(event) => go(event, '/')}
+            />
+          </Suspense>
         // ) : onTakeout ? (
         //   <TakeoutPage
         //     t={t}
@@ -338,11 +359,13 @@ export default function App() {
         //     onNavigate={go}
         //   />
         ) : onReserve ? (
-          <ReservasPage
-            t={t}
-            locale={locale}
-            onHome={(event) => go(event, '/')}
-          />
+          <Suspense fallback={<PageLoading />}>
+            <ReservasPage
+              t={t}
+              locale={locale}
+              onHome={(event) => go(event, '/')}
+            />
+          </Suspense>
         ) : (
           <>
             <section className="hero" id="inicio">
