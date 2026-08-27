@@ -2,6 +2,8 @@ export const restaurant = {
   name: 'Yama-Chan',
   nameJa: '山ちゃん',
   chefPhoto: '/images/chef-masashi.png',
+  /** Local 9:16 clip — keeps Instagram chrome off the homepage. */
+  chefVideo: '/videos/chef-reel.mp4',
   chefReelUrl: 'https://www.instagram.com/reel/DMQLKHMs94d/',
   instagramUrl: 'https://www.instagram.com/yamachan.es/',
   instagramHandle: '@yamachan.es',

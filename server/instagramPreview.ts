@@ -13,7 +13,6 @@ export type InstagramPermalinkPreview = {
 type GraphMedia = {
   id: string
   permalink?: string
-  shortcode?: string
   media_url?: string
   thumbnail_url?: string
   media_type?: string
@@ -24,11 +23,16 @@ type GraphPage = {
   paging?: { next?: string }
 }
 
-const GRAPH_PAGE_LIMIT = 25
-const GRAPH_MAX_PAGES = 8
+const GRAPH_PAGE_LIMIT = 50
+const GRAPH_MAX_PAGES = 10
 
 function normalizePermalink(value: string): string {
   return value.split('?')[0].replace(/\/+$/, '')
+}
+
+function shortcodeFromPermalink(permalink: string): string | undefined {
+  const match = permalink.match(/\/(?:reel|p|tv)\/([^/?#]+)/i)
+  return match?.[1]
 }
 
 function proxyMediaUrl(cdnUrl: string | undefined): string | undefined {
@@ -46,20 +50,17 @@ function proxyMediaUrl(cdnUrl: string | undefined): string | undefined {
   return `/api/instagram/media?url=${encodeURIComponent(cdnUrl)}`
 }
 
-function shortcodeFromPermalink(permalink: string): string | undefined {
-  const match = permalink.match(/\/(?:reel|p|tv)\/([^/?#]+)/i)
-  return match?.[1]
-}
-
-function graphItemMatches(
-  item: GraphMedia,
-  clean: string,
-  shortcode: string | undefined,
-): boolean {
-  if (item.permalink && normalizePermalink(item.permalink) === clean) {
+function graphItemMatches(item: GraphMedia, clean: string): boolean {
+  if (!item.permalink) {
+    return false
+  }
+  const itemPermalink = normalizePermalink(item.permalink)
+  if (itemPermalink === clean) {
     return true
   }
-  return Boolean(shortcode && item.shortcode === shortcode)
+  const wanted = shortcodeFromPermalink(clean)
+  const got = shortcodeFromPermalink(itemPermalink)
+  return Boolean(wanted && got && wanted === got)
 }
 
 function isGraphVideo(mediaType: string | undefined): boolean {
@@ -91,9 +92,10 @@ async function fetchGraphPermalinkPreview(
   clean: string,
   token: string,
 ): Promise<InstagramPermalinkPreview | null> {
-  const shortcode = shortcodeFromPermalink(clean)
+  // Keep fields aligned with the working feed Graph query — unsupported
+  // fields (e.g. shortcode) make the whole request fail.
   const query = new URLSearchParams({
-    fields: 'id,media_type,media_url,permalink,shortcode,thumbnail_url',
+    fields: 'id,media_type,media_url,permalink,thumbnail_url',
     limit: String(GRAPH_PAGE_LIMIT),
     access_token: token,
   })
@@ -108,7 +110,7 @@ async function fetchGraphPermalinkPreview(
     }
     const payload = (await response.json()) as GraphPage
     const hit = (payload.data ?? []).find((item) =>
-      graphItemMatches(item, clean, shortcode),
+      graphItemMatches(item, clean),
     )
     if (hit) {
       return previewFromGraphItem(clean, hit)
