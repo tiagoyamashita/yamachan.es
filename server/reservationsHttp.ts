@@ -6,6 +6,8 @@ import {
   loadMonthDays,
   tableLabel,
 } from './globallyBooked.ts'
+import { sendReservationChatEmail } from './reservationMail.ts'
+import { restaurant } from '../src/content.ts'
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -25,12 +27,49 @@ function parsePartySize(value: string | null): number | null {
   return partySize
 }
 
+function isEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
 function fail(error: unknown): Response {
   if (error instanceof GloballyBookedError) {
     return json({ error: error.message }, error.status)
   }
   const message = error instanceof Error ? error.message : 'error'
   return json({ error: message }, 502)
+}
+
+function bookingChatUrl(input: {
+  name: string
+  partySize: number
+  startDatetime: string
+  tableLabel: string | null
+}): string {
+  const when = new Date(input.startDatetime)
+  const dateLabel = new Intl.DateTimeFormat('es-ES', {
+    timeZone: 'Europe/Madrid',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(when)
+  const timeLabel = new Intl.DateTimeFormat('es-ES', {
+    timeZone: 'Europe/Madrid',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(when)
+  const lines = [
+    `Hola, soy ${input.name}.`,
+    `Acabo de pedir mesa en ${restaurant.name} para ${String(input.partySize)} el ${dateLabel} a las ${timeLabel}.`,
+  ]
+  if (input.tableLabel) {
+    lines.push(`Mesa: ${input.tableLabel}.`)
+  }
+  lines.push('¿Me podéis confirmar o ayudarme por aquí?')
+  return (
+    `https://wa.me/${restaurant.whatsappNumber}?text=` +
+    encodeURIComponent(lines.join(' '))
+  )
 }
 
 export async function handleReservationsRequest(request: Request): Promise<Response> {
@@ -78,7 +117,7 @@ export async function handleReservationsRequest(request: Request): Promise<Respo
       if (!startDatetime || Number.isNaN(new Date(startDatetime).getTime())) {
         return json({ error: 'invalid-time' }, 400)
       }
-      if (!clientName || !clientEmail) {
+      if (!clientName || !clientEmail || !isEmail(clientEmail)) {
         return json({ error: 'need-details' }, 400)
       }
 
@@ -90,6 +129,35 @@ export async function handleReservationsRequest(request: Request): Promise<Respo
         clientPhone: clientPhone || null,
         clientNotes: clientNotes || null,
       })
+      const label = tableLabel(reservation)
+      const chatUrl = bookingChatUrl({
+        name: reservation.client_name,
+        partySize: reservation.party_size,
+        startDatetime: reservation.start_datetime,
+        tableLabel: label,
+      })
+      const dateLabel = new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'Europe/Madrid',
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      }).format(new Date(reservation.start_datetime))
+      const timeLabel = new Intl.DateTimeFormat('es-ES', {
+        timeZone: 'Europe/Madrid',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(new Date(reservation.start_datetime))
+      const emailSent = await sendReservationChatEmail({
+        to: clientEmail,
+        clientName: reservation.client_name,
+        dateLabel,
+        timeLabel,
+        partySize: reservation.party_size,
+        tableLabel: label,
+        chatUrl,
+      })
+
       return json({
         booking: {
           id: reservation.id,
@@ -98,7 +166,9 @@ export async function handleReservationsRequest(request: Request): Promise<Respo
           partySize: reservation.party_size,
           status: reservation.status,
           name: reservation.client_name,
-          tableLabel: tableLabel(reservation),
+          tableLabel: label,
+          chatUrl,
+          emailSent,
         },
       })
     }

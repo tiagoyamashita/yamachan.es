@@ -123,11 +123,18 @@ export type Copy = {
   reserveContinue: string
   reserveDetailsHeading: string
   reserveStepsAria: string
+  reserveTabDate: string
+  reserveTabHours: string
+  reserveTabDetails: string
   reserveUnavailable: string
   reserveConfirmTitle: string
   reserveConfirmLead: string
   reserveConfirmNew: string
+  reserveConfirmChat: string
+  reserveConfirmChatLead: string
+  reserveConfirmEmailSent: string
   reserveTableLabel: string
+  reserveEmailRequired: string
   adminPageTitle: string
   adminTitle: string
   adminHeading: string

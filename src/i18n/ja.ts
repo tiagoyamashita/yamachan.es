@@ -157,12 +157,21 @@ export const ja: Copy = {
   reserveContinue: '次へ',
   reserveDetailsHeading: 'ご予約者情報',
   reserveStepsAria: '予約の手順',
+  reserveTabDate: '日付',
+  reserveTabHours: '時間',
+  reserveTabDetails: 'ご予約者情報',
   reserveUnavailable:
     'オンライン予約はまだ使えません。お電話かWhatsAppでご予約ください。',
   reserveConfirmTitle: 'ご予約を受け付けました。',
-  reserveConfirmLead: '台帳に記入しました。変更がある場合はお電話かWhatsAppでご連絡ください。',
+  reserveConfirmLead:
+    '台帳に記入しました。ご不明点はレストランとのチャットを開いてください。',
   reserveConfirmNew: '別の予約をする',
+  reserveConfirmChat: 'レストランとチャットを開く',
+  reserveConfirmChatLead:
+    'チャットリンクもメールで送りました。今すぐWhatsAppを開けます。',
+  reserveConfirmEmailSent: 'メールをご確認ください。チャットリンクを送りました。',
   reserveTableLabel: 'テーブル',
+  reserveEmailRequired: 'チャットリンク送付のため、メールアドレスは必須です。',
   adminPageTitle: '管理 — 山ちゃん',
   adminTitle: '管理',
   adminHeading: 'メニュー',
