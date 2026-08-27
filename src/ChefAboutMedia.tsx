@@ -12,11 +12,13 @@ type ChefAboutMediaProps = {
   caption: string
 }
 
-type MediaMode = 'loading' | 'video' | 'embed'
-
-function embedSrc(permalink: string): string {
-  const base = permalink.endsWith('/') ? permalink : `${permalink}/`
-  return `${base}embed/`
+async function localChefVideoUrl(): Promise<string | undefined> {
+  try {
+    const response = await fetch(restaurant.chefVideo, { method: 'HEAD' })
+    return response.ok ? restaurant.chefVideo : undefined
+  } catch {
+    return undefined
+  }
 }
 
 export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
@@ -24,21 +26,21 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoUrl, setVideoUrl] = useState<string | undefined>()
   const [posterUrl, setPosterUrl] = useState<string>(restaurant.chefPhoto)
-  const [mode, setMode] = useState<MediaMode>('loading')
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
+      const localVideo = await localChefVideoUrl()
+      if (!cancelled && localVideo) {
+        setVideoUrl(localVideo)
+      }
+
       try {
         const response = await fetch(
           `/api/instagram/preview?url=${encodeURIComponent(restaurant.chefReelUrl)}`,
         )
-        if (cancelled) {
-          return
-        }
-        if (!response.ok) {
-          setMode('embed')
+        if (!response.ok || cancelled) {
           return
         }
         const data = (await response.json()) as PreviewResponse
@@ -50,15 +52,9 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
         }
         if (data.videoUrl) {
           setVideoUrl(data.videoUrl)
-          setMode('video')
-          return
         }
-        // Instagram often omits media_url for reels with licensed audio.
-        setMode('embed')
       } catch {
-        if (!cancelled) {
-          setMode('embed')
-        }
+        // Keep local video / static photo — never Instagram embed chrome.
       }
     }
 
@@ -71,7 +67,7 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
   useEffect(() => {
     const frame = frameRef.current
     const video = videoRef.current
-    if (!frame || !video || !videoUrl || mode !== 'video') {
+    if (!frame || !video || !videoUrl) {
       return
     }
 
@@ -111,7 +107,6 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
         video.pause()
         return
       }
-      // pause() keeps currentTime, so play() resumes where it left off.
       void play().catch(() => {
         requestGestureUnlock()
       })
@@ -121,7 +116,13 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
     }
 
     const onVideoError = () => {
-      setMode('embed')
+      if (videoUrl !== restaurant.chefVideo) {
+        void localChefVideoUrl().then((localVideo) => {
+          setVideoUrl(localVideo)
+        })
+        return
+      }
+      setVideoUrl(undefined)
     }
 
     video.addEventListener('error', onVideoError)
@@ -148,19 +149,20 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
       document.removeEventListener('pointerdown', onGesture)
       document.removeEventListener('keydown', onGesture)
     }
-  }, [mode, videoUrl])
+  }, [videoUrl])
 
   return (
     <figure className="about-frame" ref={frameRef}>
-      {mode === 'video' && videoUrl ? (
-        <a
-          className="about-frame-media"
-          href={restaurant.chefReelUrl}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={alt}
-        >
+      <a
+        className="about-frame-media"
+        href={restaurant.chefReelUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={alt}
+      >
+        {videoUrl ? (
           <video
+            key={videoUrl}
             ref={videoRef}
             className="about-frame-video"
             src={videoUrl}
@@ -172,33 +174,10 @@ export function ChefAboutMedia({ alt, caption }: ChefAboutMediaProps) {
             preload="auto"
             aria-label={alt}
           />
-        </a>
-      ) : mode === 'embed' ? (
-        <div className="about-frame-embed-wrap">
-          <iframe
-            className="about-frame-embed"
-            title={alt}
-            src={embedSrc(restaurant.chefReelUrl)}
-            loading="lazy"
-            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-            allowFullScreen
-          />
-        </div>
-      ) : (
-        <a
-          className="about-frame-media"
-          href={restaurant.chefReelUrl}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={alt}
-        >
-          <img
-            src={mode === 'loading' ? posterUrl : restaurant.chefPhoto}
-            alt={alt}
-            loading="lazy"
-          />
-        </a>
-      )}
+        ) : (
+          <img src={posterUrl} alt={alt} loading="lazy" />
+        )}
+      </a>
       <figcaption>
         <a href={restaurant.chefReelUrl} target="_blank" rel="noreferrer">
           {caption}
