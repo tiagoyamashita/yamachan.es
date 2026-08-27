@@ -4,6 +4,7 @@ import { type Copy, localeMeta, type Locale, whatsappUrl } from './i18n/index.ts
 import { useCompanyInfo } from './useCompanyInfo.ts'
 
 type OccasionId = 'none' | 'birthday' | 'anniversary' | 'celebration'
+type ReserveStep = 'date' | 'hours' | 'details'
 
 type AvailabilitySlot = {
   start_datetime: string
@@ -22,6 +23,8 @@ type Booking = {
   partySize: number
   name: string
   tableLabel: string | null
+  chatUrl?: string
+  emailSent?: boolean
 }
 
 const MIN_GUESTS = 1
@@ -32,6 +35,7 @@ const OCCASIONS: OccasionId[] = [
   'anniversary',
   'celebration',
 ]
+const STEPS: ReserveStep[] = ['date', 'hours', 'details']
 
 function occasionLabel(t: Copy, id: OccasionId): string {
   switch (id) {
@@ -45,6 +49,21 @@ function occasionLabel(t: Copy, id: OccasionId): string {
       return t.reserveOccasionCelebration
     default: {
       const _exhaustive: never = id
+      return _exhaustive
+    }
+  }
+}
+
+function stepLabel(t: Copy, step: ReserveStep): string {
+  switch (step) {
+    case 'date':
+      return t.reserveTabDate
+    case 'hours':
+      return t.reserveTabHours
+    case 'details':
+      return t.reserveTabDetails
+    default: {
+      const _exhaustive: never = step
       return _exhaustive
     }
   }
@@ -131,6 +150,10 @@ function todayKey(timeZone = 'Europe/Madrid'): string {
   }).format(new Date())
 }
 
+function isEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
 export function ReservasPage({
   t,
   locale,
@@ -144,6 +167,7 @@ export function ReservasPage({
   const visit = mergeVisitCopy(t, companyInfo)
   const contact = contactFromCompanyInfo(companyInfo)
   const now = new Date()
+  const [step, setStep] = useState<ReserveStep>('date')
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
   const [guests, setGuests] = useState(2)
@@ -183,6 +207,7 @@ export function ReservasPage({
   const maxMonth = useMemo(() => shiftMonth(minMonth.year, minMonth.month, 2), [minMonth])
   const atMinMonth = year === minMonth.year && month === minMonth.month
   const atMaxMonth = year === maxMonth.year && month === maxMonth.month
+  const stepIndex = STEPS.indexOf(step)
 
   useEffect(() => {
     const { from, to } = monthRange(year, month)
@@ -273,14 +298,20 @@ export function ReservasPage({
     event.preventDefault()
     if (!selectedDate) {
       setFormError(t.reserveNeedDate)
+      setStep('date')
       return
     }
     if (!selectedSlot) {
       setFormError(t.reserveNeedTime)
+      setStep('hours')
       return
     }
     if (!name.trim() || !email.trim()) {
       setFormError(t.reserveNeedDetails)
+      return
+    }
+    if (!isEmail(email)) {
+      setFormError(t.reserveEmailRequired)
       return
     }
 
@@ -316,6 +347,9 @@ export function ReservasPage({
         throw new Error(row.error || 'submit')
       }
       setBooking(row.booking)
+      if (row.booking.chatUrl) {
+        window.open(row.booking.chatUrl, '_blank', 'noopener,noreferrer')
+      }
     } catch {
       setFormError(t.reserveSubmitError)
     } finally {
@@ -324,6 +358,11 @@ export function ReservasPage({
   }
 
   if (booking) {
+    const chatHref =
+      booking.chatUrl ||
+      whatsappUrl(
+        `${t.whatsappReserveText} (${formatDateLong(locale, booking.startDatetime, timezone)} ${formatTime(locale, booking.startDatetime, timezone)})`,
+      )
     return (
       <article className="carta-page reserve-page" id="reservas">
         <div className="section-inner">
@@ -356,13 +395,23 @@ export function ReservasPage({
               </div>
             ) : null}
           </dl>
+          <p className="muted">{t.reserveConfirmChatLead}</p>
+          {booking.emailSent ? (
+            <p className="muted">{t.reserveConfirmEmailSent}</p>
+          ) : null}
+          <p className="carta-back">
+            <a className="btn" href={chatHref} target="_blank" rel="noreferrer">
+              {t.reserveConfirmChat}
+            </a>
+          </p>
           <p className="carta-back">
             <button
-              className="btn"
+              className="btn btn-outline"
               type="button"
               onClick={() => {
                 setBooking(null)
                 setSelectedSlot(null)
+                setStep('date')
               }}
             >
               {t.reserveConfirmNew}
@@ -391,228 +440,354 @@ export function ReservasPage({
           <p className="takeout-error">{t.reserveUnavailable}</p>
         ) : null}
 
-        <div className="reserve-layout">
-          <section className="reserve-calendar" aria-labelledby="reserve-date-heading">
-            <div className="reserve-cal-head">
-              <h2 id="reserve-date-heading">{t.reserveDateLabel}</h2>
-              <div className="reserve-cal-nav">
-                <button
-                  type="button"
-                  aria-label={t.reservePrevMonth}
-                  disabled={atMinMonth}
-                  onClick={() => {
-                    const next = shiftMonth(year, month, -1)
-                    setYear(next.year)
-                    setMonth(next.month)
-                  }}
-                >
-                  ‹
-                </button>
-                <p>{monthTitle(locale, year, month)}</p>
-                <button
-                  type="button"
-                  aria-label={t.reserveNextMonth}
-                  disabled={atMaxMonth}
-                  onClick={() => {
-                    const next = shiftMonth(year, month, 1)
-                    setYear(next.year)
-                    setMonth(next.month)
-                  }}
-                >
-                  ›
-                </button>
-              </div>
-            </div>
-
-            <div className="reserve-grid" role="grid" aria-label={t.reserveDateLabel}>
-              <div className="reserve-weekdays" role="row">
-                {weekdays.map((label) => (
-                  <span key={label} role="columnheader">
-                    {label}
-                  </span>
-                ))}
-              </div>
-              <div className="reserve-days" role="row">
-                {cells.map((cell, index) => {
-                  if (!cell.key || cell.day === null) {
-                    return <span key={`pad-${index}`} className="reserve-day is-empty" />
+        <nav className="reserve-steps" aria-label={t.reserveStepsAria}>
+          <ol>
+            {STEPS.map((id, index) => {
+              const done = index < stepIndex
+              const current = id === step
+              const unlocked =
+                id === 'date' ||
+                (id === 'hours' && Boolean(selectedDate)) ||
+                (id === 'details' && Boolean(selectedDate && selectedSlot))
+              return (
+                <li
+                  key={id}
+                  className={
+                    current ? 'is-current' : done ? 'is-done' : undefined
                   }
-                  const info = dayByKey.get(cell.key)
-                  const bookable = Boolean(info && !info.closed && info.slot_count > 0)
-                  const selected = selectedDate === cell.key
-                  return (
-                    <button
-                      key={cell.key}
-                      type="button"
-                      className={
-                        selected
-                          ? 'reserve-day is-selected'
-                          : bookable
-                            ? 'reserve-day'
-                            : 'reserve-day is-disabled'
-                      }
-                      disabled={!bookable || daysLoading}
-                      aria-pressed={selected}
-                      onClick={() => {
-                        setSelectedDate(cell.key)
-                        setFormError(null)
-                      }}
-                    >
-                      {cell.day}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            {daysLoading ? <p className="muted">{t.reserveLoading}</p> : null}
-          </section>
-
-          <div>
-            <div className="takeout-field">
-              <span>{t.reserveGuestsLabel}</span>
-              <div className="takeout-qty">
-                <button
-                  type="button"
-                  aria-label={t.reserveFewerGuests}
-                  disabled={guests <= MIN_GUESTS}
-                  onClick={() => setGuests((value) => Math.max(MIN_GUESTS, value - 1))}
                 >
-                  −
-                </button>
-                <span>{guests}</span>
-                <button
-                  type="button"
-                  aria-label={t.reserveMoreGuests}
-                  disabled={guests >= MAX_GUESTS}
-                  onClick={() => setGuests((value) => Math.min(MAX_GUESTS, value + 1))}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            <fieldset className="reserve-times">
-              <legend>{t.reserveTimeLabel}</legend>
-              {!selectedDate ? (
-                <p className="muted">{t.reservePickDate}</p>
-              ) : slotsLoading ? (
-                <p className="muted">{t.reserveLoading}</p>
-              ) : dayClosed || slots.length === 0 ? (
-                <p className="muted">{t.reserveNoTimes}</p>
-              ) : (
-                <div className="reserve-slot-list">
-                  {slots.map((slot) => (
-                    <button
-                      key={slot.start_datetime}
-                      type="button"
-                      className={
-                        selectedSlot?.start_datetime === slot.start_datetime
-                          ? 'reserve-slot is-selected'
-                          : 'reserve-slot'
-                      }
-                      aria-pressed={selectedSlot?.start_datetime === slot.start_datetime}
-                      onClick={() => {
-                        setSelectedSlot(slot)
+                  <button
+                    type="button"
+                    disabled={!unlocked}
+                    onClick={() => {
+                      if (unlocked) {
+                        setStep(id)
                         setFormError(null)
-                      }}
-                    >
-                      {slot.time_label}
-                    </button>
+                      }
+                    }}
+                  >
+                    <span className="reserve-step-index">{index + 1}</span>
+                    <span>{stepLabel(t, id)}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ol>
+        </nav>
+
+        <div className="reserve-layout reserve-layout-tabs">
+          {step === 'date' ? (
+            <section className="reserve-calendar" aria-labelledby="reserve-date-heading">
+              <div className="takeout-field">
+                <span>{t.reserveGuestsLabel}</span>
+                <div className="takeout-qty">
+                  <button
+                    type="button"
+                    aria-label={t.reserveFewerGuests}
+                    disabled={guests <= MIN_GUESTS}
+                    onClick={() => setGuests((value) => Math.max(MIN_GUESTS, value - 1))}
+                  >
+                    −
+                  </button>
+                  <span>{guests}</span>
+                  <button
+                    type="button"
+                    aria-label={t.reserveMoreGuests}
+                    disabled={guests >= MAX_GUESTS}
+                    onClick={() => setGuests((value) => Math.min(MAX_GUESTS, value + 1))}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="reserve-cal-head">
+                <h2 id="reserve-date-heading">{t.reserveDateLabel}</h2>
+                <div className="reserve-cal-nav">
+                  <button
+                    type="button"
+                    aria-label={t.reservePrevMonth}
+                    disabled={atMinMonth}
+                    onClick={() => {
+                      const next = shiftMonth(year, month, -1)
+                      setYear(next.year)
+                      setMonth(next.month)
+                    }}
+                  >
+                    ‹
+                  </button>
+                  <p>{monthTitle(locale, year, month)}</p>
+                  <button
+                    type="button"
+                    aria-label={t.reserveNextMonth}
+                    disabled={atMaxMonth}
+                    onClick={() => {
+                      const next = shiftMonth(year, month, 1)
+                      setYear(next.year)
+                      setMonth(next.month)
+                    }}
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+
+              <div className="reserve-grid" role="grid" aria-label={t.reserveDateLabel}>
+                <div className="reserve-weekdays" role="row">
+                  {weekdays.map((label) => (
+                    <span key={label} role="columnheader">
+                      {label}
+                    </span>
                   ))}
                 </div>
-              )}
-            </fieldset>
-
-            <form className="takeout-form" onSubmit={(event) => void submit(event)}>
-              <label className="takeout-field">
-                <span>{t.reserveNameLabel}</span>
-                <input
-                  type="text"
-                  name="name"
-                  autoComplete="name"
-                  value={name}
-                  onChange={(event) => {
-                    setName(event.target.value)
-                    setFormError(null)
-                  }}
-                />
-              </label>
-              <label className="takeout-field">
-                <span>{t.reserveEmailLabel}</span>
-                <input
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => {
-                    setEmail(event.target.value)
-                    setFormError(null)
-                  }}
-                />
-              </label>
-              <label className="takeout-field">
-                <span>{t.reservePhoneLabel}</span>
-                <input
-                  type="tel"
-                  name="phone"
-                  autoComplete="tel"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                />
-              </label>
-              <label className="takeout-field">
-                <span>{t.reserveOccasionLabel}</span>
-                <select
-                  value={occasion}
-                  onChange={(event) => {
-                    const value = event.target.value
-                    switch (value) {
-                      case 'none':
-                      case 'birthday':
-                      case 'anniversary':
-                      case 'celebration':
-                        setOccasion(value)
-                        break
-                      default:
-                        setOccasion('none')
+                <div className="reserve-days" role="row">
+                  {cells.map((cell, index) => {
+                    if (!cell.key || cell.day === null) {
+                      return <span key={`pad-${index}`} className="reserve-day is-empty" />
                     }
+                    const info = dayByKey.get(cell.key)
+                    const bookable = Boolean(info && !info.closed && info.slot_count > 0)
+                    const selected = selectedDate === cell.key
+                    return (
+                      <button
+                        key={cell.key}
+                        type="button"
+                        className={
+                          selected
+                            ? 'reserve-day is-selected'
+                            : bookable
+                              ? 'reserve-day'
+                              : 'reserve-day is-disabled'
+                        }
+                        disabled={!bookable || daysLoading}
+                        aria-pressed={selected}
+                        onClick={() => {
+                          setSelectedDate(cell.key)
+                          setFormError(null)
+                        }}
+                      >
+                        {cell.day}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              {daysLoading ? <p className="muted">{t.reserveLoading}</p> : null}
+              {formError && step === 'date' ? (
+                <p className="takeout-error">{formError}</p>
+              ) : null}
+              <div className="reserve-frame-actions">
+                <button
+                  className="btn"
+                  type="button"
+                  disabled={!selectedDate}
+                  onClick={() => {
+                    if (!selectedDate) {
+                      setFormError(t.reserveNeedDate)
+                      return
+                    }
+                    setFormError(null)
+                    setStep('hours')
                   }}
                 >
-                  {OCCASIONS.map((id) => (
-                    <option key={id} value={id}>
-                      {occasionLabel(t, id)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="takeout-field">
-                <span>{t.reserveNotesLabel}</span>
-                <textarea
-                  name="notes"
-                  rows={3}
-                  placeholder={t.reserveNotesPlaceholder}
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                />
-              </label>
-              {formError ? <p className="takeout-error">{formError}</p> : null}
-              <p className="takeout-pickup-note">{t.reserveNote}</p>
-              <button className="btn" type="submit" disabled={submitting}>
-                {submitting ? t.reserveSubmitting : t.reserveSubmit}
-              </button>
-            </form>
+                  {t.reserveContinue}
+                </button>
+              </div>
+            </section>
+          ) : null}
 
-            <div className="hours reserve-hours">
-              <h3>{visit.hoursTitle}</h3>
-              <ul>
-                {visit.hours.map((row) => (
-                  <li key={row.days}>
-                    <span>{row.days}</span>
-                    <b>{row.time}</b>
-                  </li>
-                ))}
-              </ul>
-              <p className="hours-note">{visit.hoursNote}</p>
+          {step === 'hours' ? (
+            <section className="reserve-hours-step" aria-labelledby="reserve-time-heading">
+              <p className="reserve-choice muted">
+                {selectedDate
+                  ? formatDateLong(locale, selectedDate, timezone)
+                  : t.reservePickDate}{' '}
+                · {guests} {t.reserveGuestsLabel.toLowerCase()}
+              </p>
+              <fieldset className="reserve-times">
+                <legend id="reserve-time-heading">{t.reserveTimeLabel}</legend>
+                {!selectedDate ? (
+                  <p className="muted">{t.reservePickDate}</p>
+                ) : slotsLoading ? (
+                  <p className="muted">{t.reserveLoading}</p>
+                ) : dayClosed || slots.length === 0 ? (
+                  <p className="muted">{t.reserveNoTimes}</p>
+                ) : (
+                  <div className="reserve-slot-list">
+                    {slots.map((slot) => (
+                      <button
+                        key={slot.start_datetime}
+                        type="button"
+                        className={
+                          selectedSlot?.start_datetime === slot.start_datetime
+                            ? 'reserve-slot is-selected'
+                            : 'reserve-slot'
+                        }
+                        aria-pressed={
+                          selectedSlot?.start_datetime === slot.start_datetime
+                        }
+                        onClick={() => {
+                          setSelectedSlot(slot)
+                          setFormError(null)
+                        }}
+                      >
+                        {slot.time_label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </fieldset>
+
+              <div className="hours reserve-hours">
+                <h3>{visit.hoursTitle}</h3>
+                <ul>
+                  {visit.hours.map((row) => (
+                    <li key={row.days}>
+                      <span>{row.days}</span>
+                      <b>{row.time}</b>
+                    </li>
+                  ))}
+                </ul>
+                <p className="hours-note">{visit.hoursNote}</p>
+              </div>
+
+              {formError && step === 'hours' ? (
+                <p className="takeout-error">{formError}</p>
+              ) : null}
+              <div className="reserve-frame-actions">
+                <button
+                  className="btn btn-outline reserve-back"
+                  type="button"
+                  onClick={() => {
+                    setStep('date')
+                    setFormError(null)
+                  }}
+                >
+                  {t.reserveBack}
+                </button>
+                <button
+                  className="btn"
+                  type="button"
+                  disabled={!selectedSlot}
+                  onClick={() => {
+                    if (!selectedSlot) {
+                      setFormError(t.reserveNeedTime)
+                      return
+                    }
+                    setFormError(null)
+                    setStep('details')
+                  }}
+                >
+                  {t.reserveContinue}
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {step === 'details' ? (
+            <section aria-labelledby="reserve-details-heading">
+              <h2 className="reserve-details-heading" id="reserve-details-heading">
+                {t.reserveDetailsHeading}
+              </h2>
+              <p className="reserve-choice muted">
+                {selectedDate
+                  ? formatDateLong(locale, selectedDate, timezone)
+                  : '—'}
+                {selectedSlot ? ` · ${selectedSlot.time_label}` : ''} · {guests}
+              </p>
+              <form className="takeout-form" onSubmit={(event) => void submit(event)}>
+                <label className="takeout-field">
+                  <span>{t.reserveNameLabel}</span>
+                  <input
+                    type="text"
+                    name="name"
+                    autoComplete="name"
+                    required
+                    value={name}
+                    onChange={(event) => {
+                      setName(event.target.value)
+                      setFormError(null)
+                    }}
+                  />
+                </label>
+                <label className="takeout-field">
+                  <span>{t.reserveEmailLabel}</span>
+                  <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(event) => {
+                      setEmail(event.target.value)
+                      setFormError(null)
+                    }}
+                  />
+                </label>
+                <p className="muted">{t.reserveEmailRequired}</p>
+                <label className="takeout-field">
+                  <span>{t.reservePhoneLabel}</span>
+                  <input
+                    type="tel"
+                    name="phone"
+                    autoComplete="tel"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                  />
+                </label>
+                <label className="takeout-field">
+                  <span>{t.reserveOccasionLabel}</span>
+                  <select
+                    value={occasion}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      switch (value) {
+                        case 'none':
+                        case 'birthday':
+                        case 'anniversary':
+                        case 'celebration':
+                          setOccasion(value)
+                          break
+                        default:
+                          setOccasion('none')
+                      }
+                    }}
+                  >
+                    {OCCASIONS.map((id) => (
+                      <option key={id} value={id}>
+                        {occasionLabel(t, id)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="takeout-field">
+                  <span>{t.reserveNotesLabel}</span>
+                  <textarea
+                    name="notes"
+                    rows={3}
+                    placeholder={t.reserveNotesPlaceholder}
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                  />
+                </label>
+                {formError ? <p className="takeout-error">{formError}</p> : null}
+                <p className="takeout-pickup-note">{t.reserveNote}</p>
+                <div className="reserve-frame-actions">
+                  <button
+                    className="btn btn-outline reserve-back"
+                    type="button"
+                    onClick={() => {
+                      setStep('hours')
+                      setFormError(null)
+                    }}
+                  >
+                    {t.reserveBack}
+                  </button>
+                  <button className="btn" type="submit" disabled={submitting}>
+                    {submitting ? t.reserveSubmitting : t.reserveSubmit}
+                  </button>
+                </div>
+              </form>
               <p className="reserve-alt">
                 <a href={whatsappUrl(t.whatsappReserveText)}>{visit.whatsapp}</a>
                 {' · '}
@@ -620,8 +795,8 @@ export function ReservasPage({
                   {visit.call} {contact.phoneDisplay}
                 </a>
               </p>
-            </div>
-          </div>
+            </section>
+          ) : null}
         </div>
 
         <p className="carta-back">

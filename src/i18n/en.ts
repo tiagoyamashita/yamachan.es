@@ -158,12 +158,21 @@ export const en: Copy = {
   reserveContinue: 'Continue',
   reserveDetailsHeading: 'Your details',
   reserveStepsAria: 'Reservation steps',
+  reserveTabDate: 'Date',
+  reserveTabHours: 'Time',
+  reserveTabDetails: 'Your details',
   reserveUnavailable:
     'Online booking is not ready yet. Call or write on WhatsApp to reserve a table.',
   reserveConfirmTitle: 'Table booked.',
-  reserveConfirmLead: 'You are in the book. If anything changes, call us or write on WhatsApp.',
+  reserveConfirmLead:
+    'You are in the book. Open the restaurant chat if you need anything.',
   reserveConfirmNew: 'Book another table',
+  reserveConfirmChat: 'Open chat with the restaurant',
+  reserveConfirmChatLead:
+    'We also emailed you the chat link. You can open WhatsApp now.',
+  reserveConfirmEmailSent: 'Check your email — we sent you the chat link.',
   reserveTableLabel: 'Table',
+  reserveEmailRequired: 'Email is required so we can send you the chat link.',
   adminPageTitle: 'Admin — Yama-Chan',
   adminTitle: 'Admin',
   adminHeading: 'The menu',

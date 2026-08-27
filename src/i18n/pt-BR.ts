@@ -158,12 +158,21 @@ export const ptBR: Copy = {
   reserveContinue: 'Continuar',
   reserveDetailsHeading: 'Seus dados',
   reserveStepsAria: 'Etapas da reserva',
+  reserveTabDate: 'Data',
+  reserveTabHours: 'Horário',
+  reserveTabDetails: 'Seus dados',
   reserveUnavailable:
     'As reservas online ainda não estão prontas. Ligue ou escreva no WhatsApp para pedir mesa.',
   reserveConfirmTitle: 'Mesa reservada.',
-  reserveConfirmLead: 'Você entrou no livro. Se algo mudar, ligue ou escreva no WhatsApp.',
+  reserveConfirmLead:
+    'Você entrou no livro. Abra o chat com o restaurante se precisar de algo.',
   reserveConfirmNew: 'Outra reserva',
+  reserveConfirmChat: 'Abrir chat com o restaurante',
+  reserveConfirmChatLead:
+    'Também enviamos o link do chat por e-mail. Você pode abrir o WhatsApp agora.',
+  reserveConfirmEmailSent: 'Confira seu e-mail — enviamos o link do chat.',
   reserveTableLabel: 'Mesa',
+  reserveEmailRequired: 'O e-mail é obrigatório para enviarmos o link do chat.',
   adminPageTitle: 'Admin — Yama-Chan',
   adminTitle: 'Admin',
   adminHeading: 'O cardápio',
