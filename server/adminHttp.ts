@@ -428,7 +428,12 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
           loadRestaurantTables(),
           loadTableOrders(true),
         ])
-        return json({ tables, orders })
+        const settings = await loadRestaurantSettings()
+        return json({
+          tables,
+          orders,
+          timezone: settings.timezone || 'Europe/Madrid',
+        })
       } catch (error) {
         if (error instanceof GloballyBookedError) {
           return json({ error: error.message }, error.status)

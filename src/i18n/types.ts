@@ -231,8 +231,14 @@ export type Copy = {
   adminTabTables: string
   adminTablesHeading: string
   adminTablesLead: string
+  adminTablesTabToday: string
+  adminTablesTabHistory: string
+  adminTablesEmptyHistory: string
+  adminTablesForDate: string
+  adminTablesOrdersToday: string
   adminTablesEmpty: string
   adminTablesPickTable: string
+  adminTablesPickDate: string
   adminTablesDetail: string
   adminTablesSeats: string
   adminTablesOpenOrders: string

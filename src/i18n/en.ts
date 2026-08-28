@@ -277,6 +277,12 @@ export const en: Copy = {
   adminTablesHeading: 'Tables',
   adminTablesLead:
     'Pick a table to take orders for guests, review their tab, or cancel items.',
+  adminTablesTabToday: 'Today',
+  adminTablesTabHistory: 'All history',
+  adminTablesEmptyHistory: 'No table orders on this date.',
+  adminTablesPickDate: 'Pick a date on the calendar.',
+  adminTablesForDate: 'Tables for',
+  adminTablesOrdersToday: '{count} orders',
   adminTablesEmpty: 'No tables are set up in Globally Booked yet.',
   adminTablesPickTable: 'Choose a table above.',
   adminTablesDetail: 'Table {label}',

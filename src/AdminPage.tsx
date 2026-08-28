@@ -22,6 +22,7 @@ import {
   type AdminTableRow,
   type GbMenuItemRow,
   type TableOrderRow,
+  type TablesSubtab,
 } from './AdminTablesEditor.tsx'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
@@ -2280,6 +2281,13 @@ export function AdminPage({
   const [tablesOrders, setTablesOrders] = useState<TableOrderRow[]>([])
   const [tablesMenu, setTablesMenu] = useState<GbMenuItemRow[]>([])
   const [tablesSelectedId, setTablesSelectedId] = useState<string | null>(null)
+  const [tablesSubtab, setTablesSubtab] = useState<TablesSubtab>('today')
+  const [tablesTimezone, setTablesTimezone] = useState(RESTAURANT_TIME_ZONE)
+  const [tablesHistoryYear, setTablesHistoryYear] = useState(now.getFullYear())
+  const [tablesHistoryMonth, setTablesHistoryMonth] = useState(now.getMonth())
+  const [tablesHistorySelectedDate, setTablesHistorySelectedDate] = useState<
+    string | null
+  >(null)
   const [tablesBusy, setTablesBusy] = useState(false)
   const [tablesError, setTablesError] = useState<string | null>(null)
   const [instagramUrls, setInstagramUrls] = useState<string[]>(emptyInstagramSlots)
@@ -2410,7 +2418,9 @@ export function AdminPage({
     setTablesBusy(true)
     try {
       const [tablesData, menuData] = await Promise.all([
-        api<{ tables?: AdminTableRow[]; orders?: KitchenOrder[] }>('/api/admin/tables'),
+        api<{ tables?: AdminTableRow[]; orders?: KitchenOrder[]; timezone?: string }>(
+          '/api/admin/tables',
+        ),
         api<{ items?: GbMenuItemRow[] }>('/api/admin/tables/menu'),
       ])
       setAdminTables(Array.isArray(tablesData.tables) ? tablesData.tables : [])
@@ -2420,6 +2430,11 @@ export function AdminPage({
           : [],
       )
       setTablesMenu(Array.isArray(menuData.items) ? menuData.items : [])
+      setTablesTimezone(
+        typeof tablesData.timezone === 'string' && tablesData.timezone.trim()
+          ? tablesData.timezone.trim()
+          : RESTAURANT_TIME_ZONE,
+      )
       setTablesError(null)
       setTablesSelectedId((current) => {
         if (!current) {
@@ -3499,10 +3514,37 @@ export function AdminPage({
                     tables={adminTables}
                     orders={tablesOrders}
                     menuItems={tablesMenu}
+                    subtab={tablesSubtab}
+                    timeZone={tablesTimezone}
+                    historyYear={tablesHistoryYear}
+                    historyMonth={tablesHistoryMonth}
+                    historySelectedDate={tablesHistorySelectedDate}
                     selectedTableId={tablesSelectedId}
                     busy={tablesBusy}
                     loadError={tablesError}
                     t={t}
+                    onSubtabChange={setTablesSubtab}
+                    onHistoryMonthChange={(year, month) => {
+                      setTablesHistoryYear(year)
+                      setTablesHistoryMonth(month)
+                      setTablesHistorySelectedDate((current) => {
+                        if (!current) {
+                          return current
+                        }
+                        const from = `${year}-${String(month + 1).padStart(2, '0')}-01`
+                        const lastDay = new Date(year, month + 1, 0).getDate()
+                        const to = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+                        if (current >= from && current <= to) {
+                          return current
+                        }
+                        return null
+                      })
+                      setTablesSelectedId(null)
+                    }}
+                    onHistorySelectDate={(date) => {
+                      setTablesHistorySelectedDate(date)
+                      setTablesSelectedId(null)
+                    }}
                     onSelectTable={setTablesSelectedId}
                     onRefresh={() => void loadTables()}
                     onSubmitOrder={(tableId, items) =>
