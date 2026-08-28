@@ -53,7 +53,12 @@ import {
   loadOpenDates,
   loadOpeningRules,
   loadRestaurantSettings,
+  loadRestaurantTables,
+  loadGloballyBookedMenu,
   loadTableOrders,
+  submitTableOrderForTable,
+  deleteTableOrderItem,
+  closeRestaurantTableTab,
   updateOpeningRule,
   updateRestaurantSettings,
   updateTableOrderItemStatus,
@@ -408,6 +413,114 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
           return json({
             item: await updateTableOrderItemStatus(orderId, itemId, status),
           })
+        } catch (error) {
+          if (error instanceof GloballyBookedError) {
+            return json({ error: error.message }, error.status)
+          }
+          throw error
+        }
+      }
+    }
+
+    if (path === '/api/admin/tables' && request.method === 'GET') {
+      try {
+        const [tables, orders] = await Promise.all([
+          loadRestaurantTables(),
+          loadTableOrders(true),
+        ])
+        return json({ tables, orders })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    if (path === '/api/admin/tables/menu' && request.method === 'GET') {
+      try {
+        return json({ items: await loadGloballyBookedMenu() })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    {
+      const tableOrderMatch = /^\/api\/admin\/tables\/([^/]+)\/orders$/.exec(path)
+      if (tableOrderMatch && request.method === 'POST') {
+        const tableId = decodeURIComponent(tableOrderMatch[1] ?? '')
+        const body: unknown = await request.json().catch(() => null)
+        const items =
+          body &&
+          typeof body === 'object' &&
+          Array.isArray((body as { items?: unknown }).items)
+            ? (body as { items: Array<{ menu_item_id?: unknown; quantity?: unknown; line_notes?: unknown }> }).items
+            : null
+        if (!items || items.length === 0) {
+          return json({ error: 'invalid-items' }, 400)
+        }
+        try {
+          const result = await submitTableOrderForTable(
+            tableId,
+            items.map((item) => ({
+              menu_item_id:
+                typeof item.menu_item_id === 'string' ? item.menu_item_id : '',
+              quantity: Number(item.quantity),
+              line_notes:
+                typeof item.line_notes === 'string' ? item.line_notes : null,
+            })),
+          )
+          return json(result)
+        } catch (error) {
+          if (error instanceof GloballyBookedError) {
+            return json({ error: error.message }, error.status)
+          }
+          throw error
+        }
+      }
+    }
+
+    {
+      const closeTabMatch = /^\/api\/admin\/tables\/([^/]+)\/close-tab$/.exec(path)
+      if (closeTabMatch && request.method === 'POST') {
+        const tableId = decodeURIComponent(closeTabMatch[1] ?? '')
+        const body: unknown = await request.json().catch(() => null)
+        const paymentMethod =
+          body &&
+          typeof body === 'object' &&
+          typeof (body as { payment_method?: unknown }).payment_method === 'string'
+            ? (body as { payment_method: string }).payment_method
+            : 'cash'
+        const notes =
+          body &&
+          typeof body === 'object' &&
+          typeof (body as { notes?: unknown }).notes === 'string'
+            ? (body as { notes: string }).notes
+            : null
+        try {
+          await closeRestaurantTableTab(tableId, paymentMethod, notes)
+          return json({ closed: true })
+        } catch (error) {
+          if (error instanceof GloballyBookedError) {
+            return json({ error: error.message }, error.status)
+          }
+          throw error
+        }
+      }
+    }
+
+    {
+      const deleteItemMatch =
+        /^\/api\/admin\/tables\/([^/]+)\/orders\/([^/]+)\/items\/([^/]+)$/.exec(path)
+      if (deleteItemMatch && request.method === 'DELETE') {
+        const orderId = decodeURIComponent(deleteItemMatch[2] ?? '')
+        const itemId = decodeURIComponent(deleteItemMatch[3] ?? '')
+        try {
+          await deleteTableOrderItem(orderId, itemId)
+          return json({ deleted: true })
         } catch (error) {
           if (error instanceof GloballyBookedError) {
             return json({ error: error.message }, error.status)

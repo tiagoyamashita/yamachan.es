@@ -228,6 +228,36 @@ export type Copy = {
   adminOrdersError: string
   adminOrdersUpdateError: string
   adminOrdersNotConfigured: string
+  adminTabTables: string
+  adminTablesHeading: string
+  adminTablesLead: string
+  adminTablesEmpty: string
+  adminTablesPickTable: string
+  adminTablesDetail: string
+  adminTablesSeats: string
+  adminTablesOpenOrders: string
+  adminTablesInactive: string
+  adminTablesStartOrder: string
+  adminTablesAddItems: string
+  adminTablesOrderingLead: string
+  adminTablesNoMenu: string
+  adminTablesAddDish: string
+  adminTablesOrderNotes: string
+  adminTablesSendOrder: string
+  adminTablesCancelOrdering: string
+  adminTablesNoOrders: string
+  adminTablesCancelOrder: string
+  adminTablesRemoveItem: string
+  adminTablesCloseTab: string
+  adminTablesPaymentMethod: string
+  adminTablesPayCash: string
+  adminTablesPayCard: string
+  adminTablesPayOther: string
+  adminTablesError: string
+  adminTablesSubmitError: string
+  adminTablesUpdateError: string
+  adminTablesCloseTabError: string
+  adminTablesNotConfigured: string
   adminAvailabilityHeading: string
   adminAvailabilityLead: string
   adminAvailabilitySubtabDefaults: string

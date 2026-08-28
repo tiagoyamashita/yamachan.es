@@ -1341,6 +1341,114 @@ h3 {
   color: #15803d;
 }
 
+.admin-tables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.admin-table-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ink, #1c1917) 12%, transparent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--paper, #faf8f5) 92%, transparent);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.admin-table-card.is-selected {
+  outline: 2px solid color-mix(in srgb, var(--accent, #b45309) 80%, transparent);
+  outline-offset: 1px;
+}
+
+.admin-table-card.has-orders {
+  border-color: color-mix(in srgb, var(--accent, #b45309) 45%, transparent);
+}
+
+.admin-table-card:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.admin-table-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent, #b45309);
+}
+
+.admin-table-badge.is-inactive {
+  color: var(--muted, #6b6358);
+}
+
+.admin-tables-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.admin-tables-close-tab {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.admin-tables-payment {
+  min-width: 8rem;
+}
+
+.admin-tables-ordering {
+  margin-bottom: 1rem;
+}
+
+.admin-tables-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-tables-menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink, #1c1917) 8%, transparent);
+}
+
+.admin-tables-cart {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.75rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-tables-cart-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-tables-cart-line input {
+  width: 4rem;
+}
+
+.admin-tables-orders {
+  margin-top: 0.5rem;
+}
+
 @media (max-width: 640px) {
   .admin-takeout-item {
     grid-template-columns: 1fr;
