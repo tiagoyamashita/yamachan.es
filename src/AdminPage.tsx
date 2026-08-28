@@ -17,6 +17,12 @@ import { LanguagePicker } from './LanguagePicker.tsx'
 import { type Copy, type Locale } from './i18n/index.ts'
 import type { TakeoutCatalog, TakeoutCatalogItem } from './takeoutCatalog.ts'
 import { RESTAURANT_TIME_ZONE } from './openingHours.ts'
+import {
+  AdminTablesEditor,
+  type AdminTableRow,
+  type GbMenuItemRow,
+  type TableOrderRow,
+} from './AdminTablesEditor.tsx'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
 type AdminTab =
@@ -26,6 +32,7 @@ type AdminTab =
   | 'availability'
   | 'calendar'
   | 'orders'
+  | 'tables'
   | 'takeout'
   | 'instagram'
 type AvailabilitySubtab = 'defaults' | 'rules' | 'open-dates' | 'booking-status'
@@ -108,6 +115,7 @@ type KitchenOrderItem = {
 
 type KitchenOrder = {
   id: string
+  tableId: string | null
   status: KitchenOrderStatus
   created_at: string
   submitted_at: string | null
@@ -132,6 +140,8 @@ function adminHeading(t: Copy, tab: AdminTab): string {
       return t.adminCalendarHeading
     case 'orders':
       return t.adminOrdersHeading
+    case 'tables':
+      return t.adminTablesHeading
     case 'takeout':
       return t.adminTakeoutHeading
     case 'instagram':
@@ -157,6 +167,8 @@ function adminLead(t: Copy, tab: AdminTab): string {
       return t.adminCalendarLead
     case 'orders':
       return t.adminOrdersLead
+    case 'tables':
+      return t.adminTablesLead
     case 'takeout':
       return t.adminTakeoutLead
     case 'instagram':
@@ -2264,6 +2276,12 @@ export function AdminPage({
   const [ordersBusy, setOrdersBusy] = useState(false)
   const [ordersBusyItemId, setOrdersBusyItemId] = useState<string | null>(null)
   const [ordersError, setOrdersError] = useState<string | null>(null)
+  const [adminTables, setAdminTables] = useState<AdminTableRow[]>([])
+  const [tablesOrders, setTablesOrders] = useState<TableOrderRow[]>([])
+  const [tablesMenu, setTablesMenu] = useState<GbMenuItemRow[]>([])
+  const [tablesSelectedId, setTablesSelectedId] = useState<string | null>(null)
+  const [tablesBusy, setTablesBusy] = useState(false)
+  const [tablesError, setTablesError] = useState<string | null>(null)
   const [instagramUrls, setInstagramUrls] = useState<string[]>(emptyInstagramSlots)
   const [instagramBusy, setInstagramBusy] = useState(false)
   const [takeoutEnabled, setTakeoutEnabled] = useState(true)
@@ -2368,6 +2386,133 @@ export function AdminPage({
       setKitchenOrders([])
     } finally {
       setOrdersBusy(false)
+    }
+  }
+
+  const mapTableOrderRow = (order: KitchenOrder): TableOrderRow => ({
+    id: order.id,
+    tableId: order.tableId,
+    status: order.status,
+    created_at: order.created_at,
+    submitted_at: order.submitted_at,
+    orderNumber: order.orderNumber,
+    items: order.items.map((item) => ({
+      id: item.id,
+      item_name: item.item_name,
+      quantity: item.quantity,
+      unit_price_cents: item.unit_price_cents,
+      line_notes: item.line_notes,
+      status: item.status,
+    })),
+  })
+
+  const loadTables = async () => {
+    setTablesBusy(true)
+    try {
+      const [tablesData, menuData] = await Promise.all([
+        api<{ tables?: AdminTableRow[]; orders?: KitchenOrder[] }>('/api/admin/tables'),
+        api<{ items?: GbMenuItemRow[] }>('/api/admin/tables/menu'),
+      ])
+      setAdminTables(Array.isArray(tablesData.tables) ? tablesData.tables : [])
+      setTablesOrders(
+        Array.isArray(tablesData.orders)
+          ? tablesData.orders.map(mapTableOrderRow)
+          : [],
+      )
+      setTablesMenu(Array.isArray(menuData.items) ? menuData.items : [])
+      setTablesError(null)
+      setTablesSelectedId((current) => {
+        if (!current) {
+          return current
+        }
+        return tablesData.tables?.some((table) => table.id === current) ? current : null
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'error'
+      if (message === 'not-configured') {
+        setTablesError('not-configured')
+      } else {
+        setTablesError(t.adminTablesError)
+      }
+      setAdminTables([])
+      setTablesOrders([])
+      setTablesMenu([])
+    } finally {
+      setTablesBusy(false)
+    }
+  }
+
+  const submitTableOrder = async (
+    tableId: string,
+    items: Array<{ menu_item_id: string; quantity: number; line_notes?: string }>,
+  ) => {
+    setTablesBusy(true)
+    setMessage(null)
+    try {
+      await api(`/api/admin/tables/${encodeURIComponent(tableId)}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      })
+      await loadTables()
+    } catch {
+      setMessage(t.adminTablesSubmitError)
+    } finally {
+      setTablesBusy(false)
+    }
+  }
+
+  const cancelTableOrder = async (orderId: string) => {
+    setTablesBusy(true)
+    setMessage(null)
+    try {
+      await api(`/api/admin/orders/${encodeURIComponent(orderId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' }),
+      })
+      await loadTables()
+    } catch {
+      setMessage(t.adminTablesUpdateError)
+    } finally {
+      setTablesBusy(false)
+    }
+  }
+
+  const removeTableOrderItem = async (
+    tableId: string,
+    orderId: string,
+    itemId: string,
+  ) => {
+    setTablesBusy(true)
+    setMessage(null)
+    try {
+      await api(
+        `/api/admin/tables/${encodeURIComponent(tableId)}/orders/${encodeURIComponent(orderId)}/items/${encodeURIComponent(itemId)}`,
+        { method: 'DELETE' },
+      )
+      await loadTables()
+    } catch {
+      setMessage(t.adminTablesUpdateError)
+    } finally {
+      setTablesBusy(false)
+    }
+  }
+
+  const closeTableTab = async (tableId: string, paymentMethod: string) => {
+    setTablesBusy(true)
+    setMessage(null)
+    try {
+      await api(`/api/admin/tables/${encodeURIComponent(tableId)}/close-tab`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_method: paymentMethod }),
+      })
+      await loadTables()
+    } catch {
+      setMessage(t.adminTablesCloseTabError)
+    } finally {
+      setTablesBusy(false)
     }
   }
 
@@ -2519,6 +2664,19 @@ export function AdminPage({
       window.clearInterval(timer)
     }
   }, [ordersSubtab, status, tab])
+
+  useEffect(() => {
+    if (status !== 'ready' || tab !== 'tables') {
+      return
+    }
+    void loadTables()
+    const timer = window.setInterval(() => {
+      void loadTables()
+    }, 15_000)
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [status, tab])
 
   const login = async (event: FormEvent) => {
     event.preventDefault()
@@ -3045,6 +3203,18 @@ export function AdminPage({
                 <button
                   type="button"
                   role="tab"
+                  className={`admin-tab${tab === 'tables' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'tables'}
+                  onClick={() => {
+                    setTab('tables')
+                    void loadTables()
+                  }}
+                >
+                  {t.adminTabTables}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
                   className={`admin-tab${tab === 'takeout' ? ' is-active' : ''}`}
                   aria-selected={tab === 'takeout'}
                   onClick={() => {
@@ -3321,6 +3491,29 @@ export function AdminPage({
                     }
                     onOrderStatus={(orderId, status) =>
                       void patchOrderStatus(orderId, status)
+                    }
+                  />
+                ) : null}
+                {tab === 'tables' ? (
+                  <AdminTablesEditor
+                    tables={adminTables}
+                    orders={tablesOrders}
+                    menuItems={tablesMenu}
+                    selectedTableId={tablesSelectedId}
+                    busy={tablesBusy}
+                    loadError={tablesError}
+                    t={t}
+                    onSelectTable={setTablesSelectedId}
+                    onRefresh={() => void loadTables()}
+                    onSubmitOrder={(tableId, items) =>
+                      void submitTableOrder(tableId, items)
+                    }
+                    onCancelOrder={(orderId) => void cancelTableOrder(orderId)}
+                    onRemoveItem={(tableId, orderId, itemId) =>
+                      void removeTableOrderItem(tableId, orderId, itemId)
+                    }
+                    onCloseTab={(tableId, paymentMethod) =>
+                      void closeTableTab(tableId, paymentMethod)
                     }
                   />
                 ) : null}

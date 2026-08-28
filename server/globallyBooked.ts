@@ -219,12 +219,16 @@ const OPENING_RULE_COLORS = [
   'slate',
 ] as const
 
-type RestaurantTable = {
+export type AdminRestaurantTable = {
   id: string
+  label: string
   seat_count: number
-  is_active?: boolean
-  sort_order?: number
+  is_active: boolean
+  kind: string
+  sort_order: number
 }
+
+type RestaurantTable = AdminRestaurantTable
 
 type RestaurantReservation = {
   id: string
@@ -512,8 +516,163 @@ export async function clearOpenDates(dates: string[]): Promise<void> {
 }
 
 async function loadTables(): Promise<RestaurantTable[]> {
-  const data = await gbFetch<RestaurantTable[]>('GET', restaurantPath('/tables'))
-  return Array.isArray(data) ? data : []
+  const data = await gbFetch<Array<Record<string, unknown>>>(
+    'GET',
+    restaurantPath('/tables'),
+  )
+  return (Array.isArray(data) ? data : []).map((row) => ({
+    id: String(row.id ?? ''),
+    label: typeof row.label === 'string' ? row.label.trim() : '',
+    seat_count: Number(row.seat_count) || 0,
+    is_active: row.is_active !== false,
+    kind: row.kind === 'counter' ? 'counter' : 'table',
+    sort_order: Number(row.sort_order) || 0,
+  }))
+}
+
+export async function loadRestaurantTables(): Promise<AdminRestaurantTable[]> {
+  return loadTables()
+}
+
+export async function loadGloballyBookedMenu(): Promise<GloballyBookedMenuItem[]> {
+  const data = await gbFetch<Array<Record<string, unknown>>>(
+    'GET',
+    restaurantPath('/menu'),
+  )
+  return (Array.isArray(data) ? data : [])
+    .map((row) => ({
+      id: String(row.id ?? ''),
+      name: typeof row.name === 'string' ? row.name.trim() : '',
+      description:
+        typeof row.description === 'string' ? row.description.trim() || null : null,
+      price_cents:
+        row.price_cents === null || row.price_cents === undefined
+          ? null
+          : Number(row.price_cents),
+      is_available: row.is_available !== false,
+      sort_order: Number(row.sort_order) || 0,
+    }))
+    .filter((item) => item.id && item.name)
+}
+
+type GuestSessionClaim = {
+  token?: string
+  expires_at?: string
+}
+
+async function gbPublicFetch<T>(
+  method: 'GET' | 'POST' | 'DELETE',
+  path: string,
+  body?: Record<string, unknown>,
+): Promise<T> {
+  const response = await fetch(`${apiBase()}${path}`, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  const json = (await response.json().catch(() => ({}))) as Envelope<T> & {
+    data?: T
+  }
+  if (!response.ok || json.ok === false) {
+    const status = response.status === 401 || response.status === 403 ? 502 : response.status
+    throw new GloballyBookedError(json.error || `Request failed (${response.status})`, status)
+  }
+  if (json.data === undefined) {
+    throw new GloballyBookedError('empty-response', 502)
+  }
+  return json.data
+}
+
+async function claimTableGuestSession(tableId: string): Promise<string> {
+  if (!tableId.trim()) {
+    throw new GloballyBookedError('invalid-table-id', 400)
+  }
+  const data = await gbPublicFetch<GuestSessionClaim>(
+    'POST',
+    `/api/public/tables/${encodeURIComponent(tableId)}/session`,
+  )
+  const token = typeof data.token === 'string' ? data.token.trim() : ''
+  if (!token) {
+    throw new GloballyBookedError('session-claim-failed', 502)
+  }
+  return token
+}
+
+function normalizeSubmitItems(items: TableOrderSubmitItem[]): TableOrderSubmitItem[] {
+  const normalized: TableOrderSubmitItem[] = []
+  for (const item of items) {
+    const menuItemId = item.menu_item_id?.trim()
+    const quantity = Math.floor(Number(item.quantity))
+    if (!menuItemId || quantity < 1) {
+      continue
+    }
+    normalized.push({
+      menu_item_id: menuItemId,
+      quantity,
+      line_notes:
+        typeof item.line_notes === 'string' ? item.line_notes.trim() || null : null,
+    })
+  }
+  if (normalized.length === 0) {
+    throw new GloballyBookedError('invalid-items', 400)
+  }
+  return normalized
+}
+
+export async function submitTableOrderForTable(
+  tableId: string,
+  items: TableOrderSubmitItem[],
+): Promise<{ orderId: string }> {
+  const token = await claimTableGuestSession(tableId)
+  const payload = normalizeSubmitItems(items)
+  const data = await gbPublicFetch<{ order_id?: string }>(
+    'POST',
+    `/api/public/tables/${encodeURIComponent(tableId)}/orders`,
+    {
+      token,
+      items: payload.map((item) => ({
+        menu_item_id: item.menu_item_id,
+        quantity: item.quantity,
+        line_notes: item.line_notes ?? undefined,
+      })),
+    },
+  )
+  const orderId = typeof data.order_id === 'string' ? data.order_id.trim() : ''
+  if (!orderId) {
+    throw new GloballyBookedError('order-submit-failed', 502)
+  }
+  return { orderId }
+}
+
+export async function deleteTableOrderItem(
+  orderId: string,
+  itemId: string,
+): Promise<void> {
+  if (!orderId.trim() || !itemId.trim()) {
+    throw new GloballyBookedError('invalid-order-item', 400)
+  }
+  await gbFetch<{ id: string }>(
+    'DELETE',
+    `${restaurantPath('/orders')}/${encodeURIComponent(orderId)}/items/${encodeURIComponent(itemId)}`,
+  )
+}
+
+export async function closeRestaurantTableTab(
+  tableId: string,
+  paymentMethod: string,
+  notes?: string | null,
+): Promise<void> {
+  if (!tableId.trim()) {
+    throw new GloballyBookedError('invalid-table-id', 400)
+  }
+  const method = paymentMethod.trim()
+  if (!method) {
+    throw new GloballyBookedError('invalid-payment-method', 400)
+  }
+  await gbFetch('POST', `${restaurantPath('/tables')}/${encodeURIComponent(tableId)}/close-tab`, {
+    payment_method: method,
+    notes: notes?.trim() || null,
+  })
 }
 
 async function loadReservationsBetween(
@@ -856,6 +1015,7 @@ export type TableOrderItem = {
 
 export type TableOrder = {
   id: string
+  tableId: string | null
   status: TableOrderStatus
   created_at: string
   submitted_at: string | null
@@ -865,8 +1025,24 @@ export type TableOrder = {
   items: TableOrderItem[]
 }
 
+export type GloballyBookedMenuItem = {
+  id: string
+  name: string
+  description: string | null
+  price_cents: number | null
+  is_available: boolean
+  sort_order: number
+}
+
+export type TableOrderSubmitItem = {
+  menu_item_id: string
+  quantity: number
+  line_notes?: string | null
+}
+
 type RawTableOrder = {
   id: string
+  table_id?: string | null
   status?: string
   created_at?: string
   submitted_at?: string | null
@@ -918,6 +1094,11 @@ function mapTableOrder(row: RawTableOrder): TableOrder {
   const tableRow = Array.isArray(table) ? table[0] : table
   return {
     id: row.id,
+    tableId:
+      row.table_id?.trim() ||
+      (typeof tableRow === 'object' && tableRow && 'id' in tableRow
+        ? String(tableRow.id ?? '').trim() || null
+        : null),
     status: normalizeOrderStatus(row.status),
     created_at: row.created_at ?? new Date().toISOString(),
     submitted_at: row.submitted_at ?? null,
