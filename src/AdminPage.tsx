@@ -15,6 +15,7 @@ import {
 } from './companyInfo.ts'
 import { LanguagePicker } from './LanguagePicker.tsx'
 import { type Copy, type Locale } from './i18n/index.ts'
+import type { TakeoutCatalog, TakeoutCatalogItem } from './takeoutCatalog.ts'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
 type AdminTab =
@@ -23,6 +24,7 @@ type AdminTab =
   | 'restaurant'
   | 'availability'
   | 'calendar'
+  | 'takeout'
   | 'instagram'
 type AvailabilitySubtab = 'defaults' | 'rules' | 'open-dates' | 'booking-status'
 type LoginView = 'sign-in' | 'forgot' | 'reset'
@@ -95,6 +97,8 @@ function adminHeading(t: Copy, tab: AdminTab): string {
       return t.adminAvailabilityHeading
     case 'calendar':
       return t.adminCalendarHeading
+    case 'takeout':
+      return t.adminTakeoutHeading
     case 'instagram':
       return t.adminInstagramHeading
     default: {
@@ -116,6 +120,8 @@ function adminLead(t: Copy, tab: AdminTab): string {
       return t.adminAvailabilityLead
     case 'calendar':
       return t.adminCalendarLead
+    case 'takeout':
+      return t.adminTakeoutLead
     case 'instagram':
       return t.adminInstagramLead
     default: {
@@ -1499,6 +1505,109 @@ function InstagramEditor({
   )
 }
 
+function TakeoutCatalogEditor({
+  items,
+  enabled,
+  offers,
+  busy,
+  t,
+  onEnabledChange,
+  onOffersChange,
+  onSave,
+}: {
+  items: StoredMenuItem[]
+  enabled: boolean
+  offers: TakeoutCatalogItem[]
+  busy: boolean
+  t: Copy
+  onEnabledChange: (enabled: boolean) => void
+  onOffersChange: (offers: TakeoutCatalogItem[]) => void
+  onSave: () => void
+}) {
+  const offerMap = new Map(offers.map((offer) => [offer.slug, offer.maxQty]))
+  const published = items
+    .filter((item) => item.published)
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order || a.name_es.localeCompare(b.name_es))
+
+  const setOffer = (slug: string, selected: boolean, maxQty: number) => {
+    const next = offers.filter((offer) => offer.slug !== slug)
+    if (selected) {
+      next.push({ slug, maxQty: Math.max(1, Math.floor(maxQty) || 1) })
+      next.sort((a, b) => a.slug.localeCompare(b.slug))
+    }
+    onOffersChange(next)
+  }
+
+  return (
+    <section className="admin-company takeout-form">
+      <fieldset className="admin-company-block">
+        <legend>{t.adminTakeoutHeading}</legend>
+        <p className="muted">{t.adminTakeoutLead}</p>
+        <label className="admin-takeout-enable">
+          <input
+            type="checkbox"
+            checked={enabled}
+            disabled={busy}
+            onChange={(event) => onEnabledChange(event.target.checked)}
+          />
+          <span>{t.adminTakeoutEnabled}</span>
+        </label>
+        {published.length === 0 ? (
+          <p className="muted">{t.adminTakeoutNoMenu}</p>
+        ) : (
+          <ul className="admin-takeout-items">
+            {published.map((item) => {
+              const selected = offerMap.has(item.slug)
+              const maxQty = offerMap.get(item.slug) ?? 10
+              return (
+                <li key={item.id} className="admin-takeout-item">
+                  <label className="admin-takeout-item-check">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      disabled={busy}
+                      onChange={(event) =>
+                        setOffer(item.slug, event.target.checked, maxQty)
+                      }
+                    />
+                    <span>
+                      <strong>{item.name_es || item.slug}</strong>
+                      {item.name_ja ? <small>{item.name_ja}</small> : null}
+                    </span>
+                  </label>
+                  <label className="takeout-field admin-takeout-qty">
+                    <span>{t.adminTakeoutMaxQty}</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={999}
+                      value={maxQty}
+                      disabled={busy || !selected}
+                      onChange={(event) =>
+                        setOffer(
+                          item.slug,
+                          selected,
+                          Number(event.target.value) || 1,
+                        )
+                      }
+                    />
+                  </label>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+        <div className="admin-dish-actions">
+          <button className="btn" type="button" disabled={busy} onClick={onSave}>
+            {t.adminTakeoutSave}
+          </button>
+        </div>
+      </fieldset>
+    </section>
+  )
+}
+
 function AccountInfoEditor({
   accountUsername,
   resetEmail,
@@ -1676,6 +1785,9 @@ export function AdminPage({
   )
   const [instagramUrls, setInstagramUrls] = useState<string[]>(emptyInstagramSlots)
   const [instagramBusy, setInstagramBusy] = useState(false)
+  const [takeoutEnabled, setTakeoutEnabled] = useState(true)
+  const [takeoutOffers, setTakeoutOffers] = useState<TakeoutCatalogItem[]>([])
+  const [takeoutBusy, setTakeoutBusy] = useState(false)
 
   type AdminAccountResponse = {
     username: string
@@ -1763,6 +1875,22 @@ export function AdminPage({
       setInstagramUrls(slots)
     } catch {
       setInstagramUrls(emptyInstagramSlots())
+    }
+  }
+
+  const loadTakeout = async () => {
+    setTakeoutBusy(true)
+    try {
+      const data = await api<{ catalog: TakeoutCatalog }>('/api/admin/takeout')
+      setTakeoutEnabled(Boolean(data.catalog?.enabled))
+      setTakeoutOffers(
+        Array.isArray(data.catalog?.items) ? data.catalog.items : [],
+      )
+    } catch {
+      setTakeoutEnabled(true)
+      setTakeoutOffers([])
+    } finally {
+      setTakeoutBusy(false)
     }
   }
 
@@ -2141,6 +2269,32 @@ export function AdminPage({
     }
   }
 
+  const saveTakeout = async () => {
+    setTakeoutBusy(true)
+    setMessage(null)
+    try {
+      const data = await api<{ catalog: TakeoutCatalog }>('/api/admin/takeout', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          catalog: {
+            enabled: takeoutEnabled,
+            items: takeoutOffers,
+          },
+        }),
+      })
+      setTakeoutEnabled(Boolean(data.catalog?.enabled))
+      setTakeoutOffers(
+        Array.isArray(data.catalog?.items) ? data.catalog.items : [],
+      )
+      setMessage(t.adminTakeoutSaved)
+    } catch {
+      setMessage(t.adminTakeoutError)
+    } finally {
+      setTakeoutBusy(false)
+    }
+  }
+
   const current = (item: StoredMenuItem) => drafts[item.id || 'new'] ?? item
 
   const saveItem = async (item: StoredMenuItem) => {
@@ -2314,6 +2468,18 @@ export function AdminPage({
                   }}
                 >
                   {t.adminTabCalendar}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  className={`admin-tab${tab === 'takeout' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'takeout'}
+                  onClick={() => {
+                    setTab('takeout')
+                    void loadTakeout()
+                  }}
+                >
+                  {t.adminTabTakeout}
                 </button>
                 <button
                   type="button"
@@ -2546,6 +2712,18 @@ export function AdminPage({
                       void loadBookings(year, month)
                     }}
                     onSelectDate={setBookingsSelectedDate}
+                  />
+                ) : null}
+                {tab === 'takeout' ? (
+                  <TakeoutCatalogEditor
+                    items={items}
+                    enabled={takeoutEnabled}
+                    offers={takeoutOffers}
+                    busy={takeoutBusy}
+                    t={t}
+                    onEnabledChange={setTakeoutEnabled}
+                    onOffersChange={setTakeoutOffers}
+                    onSave={() => void saveTakeout()}
                   />
                 ) : null}
                 {tab === 'instagram' ? (

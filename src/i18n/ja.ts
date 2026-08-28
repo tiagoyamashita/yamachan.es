@@ -120,6 +120,10 @@ export const ja: Copy = {
     'その日は受け取り時間がありません。営業は水曜〜土曜の13:00〜16:30です。',
   takeoutPickupNote:
     '受け取りは C/ Pardo Gimeno, 10。カードでのお支払い完了でご注文が確定します。',
+  takeoutDisabled: '現在テイクアウト注文は一時停止中です。',
+  takeoutNoItems: '現在テイクアウトできる料理はありません。',
+  takeoutCatalogFallback:
+    'テイクアウト設定の読み込み中は全メニューを表示します。',
   reservePageTitle: 'ご予約 — 山ちゃん',
   reservePageHeading: '席を予約する',
   reservePageDescription:
@@ -212,6 +216,7 @@ export const ja: Copy = {
   adminTabRestaurant: '店舗',
   adminTabAvailability: '空き状況',
   adminTabCalendar: 'カレンダー',
+  adminTabTakeout: 'テイクアウト',
   adminTabInstagram: 'Instagram',
   adminRestaurantHeading: '店舗情報',
   adminRestaurantLead: 'サイトと予約ページに表示される電話・住所・営業時間です。',
@@ -286,6 +291,15 @@ export const ja: Copy = {
   adminBookingStatusClosed: '休業',
   adminBookingStatusOpened: 'その日を予約受付にしました。',
   adminBookingStatusClosedSaved: 'その日を休業にしました。新規予約はありません。',
+  adminTakeoutHeading: 'テイクアウト',
+  adminTakeoutLead:
+    'テイクアウトを有効にし、注文できる料理と販売可能数を設定します。',
+  adminTakeoutEnabled: 'テイクアウト注文を有効にする',
+  adminTakeoutMaxQty: '販売可能数',
+  adminTakeoutNoMenu: '先にメニュータブで料理を公開してください。',
+  adminTakeoutSave: 'テイクアウトを保存',
+  adminTakeoutSaved: 'テイクアウト設定を保存しました。',
+  adminTakeoutError: 'テイクアウト設定を保存できませんでした。',
   adminInstagramHeading: 'Instagram投稿',
   adminInstagramLead:
     '投稿またはリールのリンク（または埋め込みHTML）を最大5件まで貼り付けます。#1 がトップページのカルーセル先頭になります。',

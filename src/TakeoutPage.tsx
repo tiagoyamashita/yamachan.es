@@ -9,6 +9,12 @@ import {
 } from './menu.ts'
 import { PickupCalendar } from './PickupCalendar.tsx'
 import { formatPickupLabel } from './openingHours.ts'
+import {
+  DEFAULT_TAKEOUT_CATALOG,
+  parseTakeoutCatalog,
+  takeoutOfferMaxQty,
+  type TakeoutCatalog,
+} from './takeoutCatalog.ts'
 import { usePublishedMenu } from './usePublishedMenu.ts'
 
 const CART_KEY = 'yamachan-takeout-cart'
@@ -117,14 +123,20 @@ type OrderLine = {
 function QuantityControls({
   name,
   qty,
+  maxQty,
   addLabel,
   onChange,
 }: {
   name: string
   qty: number
+  maxQty: number
   addLabel: string
   onChange: (qty: number) => void
 }) {
+  if (maxQty < 1) {
+    return null
+  }
+
   if (qty <= 0) {
     return (
       <button
@@ -150,7 +162,8 @@ function QuantityControls({
       <button
         type="button"
         aria-label={`+ ${name}`}
-        onClick={() => onChange(qty + 1)}
+        disabled={qty >= maxQty}
+        onClick={() => onChange(Math.min(maxQty, qty + 1))}
       >
         +
       </button>
@@ -193,7 +206,18 @@ export function TakeoutPage({
 }) {
   const tab = tabFromHash(hash)
   const menuItems = usePublishedMenu()
-  const categories = menuItems ? groupMenuByCategory(menuItems) : []
+  const [catalog, setCatalog] = useState<TakeoutCatalog | null>(null)
+  const [catalogError, setCatalogError] = useState(false)
+  const takeoutItems = useMemo(() => {
+    if (!menuItems || !catalog) {
+      return null
+    }
+    if (!catalog.enabled) {
+      return []
+    }
+    return menuItems.filter((item) => takeoutOfferMaxQty(catalog, item.slug) > 0)
+  }, [catalog, menuItems])
+  const categories = takeoutItems ? groupMenuByCategory(takeoutItems) : []
   const [cart, setCart] = useState<Cart>(readCart)
   const [name, setName] = useState(() => readDetails().name)
   const [phone, setPhone] = useState(() => readDetails().phone)
@@ -212,6 +236,56 @@ export function TakeoutPage({
   useEffect(() => {
     sessionStorage.setItem(CART_KEY, JSON.stringify(cart))
   }, [cart])
+
+  useEffect(() => {
+    let cancelled = false
+    void fetch('/api/takeout/catalog')
+      .then(async (response) => {
+        const payload: unknown = await response.json().catch(() => null)
+        if (!response.ok || !payload || typeof payload !== 'object') {
+          throw new Error('catalog')
+        }
+        return parseTakeoutCatalog((payload as { catalog?: unknown }).catalog)
+      })
+      .then((next) => {
+        if (!cancelled) {
+          setCatalog(next)
+          setCatalogError(false)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCatalog({ ...DEFAULT_TAKEOUT_CATALOG })
+          setCatalogError(true)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!catalog) {
+      return
+    }
+    setCart((prev) => {
+      let changed = false
+      const next: Cart = {}
+      for (const [slug, qty] of Object.entries(prev)) {
+        const maxQty = takeoutOfferMaxQty(catalog, slug)
+        if (maxQty < 1) {
+          changed = true
+          continue
+        }
+        const capped = Math.min(qty, maxQty)
+        if (capped !== qty) {
+          changed = true
+        }
+        next[slug] = capped
+      }
+      return changed ? next : prev
+    })
+  }, [catalog])
 
   useEffect(() => {
     sessionStorage.setItem(
@@ -267,12 +341,14 @@ export function TakeoutPage({
   }, [paidSessionId, t.takeoutPayError, tab])
 
   const setQty = (id: string, qty: number) => {
+    const maxQty = catalog ? takeoutOfferMaxQty(catalog, id) : 0
     setCart((prev) => {
       const next = { ...prev }
-      if (qty <= 0) {
+      const capped = Math.min(Math.max(0, qty), maxQty)
+      if (capped <= 0) {
         delete next[id]
       } else {
-        next[id] = qty
+        next[id] = capped
       }
       return next
     })
@@ -280,10 +356,10 @@ export function TakeoutPage({
   }
 
   const lines = useMemo((): OrderLine[] => {
-    if (!menuItems) {
+    if (!takeoutItems) {
       return []
     }
-    return menuItems.flatMap((item) => {
+    return takeoutItems.flatMap((item) => {
       const qty = cart[item.slug] ?? 0
       if (qty <= 0) {
         return []
@@ -299,7 +375,7 @@ export function TakeoutPage({
         },
       ]
     })
-  }, [cart, locale, menuItems])
+  }, [cart, locale, takeoutItems])
 
   const itemCount = lines.reduce((sum, line) => sum + line.qty, 0)
   const orderTotalCents = lines.reduce((sum, line) => sum + line.lineTotalCents, 0)
@@ -431,8 +507,12 @@ export function TakeoutPage({
                   id="takeout-panel-menu"
                   aria-labelledby="takeout-tab-menu"
                 >
-                  {menuItems === null ? (
+                  {menuItems === null || catalog === null ? (
                     <p className="muted">{t.cartaLoading}</p>
+                  ) : !catalog.enabled ? (
+                    <p className="takeout-error">{t.takeoutDisabled}</p>
+                  ) : categories.length === 0 ? (
+                    <p className="muted">{t.takeoutNoItems}</p>
                   ) : (
                     categories.map((category) => (
                       <section
@@ -450,6 +530,7 @@ export function TakeoutPage({
                           {category.items.map((item) => {
                             const shown = displayMenuItem(item, locale)
                             const qty = cart[item.slug] ?? 0
+                            const maxQty = takeoutOfferMaxQty(catalog, item.slug)
                             return (
                               <li
                                 key={item.id}
@@ -482,6 +563,7 @@ export function TakeoutPage({
                                     <QuantityControls
                                       name={shown.name}
                                       qty={qty}
+                                      maxQty={maxQty}
                                       addLabel={t.takeoutAdd}
                                       onChange={(next) =>
                                         setQty(item.slug, next)
@@ -507,6 +589,9 @@ export function TakeoutPage({
                       </section>
                     ))
                   )}
+                  {catalogError ? (
+                    <p className="muted">{t.takeoutCatalogFallback}</p>
+                  ) : null}
                   <AllergenLegend
                     names={t.cartaAllergens}
                     label={t.cartaAllergenLabel}
@@ -562,6 +647,11 @@ export function TakeoutPage({
                               <QuantityControls
                                 name={line.copy.name}
                                 qty={line.qty}
+                                maxQty={
+                                  catalog
+                                    ? takeoutOfferMaxQty(catalog, line.item.slug)
+                                    : line.qty
+                                }
                                 addLabel={t.takeoutAdd}
                                 onChange={(next) =>
                                   setQty(line.item.slug, next)

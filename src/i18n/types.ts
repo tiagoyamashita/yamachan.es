@@ -88,6 +88,9 @@ export type Copy = {
   takeoutNeedItems: string
   takeoutNoPickupTimes: string
   takeoutPickupNote: string
+  takeoutDisabled: string
+  takeoutNoItems: string
+  takeoutCatalogFallback: string
   reservePageTitle: string
   reservePageHeading: string
   reservePageDescription: string
@@ -174,6 +177,7 @@ export type Copy = {
   adminTabRestaurant: string
   adminTabAvailability: string
   adminTabCalendar: string
+  adminTabTakeout: string
   adminTabInstagram: string
   adminRestaurantHeading: string
   adminRestaurantLead: string
@@ -238,6 +242,14 @@ export type Copy = {
   adminBookingStatusClosed: string
   adminBookingStatusOpened: string
   adminBookingStatusClosedSaved: string
+  adminTakeoutHeading: string
+  adminTakeoutLead: string
+  adminTakeoutEnabled: string
+  adminTakeoutMaxQty: string
+  adminTakeoutNoMenu: string
+  adminTakeoutSave: string
+  adminTakeoutSaved: string
+  adminTakeoutError: string
   adminInstagramHeading: string
   adminInstagramLead: string
   adminInstagramPostLabel: string

@@ -120,6 +120,10 @@ export const ptBR: Copy = {
     'Não há horários de retirada nesse dia. Abrimos de quarta a sábado, das 13:00 às 16:30.',
   takeoutPickupNote:
     'Retirada na C/ Pardo Gimeno, 10. O pedido fica confirmado ao pagar com cartão.',
+  takeoutDisabled: 'Os pedidos para viagem estão pausados no momento.',
+  takeoutNoItems: 'Não há pratos para viagem disponíveis no momento.',
+  takeoutCatalogFallback:
+    'Mostrando o cardápio completo enquanto as configurações de para viagem carregam.',
   reservePageTitle: 'Reservar mesa — Yama-Chan',
   reservePageHeading: 'Reservar mesa',
   reservePageDescription:
@@ -214,6 +218,7 @@ export const ptBR: Copy = {
   adminTabRestaurant: 'Restaurante',
   adminTabAvailability: 'Disponibilidade',
   adminTabCalendar: 'Calendário',
+  adminTabTakeout: 'Para viagem',
   adminTabInstagram: 'Instagram',
   adminRestaurantHeading: 'Dados do restaurante',
   adminRestaurantLead:
@@ -289,6 +294,15 @@ export const ptBR: Copy = {
   adminBookingStatusClosed: 'Fechado',
   adminBookingStatusOpened: 'Dia aberto para reservas.',
   adminBookingStatusClosedSaved: 'Dia fechado — sem novas reservas.',
+  adminTakeoutHeading: 'Para viagem',
+  adminTakeoutLead:
+    'Ative o para viagem, marque quais pratos podem ser pedidos e quantas unidades podem ser vendidas.',
+  adminTakeoutEnabled: 'Ativar pedidos para viagem',
+  adminTakeoutMaxQty: 'Qtd. à venda',
+  adminTakeoutNoMenu: 'Publique pratos na aba Cardápio primeiro.',
+  adminTakeoutSave: 'Salvar para viagem',
+  adminTakeoutSaved: 'Configurações de para viagem salvas.',
+  adminTakeoutError: 'Não foi possível salvar as configurações de para viagem.',
   adminInstagramHeading: 'Posts do Instagram',
   adminInstagramLead:
     'Cole até cinco links de posts ou reels (ou o HTML completo do embed). O espaço #1 aparece primeiro no carrossel da página inicial.',

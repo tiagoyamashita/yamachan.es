@@ -120,6 +120,9 @@ export const en: Copy = {
     'No pickup times that day. We are open Wednesday to Saturday, 13:00 to 16:30.',
   takeoutPickupNote:
     'Pickup at C/ Pardo Gimeno, 10. The order is confirmed when you pay by card.',
+  takeoutDisabled: 'Takeaway orders are paused right now.',
+  takeoutNoItems: 'No takeaway dishes are available at the moment.',
+  takeoutCatalogFallback: 'Showing the full menu while takeaway settings load.',
   reservePageTitle: 'Book a table — Yama-Chan',
   reservePageHeading: 'Book a table',
   reservePageDescription:
@@ -213,6 +216,7 @@ export const en: Copy = {
   adminTabRestaurant: 'Restaurant',
   adminTabAvailability: 'Availability',
   adminTabCalendar: 'Calendar',
+  adminTabTakeout: 'Takeaway',
   adminTabInstagram: 'Instagram',
   adminRestaurantHeading: 'Restaurant info',
   adminRestaurantLead:
@@ -287,6 +291,15 @@ export const en: Copy = {
   adminBookingStatusClosed: 'Closed',
   adminBookingStatusOpened: 'Day opened for bookings.',
   adminBookingStatusClosedSaved: 'Day closed — no new bookings.',
+  adminTakeoutHeading: 'Takeaway',
+  adminTakeoutLead:
+    'Enable takeaway, then check which dishes can be ordered and how many can be sold.',
+  adminTakeoutEnabled: 'Enable takeaway orders',
+  adminTakeoutMaxQty: 'Qty for sale',
+  adminTakeoutNoMenu: 'Publish dishes in the Menu tab first.',
+  adminTakeoutSave: 'Save takeaway',
+  adminTakeoutSaved: 'Takeaway settings saved.',
+  adminTakeoutError: 'Could not save takeaway settings.',
   adminInstagramHeading: 'Instagram posts',
   adminInstagramLead:
     'Paste up to five Instagram post or reel links (or the full embed HTML). Slot #1 appears first in the homepage carousel.',
