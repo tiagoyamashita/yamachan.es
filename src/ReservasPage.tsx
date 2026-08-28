@@ -358,11 +358,24 @@ export function ReservasPage({
   }
 
   if (booking) {
-    const chatHref =
-      booking.chatUrl ||
-      whatsappUrl(
-        `${t.whatsappReserveText} (${formatDateLong(locale, booking.startDatetime, timezone)} ${formatTime(locale, booking.startDatetime, timezone)})`,
-      )
+    const formNotes = [
+      occasion !== 'none' ? occasionLabel(t, occasion) : '',
+      notes.trim(),
+    ]
+      .filter(Boolean)
+      .join(' · ')
+    const fallbackChatLines = [
+      `${t.whatsappReserveText} ${name.trim()}.`,
+      `${formatDateLong(locale, booking.startDatetime, timezone)} ${formatTime(locale, booking.startDatetime, timezone)} · ${String(booking.partySize)}.`,
+      email.trim(),
+    ]
+    if (phone.trim()) {
+      fallbackChatLines.push(phone.trim())
+    }
+    if (formNotes) {
+      fallbackChatLines.push(formNotes)
+    }
+    const chatHref = booking.chatUrl || whatsappUrl(fallbackChatLines.join(' '))
     return (
       <article className="carta-page reserve-page" id="reservas">
         <div className="section-inner">
