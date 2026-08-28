@@ -65,6 +65,11 @@ import {
   padInstagramSlots,
   setStoredInstagramPostUrls,
 } from './adminInstagram.ts'
+import {
+  loadTakeoutCatalog,
+  normalizeTakeoutCatalogInput,
+  saveTakeoutCatalog,
+} from './takeoutCatalog.ts'
 
 function json(
   data: unknown,
@@ -566,6 +571,34 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
           return json({ error: error.message }, error.status)
         }
         throw error
+      }
+    }
+
+    if (path === '/api/admin/takeout' && request.method === 'GET') {
+      try {
+        return json({ catalog: await loadTakeoutCatalog() })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'error'
+        return json({ error: message }, 500)
+      }
+    }
+
+    if (path === '/api/admin/takeout' && request.method === 'PUT') {
+      const body: unknown = await request.json().catch(() => null)
+      if (!body || typeof body !== 'object') {
+        return json({ error: 'invalid-request' }, 400)
+      }
+      try {
+        const catalog = await saveTakeoutCatalog(
+          normalizeTakeoutCatalogInput((body as { catalog?: unknown }).catalog),
+        )
+        return json({ catalog })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'error'
+        if (message === 'missing-admin-config') {
+          return json({ error: message }, 503)
+        }
+        return json({ error: message }, 500)
       }
     }
 

@@ -6,6 +6,7 @@ import {
   publicOrigin,
   TakeoutCheckoutError,
 } from './takeoutCheckout.ts'
+import { loadTakeoutCatalog } from './takeoutCatalog.ts'
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -27,6 +28,15 @@ export async function handleTakeoutRequest(request: Request): Promise<Response> 
   const path = url.pathname.replace(/\/+$/, '') || '/'
 
   try {
+    if (path === '/api/takeout/catalog' && request.method === 'GET') {
+      try {
+        return json({ catalog: await loadTakeoutCatalog() })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'error'
+        return json({ error: message }, 500)
+      }
+    }
+
     if (path === '/api/takeout/checkout' && request.method === 'POST') {
       const body: unknown = await request.json().catch(() => null)
       const parsed = parseCheckoutBody(body)

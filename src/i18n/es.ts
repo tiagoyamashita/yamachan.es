@@ -121,6 +121,10 @@ export const es: Copy = {
     'Ese día no hay horas de recogida. Abrimos de miércoles a sábado, de 13:00 a 16:30.',
   takeoutPickupNote:
     'Recogida en C/ Pardo Gimeno, 10. El pedido queda confirmado al pagar con tarjeta.',
+  takeoutDisabled: 'Los pedidos para llevar están pausados ahora.',
+  takeoutNoItems: 'No hay platos para llevar disponibles de momento.',
+  takeoutCatalogFallback:
+    'Mostrando la carta completa mientras cargan los ajustes de para llevar.',
   reservePageTitle: 'Reservar mesa — Yama-Chan',
   reservePageHeading: 'Reservar mesa',
   reservePageDescription:
@@ -214,6 +218,7 @@ export const es: Copy = {
   adminTabRestaurant: 'Restaurante',
   adminTabAvailability: 'Disponibilidad',
   adminTabCalendar: 'Calendario',
+  adminTabTakeout: 'Para llevar',
   adminTabInstagram: 'Instagram',
   adminRestaurantHeading: 'Datos del restaurante',
   adminRestaurantLead:
@@ -289,6 +294,15 @@ export const es: Copy = {
   adminBookingStatusClosed: 'Cerrado',
   adminBookingStatusOpened: 'Día abierto a reservas.',
   adminBookingStatusClosedSaved: 'Día cerrado: sin nuevas reservas.',
+  adminTakeoutHeading: 'Para llevar',
+  adminTakeoutLead:
+    'Activa para llevar, marca qué platos se pueden pedir y cuántas unidades se pueden vender.',
+  adminTakeoutEnabled: 'Activar pedidos para llevar',
+  adminTakeoutMaxQty: 'Cantidad a la venta',
+  adminTakeoutNoMenu: 'Publica platos en la pestaña Carta primero.',
+  adminTakeoutSave: 'Guardar para llevar',
+  adminTakeoutSaved: 'Ajustes de para llevar guardados.',
+  adminTakeoutError: 'No se pudieron guardar los ajustes de para llevar.',
   adminInstagramHeading: 'Publicaciones de Instagram',
   adminInstagramLead:
     'Pega hasta cinco enlaces de publicaciones o reels (o el HTML completo del embed). El hueco #1 aparece primero en el carrusel de la portada.',

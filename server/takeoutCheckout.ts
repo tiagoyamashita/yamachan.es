@@ -2,10 +2,12 @@ import type Stripe from 'stripe'
 import { isLocale, type Locale } from '../src/i18n/locales.ts'
 import { displayMenuItem } from '../src/menu.ts'
 import { pickupSlotsForDate } from '../src/openingHours.ts'
+import { takeoutOfferMaxQty } from '../src/takeoutCatalog.ts'
 import { scheduleFromCompanyInfo } from '../src/companyInfo.ts'
 import { loadCompanyInfo } from './companyInfo.ts'
 import { listPublishedMenu } from './publishedMenu.ts'
 import { getStripeClient } from './stripeClient.ts'
+import { loadTakeoutCatalog } from './takeoutCatalog.ts'
 
 const MAX_QTY = 20
 const MAX_LINES = 40
@@ -196,10 +198,19 @@ export async function createTakeoutCheckoutSession(
     throw new TakeoutCheckoutError('invalid-slot', 400)
   }
 
+  const catalog = await loadTakeoutCatalog().catch(() => null)
+  if (!catalog || !catalog.enabled) {
+    throw new TakeoutCheckoutError('takeout-disabled', 403)
+  }
+
   const menu = await listPublishedMenu()
   const bySlug = new Map(menu.map((item) => [item.slug, item]))
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
   for (const line of input.items) {
+    const maxQty = takeoutOfferMaxQty(catalog, line.slug)
+    if (maxQty < 1 || line.qty > maxQty) {
+      throw new TakeoutCheckoutError('item-unavailable', 400)
+    }
     const item = bySlug.get(line.slug)
     if (!item || item.price_cents <= 0) {
       throw new TakeoutCheckoutError('invalid-item', 400)
