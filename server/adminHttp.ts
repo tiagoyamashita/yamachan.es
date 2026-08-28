@@ -53,8 +53,13 @@ import {
   loadOpenDates,
   loadOpeningRules,
   loadRestaurantSettings,
+  loadTableOrders,
   updateOpeningRule,
   updateRestaurantSettings,
+  updateTableOrderItemStatus,
+  updateTableOrderStatus,
+  type TableOrderItemStatus,
+  type TableOrderStatus,
 } from './globallyBooked.ts'
 import {
   loadClosedBookingDates,
@@ -342,6 +347,69 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
           return json({ error: error.message }, error.status)
         }
         throw error
+      }
+    }
+
+    if (path === '/api/admin/orders' && request.method === 'GET') {
+      try {
+        const includeClosed =
+          url.searchParams.get('include_closed') === '1' ||
+          url.searchParams.get('include_closed') === 'true'
+        return json({ orders: await loadTableOrders(includeClosed) })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    {
+      const orderMatch = /^\/api\/admin\/orders\/([^/]+)$/.exec(path)
+      if (orderMatch && request.method === 'PATCH') {
+        const orderId = decodeURIComponent(orderMatch[1] ?? '')
+        const body: unknown = await request.json().catch(() => null)
+        const status =
+          body && typeof body === 'object' && typeof (body as { status?: unknown }).status === 'string'
+            ? ((body as { status: string }).status as TableOrderStatus)
+            : null
+        if (!status) {
+          return json({ error: 'invalid-status' }, 400)
+        }
+        try {
+          return json({ order: await updateTableOrderStatus(orderId, status) })
+        } catch (error) {
+          if (error instanceof GloballyBookedError) {
+            return json({ error: error.message }, error.status)
+          }
+          throw error
+        }
+      }
+    }
+
+    {
+      const itemMatch = /^\/api\/admin\/orders\/([^/]+)\/items\/([^/]+)$/.exec(path)
+      if (itemMatch && request.method === 'PATCH') {
+        const orderId = decodeURIComponent(itemMatch[1] ?? '')
+        const itemId = decodeURIComponent(itemMatch[2] ?? '')
+        const body: unknown = await request.json().catch(() => null)
+        const status =
+          body && typeof body === 'object' && typeof (body as { status?: unknown }).status === 'string'
+            ? ((body as { status: string }).status as TableOrderItemStatus)
+            : null
+        if (!status) {
+          return json({ error: 'invalid-status' }, 400)
+        }
+        try {
+          return json({
+            item: await updateTableOrderItemStatus(orderId, itemId, status),
+          })
+        } catch (error) {
+          if (error instanceof GloballyBookedError) {
+            return json({ error: error.message }, error.status)
+          }
+          throw error
+        }
       }
     }
 

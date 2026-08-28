@@ -24,6 +24,7 @@ type AdminTab =
   | 'restaurant'
   | 'availability'
   | 'calendar'
+  | 'orders'
   | 'takeout'
   | 'instagram'
 type AvailabilitySubtab = 'defaults' | 'rules' | 'open-dates' | 'booking-status'
@@ -85,6 +86,37 @@ type AdminBookingDay = {
   bookingCount: number
 }
 
+type KitchenOrderItemStatus = 'pending' | 'preparing' | 'served'
+type KitchenOrderStatus =
+  | 'open'
+  | 'submitted'
+  | 'preparing'
+  | 'served'
+  | 'closed'
+  | 'cancelled'
+
+type KitchenOrderItem = {
+  id: string
+  item_name: string
+  quantity: number
+  unit_price_cents: number
+  line_notes: string | null
+  status: KitchenOrderItemStatus
+  created_at?: string
+}
+
+type KitchenOrder = {
+  id: string
+  status: KitchenOrderStatus
+  created_at: string
+  submitted_at: string | null
+  tableLabel: string | null
+  orderNumber: string
+  items: KitchenOrderItem[]
+}
+
+type OrdersSubtab = 'active' | 'finished'
+
 function adminHeading(t: Copy, tab: AdminTab): string {
   switch (tab) {
     case 'menu':
@@ -97,6 +129,8 @@ function adminHeading(t: Copy, tab: AdminTab): string {
       return t.adminAvailabilityHeading
     case 'calendar':
       return t.adminCalendarHeading
+    case 'orders':
+      return t.adminOrdersHeading
     case 'takeout':
       return t.adminTakeoutHeading
     case 'instagram':
@@ -120,6 +154,8 @@ function adminLead(t: Copy, tab: AdminTab): string {
       return t.adminAvailabilityLead
     case 'calendar':
       return t.adminCalendarLead
+    case 'orders':
+      return t.adminOrdersLead
     case 'takeout':
       return t.adminTakeoutLead
     case 'instagram':
@@ -845,6 +881,241 @@ function BookingsCalendarEditor({
                     </div>
                   ) : null}
                 </dl>
+              </li>
+            ))}
+          </ul>
+        )}
+      </fieldset>
+    </section>
+  )
+}
+
+function kitchenOrderStatusLabel(t: Copy, status: KitchenOrderStatus): string {
+  switch (status) {
+    case 'open':
+      return t.adminOrdersStatusOpen
+    case 'submitted':
+      return t.adminOrdersStatusSubmitted
+    case 'preparing':
+      return t.adminOrdersStatusPreparing
+    case 'served':
+      return t.adminOrdersStatusServed
+    case 'closed':
+      return t.adminOrdersStatusClosed
+    case 'cancelled':
+      return t.adminOrdersStatusCancelled
+    default: {
+      const _exhaustive: never = status
+      return _exhaustive
+    }
+  }
+}
+
+function kitchenItemStatusLabel(t: Copy, status: KitchenOrderItemStatus): string {
+  switch (status) {
+    case 'pending':
+      return t.adminOrdersItemPending
+    case 'preparing':
+      return t.adminOrdersStatusPreparing
+    case 'served':
+      return t.adminOrdersStatusServed
+    default: {
+      const _exhaustive: never = status
+      return _exhaustive
+    }
+  }
+}
+
+function OrdersKitchenEditor({
+  orders,
+  subtab,
+  busy,
+  busyItemId,
+  loadError,
+  t,
+  onSubtabChange,
+  onRefresh,
+  onItemStatus,
+  onOrderStatus,
+}: {
+  orders: KitchenOrder[]
+  subtab: OrdersSubtab
+  busy: boolean
+  busyItemId: string | null
+  loadError: string | null
+  t: Copy
+  onSubtabChange: (subtab: OrdersSubtab) => void
+  onRefresh: () => void
+  onItemStatus: (
+    orderId: string,
+    itemId: string,
+    status: KitchenOrderItemStatus,
+  ) => void
+  onOrderStatus: (orderId: string, status: KitchenOrderStatus) => void
+}) {
+  if (loadError === 'not-configured') {
+    return (
+      <section className="admin-company takeout-form">
+        <p className="takeout-error">{t.adminOrdersNotConfigured}</p>
+      </section>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <section className="admin-company takeout-form">
+        <p className="takeout-error">{loadError}</p>
+      </section>
+    )
+  }
+
+  const active = orders.filter((order) =>
+    ['open', 'submitted', 'preparing', 'served'].includes(order.status),
+  )
+  const finished = orders.filter((order) =>
+    ['closed', 'cancelled'].includes(order.status),
+  )
+  const visible = subtab === 'active' ? active : finished
+
+  return (
+    <section className="admin-company takeout-form">
+      <fieldset className="admin-company-block">
+        <legend>{t.adminOrdersHeading}</legend>
+        <p className="muted">{t.adminOrdersLead}</p>
+        <div className="admin-orders-toolbar">
+          <div className="admin-subtabs" role="tablist" aria-label={t.adminOrdersHeading}>
+            <button
+              type="button"
+              role="tab"
+              className={`admin-tab${subtab === 'active' ? ' is-active' : ''}`}
+              aria-selected={subtab === 'active'}
+              onClick={() => onSubtabChange('active')}
+            >
+              {t.adminOrdersTabActive}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              className={`admin-tab${subtab === 'finished' ? ' is-active' : ''}`}
+              aria-selected={subtab === 'finished'}
+              onClick={() => onSubtabChange('finished')}
+            >
+              {t.adminOrdersTabFinished}
+            </button>
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline btn-small"
+            disabled={busy}
+            onClick={onRefresh}
+          >
+            {t.adminOrdersRefresh}
+          </button>
+        </div>
+        {visible.length === 0 ? (
+          <p className="muted">
+            {subtab === 'active' ? t.adminOrdersEmptyActive : t.adminOrdersEmptyFinished}
+          </p>
+        ) : (
+          <ul className="admin-orders-list">
+            {visible.map((order) => (
+              <li key={order.id} className="admin-order-card">
+                <header className="admin-order-head">
+                  <div>
+                    <p className="admin-order-number">
+                      {t.adminOrdersNumberLabel} #{order.orderNumber}
+                    </p>
+                    <p className="admin-order-meta">
+                      {order.tableLabel
+                        ? `${t.adminOrdersTableLabel} ${order.tableLabel}`
+                        : t.adminOrdersNoTable}
+                      {' · '}
+                      {kitchenOrderStatusLabel(t, order.status)}
+                    </p>
+                  </div>
+                  {subtab === 'active' ? (
+                    <div className="admin-order-actions">
+                      {order.status !== 'served' && order.status !== 'closed' ? (
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-small"
+                          disabled={busy}
+                          onClick={() => onOrderStatus(order.id, 'served')}
+                        >
+                          {t.adminOrdersMarkServed}
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-small"
+                        disabled={busy}
+                        onClick={() => onOrderStatus(order.id, 'closed')}
+                      >
+                        {t.adminOrdersClose}
+                      </button>
+                    </div>
+                  ) : null}
+                </header>
+                <ul className="admin-order-items">
+                  {order.items.map((item) => {
+                    const itemBusy = busyItemId === item.id || busy
+                    return (
+                      <li key={item.id} className="admin-order-item">
+                        <div className="admin-order-item-copy">
+                          <strong>
+                            {item.quantity}× {item.item_name}
+                          </strong>
+                          <span className={`admin-order-item-status is-${item.status}`}>
+                            {kitchenItemStatusLabel(t, item.status)}
+                          </span>
+                          {item.line_notes ? (
+                            <p className="muted">{item.line_notes}</p>
+                          ) : null}
+                        </div>
+                        {subtab === 'active' ? (
+                          <div className="admin-order-item-actions">
+                            {item.status === 'pending' ? (
+                              <button
+                                type="button"
+                                className="btn btn-small"
+                                disabled={itemBusy}
+                                onClick={() =>
+                                  onItemStatus(order.id, item.id, 'preparing')
+                                }
+                              >
+                                {t.adminOrdersStartPreparing}
+                              </button>
+                            ) : null}
+                            {item.status === 'preparing' ? (
+                              <button
+                                type="button"
+                                className="btn btn-small"
+                                disabled={itemBusy}
+                                onClick={() =>
+                                  onItemStatus(order.id, item.id, 'served')
+                                }
+                              >
+                                {t.adminOrdersMarkItemServed}
+                              </button>
+                            ) : null}
+                            {item.status === 'served' ? (
+                              <button
+                                type="button"
+                                className="btn btn-outline btn-small"
+                                disabled={itemBusy}
+                                onClick={() =>
+                                  onItemStatus(order.id, item.id, 'preparing')
+                                }
+                              >
+                                {t.adminOrdersReopenItem}
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </li>
+                    )
+                  })}
+                </ul>
               </li>
             ))}
           </ul>
@@ -1783,6 +2054,11 @@ export function AdminPage({
   const [bookingsSelectedDate, setBookingsSelectedDate] = useState<string | null>(
     null,
   )
+  const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([])
+  const [ordersSubtab, setOrdersSubtab] = useState<OrdersSubtab>('active')
+  const [ordersBusy, setOrdersBusy] = useState(false)
+  const [ordersBusyItemId, setOrdersBusyItemId] = useState<string | null>(null)
+  const [ordersError, setOrdersError] = useState<string | null>(null)
   const [instagramUrls, setInstagramUrls] = useState<string[]>(emptyInstagramSlots)
   const [instagramBusy, setInstagramBusy] = useState(false)
   const [takeoutEnabled, setTakeoutEnabled] = useState(true)
@@ -1861,6 +2137,69 @@ export function AdminPage({
       setBookingsList([])
     } finally {
       setBookingsBusy(false)
+    }
+  }
+
+  const loadOrders = async (includeClosed = ordersSubtab === 'finished') => {
+    setOrdersBusy(true)
+    try {
+      const query = includeClosed ? '?include_closed=true' : ''
+      const data = await api<{ orders?: KitchenOrder[] }>(
+        `/api/admin/orders${query}`,
+      )
+      setKitchenOrders(Array.isArray(data.orders) ? data.orders : [])
+      setOrdersError(null)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'error'
+      if (message === 'not-configured') {
+        setOrdersError('not-configured')
+      } else {
+        setOrdersError(t.adminOrdersError)
+      }
+      setKitchenOrders([])
+    } finally {
+      setOrdersBusy(false)
+    }
+  }
+
+  const patchOrderItemStatus = async (
+    orderId: string,
+    itemId: string,
+    status: KitchenOrderItemStatus,
+  ) => {
+    setOrdersBusyItemId(itemId)
+    setMessage(null)
+    try {
+      await api(`/api/admin/orders/${encodeURIComponent(orderId)}/items/${encodeURIComponent(itemId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      await loadOrders(ordersSubtab === 'finished')
+    } catch {
+      setMessage(t.adminOrdersUpdateError)
+    } finally {
+      setOrdersBusyItemId(null)
+    }
+  }
+
+  const patchOrderStatus = async (
+    orderId: string,
+    status: KitchenOrderStatus,
+  ) => {
+    setOrdersBusy(true)
+    setMessage(null)
+    try {
+      await api(`/api/admin/orders/${encodeURIComponent(orderId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      await loadOrders(ordersSubtab === 'finished')
+    } catch {
+      setMessage(t.adminOrdersUpdateError)
+    } finally {
+      setOrdersBusy(false)
     }
   }
 
@@ -1958,6 +2297,19 @@ export function AdminPage({
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    if (status !== 'ready' || tab !== 'orders') {
+      return
+    }
+    void loadOrders(ordersSubtab === 'finished')
+    const timer = window.setInterval(() => {
+      void loadOrders(ordersSubtab === 'finished')
+    }, 15_000)
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [ordersSubtab, status, tab])
 
   const login = async (event: FormEvent) => {
     event.preventDefault()
@@ -2472,6 +2824,18 @@ export function AdminPage({
                 <button
                   type="button"
                   role="tab"
+                  className={`admin-tab${tab === 'orders' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'orders'}
+                  onClick={() => {
+                    setTab('orders')
+                    void loadOrders(ordersSubtab === 'finished')
+                  }}
+                >
+                  {t.adminTabOrders}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
                   className={`admin-tab${tab === 'takeout' ? ' is-active' : ''}`}
                   aria-selected={tab === 'takeout'}
                   onClick={() => {
@@ -2712,6 +3076,27 @@ export function AdminPage({
                       void loadBookings(year, month)
                     }}
                     onSelectDate={setBookingsSelectedDate}
+                  />
+                ) : null}
+                {tab === 'orders' ? (
+                  <OrdersKitchenEditor
+                    orders={kitchenOrders}
+                    subtab={ordersSubtab}
+                    busy={ordersBusy}
+                    busyItemId={ordersBusyItemId}
+                    loadError={ordersError}
+                    t={t}
+                    onSubtabChange={(next) => {
+                      setOrdersSubtab(next)
+                      void loadOrders(next === 'finished')
+                    }}
+                    onRefresh={() => void loadOrders(ordersSubtab === 'finished')}
+                    onItemStatus={(orderId, itemId, status) =>
+                      void patchOrderItemStatus(orderId, itemId, status)
+                    }
+                    onOrderStatus={(orderId, status) =>
+                      void patchOrderStatus(orderId, status)
+                    }
                   />
                 ) : null}
                 {tab === 'takeout' ? (

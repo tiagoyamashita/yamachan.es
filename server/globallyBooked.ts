@@ -833,3 +833,164 @@ export async function loadAdminBookings(
   return { timezone: timeZone, bookings, days }
 }
 
+export type TableOrderItemStatus = 'pending' | 'preparing' | 'served'
+
+export type TableOrderStatus =
+  | 'open'
+  | 'submitted'
+  | 'preparing'
+  | 'served'
+  | 'closed'
+  | 'cancelled'
+
+export type TableOrderItem = {
+  id: string
+  menu_item_id?: string | null
+  item_name: string
+  quantity: number
+  unit_price_cents: number
+  line_notes: string | null
+  status: TableOrderItemStatus
+  created_at?: string
+}
+
+export type TableOrder = {
+  id: string
+  status: TableOrderStatus
+  created_at: string
+  submitted_at: string | null
+  updated_at?: string | null
+  tableLabel: string | null
+  orderNumber: string
+  items: TableOrderItem[]
+}
+
+type RawTableOrder = {
+  id: string
+  status?: string
+  created_at?: string
+  submitted_at?: string | null
+  updated_at?: string | null
+  restaurant_tables?: { label?: string } | { label?: string }[] | null
+  restaurant_table_order_items?: Array<{
+    id: string
+    menu_item_id?: string | null
+    item_name?: string
+    quantity?: number
+    unit_price_cents?: number
+    line_notes?: string | null
+    status?: string
+    created_at?: string
+  }> | null
+}
+
+function orderNumberFromId(id: string): string {
+  return id.replaceAll('-', '').slice(0, 8).toUpperCase()
+}
+
+function normalizeItemStatus(value: string | undefined): TableOrderItemStatus {
+  switch (value) {
+    case 'preparing':
+      return 'preparing'
+    case 'served':
+      return 'served'
+    default:
+      return 'pending'
+  }
+}
+
+function normalizeOrderStatus(value: string | undefined): TableOrderStatus {
+  switch (value) {
+    case 'open':
+    case 'submitted':
+    case 'preparing':
+    case 'served':
+    case 'closed':
+    case 'cancelled':
+      return value
+    default:
+      return 'open'
+  }
+}
+
+function mapTableOrder(row: RawTableOrder): TableOrder {
+  const table = row.restaurant_tables
+  const tableRow = Array.isArray(table) ? table[0] : table
+  return {
+    id: row.id,
+    status: normalizeOrderStatus(row.status),
+    created_at: row.created_at ?? new Date().toISOString(),
+    submitted_at: row.submitted_at ?? null,
+    updated_at: row.updated_at ?? null,
+    tableLabel: tableRow?.label?.trim() || null,
+    orderNumber: orderNumberFromId(row.id),
+    items: (row.restaurant_table_order_items ?? []).map((item) => ({
+      id: item.id,
+      menu_item_id: item.menu_item_id ?? null,
+      item_name: item.item_name?.trim() || '—',
+      quantity: Number(item.quantity) || 0,
+      unit_price_cents: Number(item.unit_price_cents) || 0,
+      line_notes: item.line_notes?.trim() || null,
+      status: normalizeItemStatus(item.status),
+      created_at: item.created_at,
+    })),
+  }
+}
+
+export async function loadTableOrders(includeClosed = false): Promise<TableOrder[]> {
+  const query = includeClosed ? '?include_closed=true' : ''
+  const data = await gbFetch<RawTableOrder[]>(
+    'GET',
+    `${restaurantPath('/orders')}${query}`,
+  )
+  return (Array.isArray(data) ? data : []).map(mapTableOrder)
+}
+
+export async function updateTableOrderStatus(
+  orderId: string,
+  status: TableOrderStatus,
+): Promise<TableOrder> {
+  if (!orderId.trim()) {
+    throw new GloballyBookedError('invalid-order-id', 400)
+  }
+  const data = await gbFetch<RawTableOrder>(
+    'PATCH',
+    restaurantPath(`/orders/${encodeURIComponent(orderId)}`),
+    { status },
+  )
+  return mapTableOrder(data)
+}
+
+export async function updateTableOrderItemStatus(
+  orderId: string,
+  itemId: string,
+  status: TableOrderItemStatus,
+): Promise<TableOrderItem> {
+  if (!orderId.trim() || !itemId.trim()) {
+    throw new GloballyBookedError('invalid-order-item', 400)
+  }
+  const data = await gbFetch<{
+    id: string
+    menu_item_id?: string | null
+    item_name?: string
+    quantity?: number
+    unit_price_cents?: number
+    line_notes?: string | null
+    status?: string
+    created_at?: string
+  }>('PATCH', restaurantPath(`/orders/${encodeURIComponent(orderId)}/items/${encodeURIComponent(itemId)}`), {
+    status,
+  })
+  return {
+    id: data.id,
+    menu_item_id: data.menu_item_id ?? null,
+    item_name: data.item_name?.trim() || '—',
+    quantity: Number(data.quantity) || 0,
+    unit_price_cents: Number(data.unit_price_cents) || 0,
+    line_notes: data.line_notes?.trim() || null,
+    status: normalizeItemStatus(data.status),
+    created_at: data.created_at,
+  }
+}
+
+
