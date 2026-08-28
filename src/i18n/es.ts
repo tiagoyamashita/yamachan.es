@@ -279,6 +279,12 @@ export const es: Copy = {
   adminTablesHeading: 'Mesas',
   adminTablesLead:
     'Elige una mesa para tomar pedidos, revisar la cuenta o cancelar platos.',
+  adminTablesTabToday: 'Hoy',
+  adminTablesTabHistory: 'Historial',
+  adminTablesEmptyHistory: 'No hay pedidos de mesa en esta fecha.',
+  adminTablesPickDate: 'Elige una fecha en el calendario.',
+  adminTablesForDate: 'Mesas del',
+  adminTablesOrdersToday: '{count} pedidos',
   adminTablesEmpty: 'Aún no hay mesas configuradas en Globally Booked.',
   adminTablesPickTable: 'Elige una mesa arriba.',
   adminTablesDetail: 'Mesa {label}',

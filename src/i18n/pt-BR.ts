@@ -279,6 +279,12 @@ export const ptBR: Copy = {
   adminTablesHeading: 'Mesas',
   adminTablesLead:
     'Escolha uma mesa para fazer pedidos, ver a conta ou cancelar itens.',
+  adminTablesTabToday: 'Hoje',
+  adminTablesTabHistory: 'Histórico',
+  adminTablesEmptyHistory: 'Nenhum pedido de mesa nesta data.',
+  adminTablesPickDate: 'Escolha uma data no calendário.',
+  adminTablesForDate: 'Mesas de',
+  adminTablesOrdersToday: '{count} pedidos',
   adminTablesEmpty: 'Nenhuma mesa configurada no Globally Booked ainda.',
   adminTablesPickTable: 'Escolha uma mesa acima.',
   adminTablesDetail: 'Mesa {label}',
