@@ -69,6 +69,10 @@ const CARD_ONLY_EXCLUDED: Stripe.Checkout.SessionCreateParams.ExcludedPaymentMet
     'zip',
   ]
 
+function isEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
 export type TakeoutCartLine = {
   slug: string
   qty: number
@@ -77,6 +81,7 @@ export type TakeoutCartLine = {
 export type TakeoutCheckoutInput = {
   items: TakeoutCartLine[]
   name: string
+  email: string
   phone: string
   pickupDate: string
   pickupSlot: string
@@ -88,6 +93,7 @@ export type TakeoutCheckoutInput = {
 export type PaidTakeoutSession = {
   paid: boolean
   name: string
+  email: string
   phone: string
   pickupDate: string
   pickupSlot: string
@@ -164,6 +170,7 @@ export function parseCheckoutBody(value: unknown): TakeoutCheckoutInput | null {
     return null
   }
   const name = typeof row.name === 'string' ? row.name.trim() : ''
+  const email = typeof row.email === 'string' ? row.email.trim() : ''
   const phone = typeof row.phone === 'string' ? row.phone.trim() : ''
   const pickupDate =
     typeof row.pickupDate === 'string' ? row.pickupDate.trim() : ''
@@ -171,12 +178,13 @@ export function parseCheckoutBody(value: unknown): TakeoutCheckoutInput | null {
     typeof row.pickupSlot === 'string' ? row.pickupSlot.trim() : ''
   const notes = typeof row.notes === 'string' ? row.notes.trim() : ''
   const locale = isLocale(row.locale) ? row.locale : 'es'
-  if (!name || !phone || !pickupDate || !pickupSlot) {
+  if (!name || !phone || !isEmail(email) || !pickupDate || !pickupSlot) {
     return null
   }
   return {
     items,
     name,
+    email,
     phone,
     pickupDate,
     pickupSlot,
@@ -239,11 +247,13 @@ export async function createTakeoutCheckoutSession(
     excluded_payment_method_types: CARD_ONLY_EXCLUDED,
     ...(configuration ? { payment_method_configuration: configuration } : {}),
     line_items: lineItems,
+    customer_email: input.email,
     success_url: `${input.origin}/para-llevar?session_id={CHECKOUT_SESSION_ID}#pagado`,
     cancel_url: `${input.origin}/para-llevar?canceled=1#enviar`,
     metadata: {
       kind: 'takeout',
       name: meta(input.name),
+      email: meta(input.email),
       phone: meta(input.phone),
       pickup_date: meta(input.pickupDate),
       pickup_slot: meta(input.pickupSlot),
@@ -255,6 +265,7 @@ export async function createTakeoutCheckoutSession(
       metadata: {
         kind: 'takeout',
         name: meta(input.name),
+        email: meta(input.email),
         phone: meta(input.phone),
         pickup: meta(pickup),
       },
@@ -302,6 +313,7 @@ export async function loadPaidTakeoutSession(
   return {
     paid,
     name: metadata.name ?? '',
+    email: metadata.email ?? session.customer_details?.email ?? '',
     phone: metadata.phone ?? '',
     pickupDate: metadata.pickup_date ?? '',
     pickupSlot: metadata.pickup_slot ?? '',

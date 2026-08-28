@@ -109,7 +109,7 @@ export function pickupSlotsForDate(
   now = new Date(),
   schedule: OpeningSchedule = defaultSchedule(),
 ): string[] {
-  if (!isOpenDate(key, schedule) || key < todayKey(now)) {
+  if (!isOpenDate(key, schedule) || key !== todayKey(now)) {
     return []
   }
   const openMinutes = timeToMinutes(schedule.lunchOpen)

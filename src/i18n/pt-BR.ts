@@ -124,6 +124,9 @@ export const ptBR: Copy = {
   takeoutPickupNote:
     'Retirada na C/ Pardo Gimeno, 10. O pedido fica confirmado ao pagar com cartão.',
   takeoutDisabled: 'Os pedidos para viagem estão pausados no momento.',
+  takeoutClosedHeading: 'No momento não estamos aceitando pedidos para viagem',
+  takeoutClosedLead:
+    'Os pedidos para viagem estão pausados. Você pode ver o cardápio ou reservar uma mesa.',
   takeoutNoItems: 'Não há pratos para viagem disponíveis no momento.',
   takeoutCatalogFallback:
     'Mostrando o cardápio completo enquanto as configurações de para viagem carregam.',
@@ -247,11 +250,13 @@ export const ptBR: Copy = {
   adminOrdersHeading: 'Pedidos',
   adminOrdersLead:
     'Fila da cozinha por número do pedido e mesa. Comece a preparar e marque como servido.',
-  adminOrdersTabActive: 'Em andamento',
-  adminOrdersTabFinished: 'Finalizados',
+  adminOrdersTabToday: 'Hoje',
+  adminOrdersTabHistory: 'Histórico',
   adminOrdersRefresh: 'Atualizar',
-  adminOrdersEmptyActive: 'Nenhum pedido aberto agora.',
-  adminOrdersEmptyFinished: 'Ainda não há pedidos finalizados.',
+  adminOrdersEmptyToday: 'Ainda não há pedidos hoje.',
+  adminOrdersEmptyHistory: 'Nenhum pedido nesta data.',
+  adminOrdersPickDate: 'Escolha uma data no calendário.',
+  adminOrdersForDate: 'Pedidos de',
   adminOrdersNumberLabel: 'Pedido',
   adminOrdersTableLabel: 'Mesa',
   adminOrdersNoTable: 'Sem mesa',

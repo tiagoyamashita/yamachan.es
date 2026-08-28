@@ -124,6 +124,9 @@ export const ja: Copy = {
   takeoutPickupNote:
     '受け取りは C/ Pardo Gimeno, 10。カードでのお支払い完了でご注文が確定します。',
   takeoutDisabled: '現在テイクアウト注文は一時停止中です。',
+  takeoutClosedHeading: '現在テイクアウトのご注文は受け付けておりません',
+  takeoutClosedLead:
+    'テイクアウトは一時停止中です。メニューをご覧いただくか、ご予約ください。',
   takeoutNoItems: '現在テイクアウトできる料理はありません。',
   takeoutCatalogFallback:
     'テイクアウト設定の読み込み中は全メニューを表示します。',
@@ -244,11 +247,13 @@ export const ja: Copy = {
   adminOrdersHeading: '注文',
   adminOrdersLead:
     '注文番号とテーブルごとのキッチキュー。調理開始、提供済みに更新できます。',
-  adminOrdersTabActive: '進行中',
-  adminOrdersTabFinished: '完了',
+  adminOrdersTabToday: '今日',
+  adminOrdersTabHistory: '履歴',
   adminOrdersRefresh: '更新',
-  adminOrdersEmptyActive: '現在オープン中の注文はありません。',
-  adminOrdersEmptyFinished: '完了した注文はまだありません。',
+  adminOrdersEmptyToday: '今日の注文はまだありません。',
+  adminOrdersEmptyHistory: 'この日付の注文はありません。',
+  adminOrdersPickDate: 'カレンダーで日付を選んでください。',
+  adminOrdersForDate: '注文',
   adminOrdersNumberLabel: '注文',
   adminOrdersTableLabel: 'テーブル',
   adminOrdersNoTable: 'テーブルなし',
