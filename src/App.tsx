@@ -17,10 +17,14 @@ import {
 } from './i18n/index.ts'
 import { LanguagePicker } from './LanguagePicker.tsx'
 import { FeaturedDishes } from './FeaturedDishes.tsx'
-// import { TakeoutPage } from './TakeoutPage.tsx'
 
 const CartaPage = lazy(() =>
   import('./CartaPage.tsx').then((module) => ({ default: module.CartaPage })),
+)
+const TakeoutPage = lazy(() =>
+  import('./TakeoutPage.tsx').then((module) => ({
+    default: module.TakeoutPage,
+  })),
 )
 const ReservasPage = lazy(() =>
   import('./ReservasPage.tsx').then((module) => ({
@@ -287,19 +291,19 @@ export default function App() {
             >
               {t.nav.carta}
             </a>
+            <a
+              href="/para-llevar"
+              aria-current={onTakeout ? 'page' : undefined}
+              onClick={(event) => go(event, '/para-llevar')}
+            >
+              {t.nav.takeout}
+            </a>
             <a href="/#opiniones" onClick={(event) => go(event, '/#opiniones')}>
               {t.nav.opiniones}
             </a>
             <a href="/#visita" onClick={(event) => go(event, '/#visita')}>
               {t.nav.visitas}
             </a>
-            {/* <a
-              href="/para-llevar"
-              aria-current={onTakeout ? 'page' : undefined}
-              onClick={(event) => go(event, '/para-llevar')}
-            >
-              {t.nav.takeout}
-            </a> */}
             <LanguagePicker locale={locale} onChange={setLocale} />
             <a
               className="btn btn-small"
@@ -320,14 +324,14 @@ export default function App() {
             >
               {t.nav.carta}
             </a>
-            {/* <a
+            <a
               className="header-carta"
               href="/para-llevar"
               aria-current={onTakeout ? 'page' : undefined}
               onClick={(event) => go(event, '/para-llevar')}
             >
               {t.nav.takeout}
-            </a> */}
+            </a>
             <LanguagePicker locale={locale} onChange={setLocale} />
             <a
               className="btn btn-small"
@@ -350,14 +354,16 @@ export default function App() {
               onHome={(event) => go(event, '/')}
             />
           </Suspense>
-        // ) : onTakeout ? (
-        //   <TakeoutPage
-        //     t={t}
-        //     locale={locale}
-        //     hash={hash}
-        //     onHome={(event) => go(event, '/')}
-        //     onNavigate={go}
-        //   />
+        ) : onTakeout ? (
+          <Suspense fallback={<PageLoading />}>
+            <TakeoutPage
+              t={t}
+              locale={locale}
+              hash={hash}
+              onHome={(event) => go(event, '/')}
+              onNavigate={go}
+            />
+          </Suspense>
         ) : onReserve ? (
           <Suspense fallback={<PageLoading />}>
             <ReservasPage
@@ -569,12 +575,12 @@ export default function App() {
               {t.nav.carta}
             </a>
             {' · '}
-            {/* <a
+            <a
               href="/para-llevar"
               onClick={(event) => go(event, '/para-llevar')}
             >
               {t.nav.takeout}
-            </a> */}
+            </a>
             {' · '}
             <a href="/reservas" onClick={(event) => go(event, '/reservas')}>
               {t.nav.reservar}

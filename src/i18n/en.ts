@@ -124,6 +124,9 @@ export const en: Copy = {
   takeoutPickupNote:
     'Pickup at C/ Pardo Gimeno, 10. The order is confirmed when you pay by card.',
   takeoutDisabled: 'Takeaway orders are paused right now.',
+  takeoutClosedHeading: 'We are not currently taking takeout orders',
+  takeoutClosedLead:
+    'Takeaway is paused for now. You can still see the menu or book a table.',
   takeoutNoItems: 'No takeaway dishes are available at the moment.',
   takeoutCatalogFallback: 'Showing the full menu while takeaway settings load.',
   reservePageTitle: 'Book a table — Yama-Chan',
@@ -245,11 +248,13 @@ export const en: Copy = {
   adminOrdersHeading: 'Orders',
   adminOrdersLead:
     'Kitchen queue by order number and table. Start preparing dishes, then mark them served.',
-  adminOrdersTabActive: 'In progress',
-  adminOrdersTabFinished: 'Finished',
+  adminOrdersTabToday: 'Today',
+  adminOrdersTabHistory: 'All history',
   adminOrdersRefresh: 'Refresh',
-  adminOrdersEmptyActive: 'No open orders right now.',
-  adminOrdersEmptyFinished: 'No finished orders yet.',
+  adminOrdersEmptyToday: 'No orders today yet.',
+  adminOrdersEmptyHistory: 'No orders on this date.',
+  adminOrdersPickDate: 'Pick a date on the calendar.',
+  adminOrdersForDate: 'Orders for',
   adminOrdersNumberLabel: 'Order',
   adminOrdersTableLabel: 'Table',
   adminOrdersNoTable: 'No table',

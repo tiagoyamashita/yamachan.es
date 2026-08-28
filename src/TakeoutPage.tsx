@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'react'
 import { AllergenLegend, AllergenMarks } from './AllergenIcon.tsx'
+import { scheduleFromCompanyInfo } from './companyInfo.ts'
 import { type Copy, formatEuros, type Locale, showJapaneseCaption } from './i18n/index.ts'
 import {
   categoryHeading,
@@ -8,13 +9,19 @@ import {
   type StoredMenuItem,
 } from './menu.ts'
 import { PickupCalendar } from './PickupCalendar.tsx'
-import { formatPickupLabel } from './openingHours.ts'
+import {
+  formatPickupLabel,
+  pickupSlotsForDate,
+  todayKey,
+} from './openingHours.ts'
 import {
   DEFAULT_TAKEOUT_CATALOG,
   parseTakeoutCatalog,
   takeoutOfferMaxQty,
   type TakeoutCatalog,
 } from './takeoutCatalog.ts'
+import { TakeoutClosedPage } from './TakeoutClosedPage.tsx'
+import { useCompanyInfo } from './useCompanyInfo.ts'
 import { usePublishedMenu } from './usePublishedMenu.ts'
 
 const CART_KEY = 'yamachan-takeout-cart'
@@ -24,6 +31,7 @@ type Cart = Record<string, number>
 type TakeoutTab = 'menu' | 'order' | 'info' | 'send' | 'paid'
 type SavedDetails = {
   name: string
+  email: string
   phone: string
   pickupDate: string | null
   pickupSlot: string
@@ -32,12 +40,28 @@ type SavedDetails = {
 type PaidOrder = {
   paid: boolean
   name: string
+  email: string
   phone: string
   pickupDate: string
   pickupSlot: string
   notes: string
   amountTotal: number
   lines: { name: string; qty: number; amount: number }[]
+}
+
+function emptyDetails(): SavedDetails {
+  return {
+    name: '',
+    email: '',
+    phone: '',
+    pickupDate: todayKey(),
+    pickupSlot: '',
+    notes: '',
+  }
+}
+
+function isEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
 }
 
 function readCart(): Cart {
@@ -63,25 +87,27 @@ function readCart(): Cart {
 }
 
 function readDetails(): SavedDetails {
+  const empty = emptyDetails()
   try {
     const raw = sessionStorage.getItem(DETAILS_KEY)
     if (!raw) {
-      return { name: '', phone: '', pickupDate: null, pickupSlot: '', notes: '' }
+      return empty
     }
     const parsed: unknown = JSON.parse(raw)
     if (!parsed || typeof parsed !== 'object') {
-      return { name: '', phone: '', pickupDate: null, pickupSlot: '', notes: '' }
+      return empty
     }
     const row = parsed as Record<string, unknown>
     return {
       name: typeof row.name === 'string' ? row.name : '',
+      email: typeof row.email === 'string' ? row.email : '',
       phone: typeof row.phone === 'string' ? row.phone : '',
-      pickupDate: typeof row.pickupDate === 'string' ? row.pickupDate : null,
+      pickupDate: todayKey(),
       pickupSlot: typeof row.pickupSlot === 'string' ? row.pickupSlot : '',
       notes: typeof row.notes === 'string' ? row.notes : '',
     }
   } catch {
-    return { name: '', phone: '', pickupDate: null, pickupSlot: '', notes: '' }
+    return empty
   }
 }
 
@@ -206,6 +232,11 @@ export function TakeoutPage({
 }) {
   const tab = tabFromHash(hash)
   const menuItems = usePublishedMenu()
+  const companyInfo = useCompanyInfo()
+  const schedule = useMemo(
+    () => scheduleFromCompanyInfo(companyInfo),
+    [companyInfo],
+  )
   const [catalog, setCatalog] = useState<TakeoutCatalog | null>(null)
   const [catalogError, setCatalogError] = useState(false)
   const takeoutItems = useMemo(() => {
@@ -220,10 +251,8 @@ export function TakeoutPage({
   const categories = takeoutItems ? groupMenuByCategory(takeoutItems) : []
   const [cart, setCart] = useState<Cart>(readCart)
   const [name, setName] = useState(() => readDetails().name)
+  const [email, setEmail] = useState(() => readDetails().email)
   const [phone, setPhone] = useState(() => readDetails().phone)
-  const [pickupDate, setPickupDate] = useState<string | null>(
-    () => readDetails().pickupDate,
-  )
   const [pickupSlot, setPickupSlot] = useState(() => readDetails().pickupSlot)
   const [notes, setNotes] = useState(() => readDetails().notes)
   const [error, setError] = useState<string | null>(null)
@@ -232,6 +261,9 @@ export function TakeoutPage({
   const [canceledNotice] = useState(() => checkoutWasCanceled())
   const paidSessionId = tab === 'paid' ? sessionIdFromSearch() : ''
   const [paidLoading, setPaidLoading] = useState(() => Boolean(paidSessionId))
+  const pickupDate = todayKey()
+  const todaySlots = pickupSlotsForDate(pickupDate, new Date(), schedule)
+  const selectedSlot = todaySlots.includes(pickupSlot) ? pickupSlot : ''
 
   useEffect(() => {
     sessionStorage.setItem(CART_KEY, JSON.stringify(cart))
@@ -290,9 +322,16 @@ export function TakeoutPage({
   useEffect(() => {
     sessionStorage.setItem(
       DETAILS_KEY,
-      JSON.stringify({ name, phone, pickupDate, pickupSlot, notes }),
+      JSON.stringify({
+        name,
+        email,
+        phone,
+        pickupDate,
+        pickupSlot: selectedSlot,
+        notes,
+      }),
     )
-  }, [name, notes, phone, pickupDate, pickupSlot])
+  }, [email, name, notes, phone, pickupDate, selectedSlot])
 
   useEffect(() => {
     if (!canceledNotice) {
@@ -382,10 +421,9 @@ export function TakeoutPage({
 
   const money = (cents: number) =>
     cents > 0 ? formatEuros(cents, locale) : t.takeoutTotalPending
-  const pickupLabel =
-    pickupDate && pickupSlot
-      ? formatPickupLabel(locale, pickupDate, pickupSlot)
-      : ''
+  const pickupLabel = selectedSlot
+    ? formatPickupLabel(locale, pickupDate, selectedSlot)
+    : ''
 
   const payOrder = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -393,11 +431,15 @@ export function TakeoutPage({
       setError(t.takeoutNeedItems)
       return
     }
-    if (!name.trim() || !phone.trim()) {
+    if (!name.trim() || !phone.trim() || !email.trim()) {
       setError(t.takeoutNeedDetails)
       return
     }
-    if (!pickupDate || !pickupSlot || !pickupLabel) {
+    if (!isEmail(email)) {
+      setError(t.takeoutNeedEmail)
+      return
+    }
+    if (!selectedSlot || !pickupLabel) {
       setError(t.takeoutNeedTime)
       return
     }
@@ -414,9 +456,10 @@ export function TakeoutPage({
             qty: line.qty,
           })),
           name: name.trim(),
+          email: email.trim(),
           phone: phone.trim(),
           pickupDate,
-          pickupSlot,
+          pickupSlot: selectedSlot,
           notes: notes.trim(),
           locale,
         }),
@@ -437,6 +480,31 @@ export function TakeoutPage({
       setError(t.takeoutPayError)
       setPaying(false)
     }
+  }
+
+  if (catalog === null) {
+    return (
+      <article className="carta-page takeout-page" id="para-llevar">
+        <div className="section-inner">
+          <header className="section-head">
+            <p className="kicker">{t.nav.takeout}</p>
+            <h1>{t.takeoutPageHeading}</h1>
+          </header>
+          <p className="muted">{t.cartaLoading}</p>
+          <p className="carta-back">
+            <a href="/" onClick={onHome}>
+              {t.cartaBackHome}
+            </a>
+          </p>
+        </div>
+      </article>
+    )
+  }
+
+  if (!catalog.enabled) {
+    return (
+      <TakeoutClosedPage t={t} onHome={onHome} onNavigate={onNavigate} />
+    )
   }
 
   return (
@@ -507,10 +575,8 @@ export function TakeoutPage({
                   id="takeout-panel-menu"
                   aria-labelledby="takeout-tab-menu"
                 >
-                  {menuItems === null || catalog === null ? (
+                  {menuItems === null ? (
                     <p className="muted">{t.cartaLoading}</p>
-                  ) : !catalog.enabled ? (
-                    <p className="takeout-error">{t.takeoutDisabled}</p>
                   ) : categories.length === 0 ? (
                     <p className="muted">{t.takeoutNoItems}</p>
                   ) : (
@@ -704,9 +770,24 @@ export function TakeoutPage({
                           type="text"
                           name="name"
                           autoComplete="name"
+                          required
                           value={name}
                           onChange={(event) => {
                             setName(event.target.value)
+                            setError(null)
+                          }}
+                        />
+                      </label>
+                      <label className="takeout-field">
+                        <span>{t.takeoutEmailLabel}</span>
+                        <input
+                          type="email"
+                          name="email"
+                          autoComplete="email"
+                          required
+                          value={email}
+                          onChange={(event) => {
+                            setEmail(event.target.value)
                             setError(null)
                           }}
                         />
@@ -717,6 +798,7 @@ export function TakeoutPage({
                           type="tel"
                           name="phone"
                           autoComplete="tel"
+                          required
                           value={phone}
                           onChange={(event) => {
                             setPhone(event.target.value)
@@ -728,9 +810,9 @@ export function TakeoutPage({
                         t={t}
                         locale={locale}
                         selectedDate={pickupDate}
-                        selectedTime={pickupSlot}
-                        onSelect={(date, time) => {
-                          setPickupDate(date)
+                        selectedTime={selectedSlot}
+                        schedule={schedule}
+                        onSelect={(_date, time) => {
                           setPickupSlot(time)
                           setError(null)
                         }}
@@ -751,12 +833,17 @@ export function TakeoutPage({
                           className="btn"
                           href="/para-llevar#enviar"
                           onClick={(event) => {
-                            if (!name.trim() || !phone.trim()) {
+                            if (!name.trim() || !phone.trim() || !email.trim()) {
                               event.preventDefault()
                               setError(t.takeoutNeedDetails)
                               return
                             }
-                            if (!pickupDate || !pickupSlot) {
+                            if (!isEmail(email)) {
+                              event.preventDefault()
+                              setError(t.takeoutNeedEmail)
+                              return
+                            }
+                            if (!selectedSlot) {
                               event.preventDefault()
                               setError(t.takeoutNeedTime)
                               return
@@ -831,6 +918,10 @@ export function TakeoutPage({
                           <li>
                             <span>{t.takeoutNameLabel}</span>
                             <span>{name.trim() || '—'}</span>
+                          </li>
+                          <li>
+                            <span>{t.takeoutEmailLabel}</span>
+                            <span>{email.trim() || '—'}</span>
                           </li>
                           <li>
                             <span>{t.takeoutPhoneLabel}</span>
@@ -917,6 +1008,10 @@ export function TakeoutPage({
                             <span>{paidOrder.name || '—'}</span>
                           </li>
                           <li>
+                            <span>{t.takeoutEmailLabel}</span>
+                            <span>{paidOrder.email || '—'}</span>
+                          </li>
+                          <li>
                             <span>{t.takeoutPhoneLabel}</span>
                             <span>{paidOrder.phone || '—'}</span>
                           </li>
@@ -951,8 +1046,8 @@ export function TakeoutPage({
                           onClick={(event) => {
                             setPaidOrder(null)
                             setName('')
+                            setEmail('')
                             setPhone('')
-                            setPickupDate(null)
                             setPickupSlot('')
                             setNotes('')
                             clearCheckoutSearch('')
