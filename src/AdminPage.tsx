@@ -16,6 +16,7 @@ import {
 import { LanguagePicker } from './LanguagePicker.tsx'
 import { type Copy, type Locale } from './i18n/index.ts'
 import type { TakeoutCatalog, TakeoutCatalogItem } from './takeoutCatalog.ts'
+import { RESTAURANT_TIME_ZONE } from './openingHours.ts'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
 type AdminTab =
@@ -115,7 +116,7 @@ type KitchenOrder = {
   items: KitchenOrderItem[]
 }
 
-type OrdersSubtab = 'active' | 'finished'
+type OrdersSubtab = 'today' | 'history'
 
 function adminHeading(t: Copy, tab: AdminTab): string {
   switch (tab) {
@@ -890,6 +891,176 @@ function BookingsCalendarEditor({
   )
 }
 
+function dateKeyFromIso(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(iso))
+}
+
+function todayKeyInTimeZone(timeZone: string, now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(now)
+}
+
+function orderMadeAtIso(order: KitchenOrder): string {
+  return order.submitted_at ?? order.created_at
+}
+
+function orderDateKey(order: KitchenOrder, timeZone: string): string {
+  return dateKeyFromIso(orderMadeAtIso(order), timeZone)
+}
+
+function isKitchenOrderActive(order: KitchenOrder): boolean {
+  return !['closed', 'cancelled'].includes(order.status)
+}
+
+function sortKitchenOrdersNewestFirst(orders: KitchenOrder[]): KitchenOrder[] {
+  return orders.slice().sort((left, right) => {
+    const leftMs = new Date(orderMadeAtIso(left)).getTime()
+    const rightMs = new Date(orderMadeAtIso(right)).getTime()
+    return rightMs - leftMs
+  })
+}
+
+function formatOrdersDateLabel(dateKey: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${dateKey}T12:00:00`))
+}
+
+function KitchenOrderCards({
+  orders,
+  busy,
+  busyItemId,
+  t,
+  onItemStatus,
+  onOrderStatus,
+}: {
+  orders: KitchenOrder[]
+  busy: boolean
+  busyItemId: string | null
+  t: Copy
+  onItemStatus: (
+    orderId: string,
+    itemId: string,
+    status: KitchenOrderItemStatus,
+  ) => void
+  onOrderStatus: (orderId: string, status: KitchenOrderStatus) => void
+}) {
+  return (
+    <ul className="admin-orders-list">
+      {orders.map((order) => {
+        const editable = isKitchenOrderActive(order)
+        return (
+          <li key={order.id} className="admin-order-card">
+            <header className="admin-order-head">
+              <div>
+                <p className="admin-order-number">
+                  {t.adminOrdersNumberLabel} #{order.orderNumber}
+                </p>
+                <p className="admin-order-meta">
+                  {order.tableLabel
+                    ? `${t.adminOrdersTableLabel} ${order.tableLabel}`
+                    : t.adminOrdersNoTable}
+                  {' · '}
+                  {kitchenOrderStatusLabel(t, order.status)}
+                </p>
+              </div>
+              {editable ? (
+                <div className="admin-order-actions">
+                  {order.status !== 'served' && order.status !== 'closed' ? (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-small"
+                      disabled={busy}
+                      onClick={() => onOrderStatus(order.id, 'served')}
+                    >
+                      {t.adminOrdersMarkServed}
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-small"
+                    disabled={busy}
+                    onClick={() => onOrderStatus(order.id, 'closed')}
+                  >
+                    {t.adminOrdersClose}
+                  </button>
+                </div>
+              ) : null}
+            </header>
+            <ul className="admin-order-items">
+              {order.items.map((item) => {
+                const itemBusy = busyItemId === item.id || busy
+                return (
+                  <li key={item.id} className="admin-order-item">
+                    <div className="admin-order-item-copy">
+                      <strong>
+                        {item.quantity}× {item.item_name}
+                      </strong>
+                      <span className={`admin-order-item-status is-${item.status}`}>
+                        {kitchenItemStatusLabel(t, item.status)}
+                      </span>
+                      {item.line_notes ? (
+                        <p className="muted">{item.line_notes}</p>
+                      ) : null}
+                    </div>
+                    {editable ? (
+                      <div className="admin-order-item-actions">
+                        {item.status === 'pending' ? (
+                          <button
+                            type="button"
+                            className="btn btn-small"
+                            disabled={itemBusy}
+                            onClick={() =>
+                              onItemStatus(order.id, item.id, 'preparing')
+                            }
+                          >
+                            {t.adminOrdersStartPreparing}
+                          </button>
+                        ) : null}
+                        {item.status === 'preparing' ? (
+                          <button
+                            type="button"
+                            className="btn btn-small"
+                            disabled={itemBusy}
+                            onClick={() =>
+                              onItemStatus(order.id, item.id, 'served')
+                            }
+                          >
+                            {t.adminOrdersMarkItemServed}
+                          </button>
+                        ) : null}
+                        {item.status === 'served' ? (
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-small"
+                            disabled={itemBusy}
+                            onClick={() =>
+                              onItemStatus(order.id, item.id, 'preparing')
+                            }
+                          >
+                            {t.adminOrdersReopenItem}
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </li>
+                )
+              })}
+            </ul>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 function kitchenOrderStatusLabel(t: Copy, status: KitchenOrderStatus): string {
   switch (status) {
     case 'open':
@@ -929,22 +1100,34 @@ function kitchenItemStatusLabel(t: Copy, status: KitchenOrderItemStatus): string
 function OrdersKitchenEditor({
   orders,
   subtab,
+  timeZone,
+  historyYear,
+  historyMonth,
+  historySelectedDate,
   busy,
   busyItemId,
   loadError,
   t,
   onSubtabChange,
+  onHistoryMonthChange,
+  onHistorySelectDate,
   onRefresh,
   onItemStatus,
   onOrderStatus,
 }: {
   orders: KitchenOrder[]
   subtab: OrdersSubtab
+  timeZone: string
+  historyYear: number
+  historyMonth: number
+  historySelectedDate: string | null
   busy: boolean
   busyItemId: string | null
   loadError: string | null
   t: Copy
   onSubtabChange: (subtab: OrdersSubtab) => void
+  onHistoryMonthChange: (year: number, month: number) => void
+  onHistorySelectDate: (date: string) => void
   onRefresh: () => void
   onItemStatus: (
     orderId: string,
@@ -969,13 +1152,35 @@ function OrdersKitchenEditor({
     )
   }
 
-  const active = orders.filter((order) =>
-    ['open', 'submitted', 'preparing', 'served'].includes(order.status),
+  const today = todayKeyInTimeZone(timeZone)
+  const todayOrders = sortKitchenOrdersNewestFirst(
+    orders.filter((order) => orderDateKey(order, timeZone) === today),
   )
-  const finished = orders.filter((order) =>
-    ['closed', 'cancelled'].includes(order.status),
-  )
-  const visible = subtab === 'active' ? active : finished
+  const orderCountByDate = new Map<string, number>()
+  for (const order of orders) {
+    const key = orderDateKey(order, timeZone)
+    orderCountByDate.set(key, (orderCountByDate.get(key) ?? 0) + 1)
+  }
+  const historyOrders = historySelectedDate
+    ? sortKitchenOrdersNewestFirst(
+        orders.filter(
+          (order) => orderDateKey(order, timeZone) === historySelectedDate,
+        ),
+      )
+    : []
+  const historyDateLabel = historySelectedDate
+    ? formatOrdersDateLabel(historySelectedDate)
+    : null
+  const firstWeekday = new Date(historyYear, historyMonth, 1).getDay()
+  const daysInMonth = new Date(historyYear, historyMonth + 1, 0).getDate()
+  const calendarCells: Array<number | null> = [
+    ...Array.from({ length: firstWeekday }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+  ]
+  const monthLabel = new Intl.DateTimeFormat(undefined, {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(historyYear, historyMonth, 1))
 
   return (
     <section className="admin-company takeout-form">
@@ -987,20 +1192,20 @@ function OrdersKitchenEditor({
             <button
               type="button"
               role="tab"
-              className={`admin-tab${subtab === 'active' ? ' is-active' : ''}`}
-              aria-selected={subtab === 'active'}
-              onClick={() => onSubtabChange('active')}
+              className={`admin-tab${subtab === 'today' ? ' is-active' : ''}`}
+              aria-selected={subtab === 'today'}
+              onClick={() => onSubtabChange('today')}
             >
-              {t.adminOrdersTabActive}
+              {t.adminOrdersTabToday}
             </button>
             <button
               type="button"
               role="tab"
-              className={`admin-tab${subtab === 'finished' ? ' is-active' : ''}`}
-              aria-selected={subtab === 'finished'}
-              onClick={() => onSubtabChange('finished')}
+              className={`admin-tab${subtab === 'history' ? ' is-active' : ''}`}
+              aria-selected={subtab === 'history'}
+              onClick={() => onSubtabChange('history')}
             >
-              {t.adminOrdersTabFinished}
+              {t.adminOrdersTabHistory}
             </button>
           </div>
           <button
@@ -1012,115 +1217,109 @@ function OrdersKitchenEditor({
             {t.adminOrdersRefresh}
           </button>
         </div>
-        {visible.length === 0 ? (
-          <p className="muted">
-            {subtab === 'active' ? t.adminOrdersEmptyActive : t.adminOrdersEmptyFinished}
-          </p>
+        {subtab === 'today' ? (
+          todayOrders.length === 0 ? (
+            <p className="muted">{t.adminOrdersEmptyToday}</p>
+          ) : (
+            <KitchenOrderCards
+              orders={todayOrders}
+              busy={busy}
+              busyItemId={busyItemId}
+              t={t}
+              onItemStatus={onItemStatus}
+              onOrderStatus={onOrderStatus}
+            />
+          )
         ) : (
-          <ul className="admin-orders-list">
-            {visible.map((order) => (
-              <li key={order.id} className="admin-order-card">
-                <header className="admin-order-head">
-                  <div>
-                    <p className="admin-order-number">
-                      {t.adminOrdersNumberLabel} #{order.orderNumber}
-                    </p>
-                    <p className="admin-order-meta">
-                      {order.tableLabel
-                        ? `${t.adminOrdersTableLabel} ${order.tableLabel}`
-                        : t.adminOrdersNoTable}
-                      {' · '}
-                      {kitchenOrderStatusLabel(t, order.status)}
-                    </p>
-                  </div>
-                  {subtab === 'active' ? (
-                    <div className="admin-order-actions">
-                      {order.status !== 'served' && order.status !== 'closed' ? (
-                        <button
-                          type="button"
-                          className="btn btn-outline btn-small"
-                          disabled={busy}
-                          onClick={() => onOrderStatus(order.id, 'served')}
-                        >
-                          {t.adminOrdersMarkServed}
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="btn btn-outline btn-small"
-                        disabled={busy}
-                        onClick={() => onOrderStatus(order.id, 'closed')}
-                      >
-                        {t.adminOrdersClose}
-                      </button>
-                    </div>
-                  ) : null}
-                </header>
-                <ul className="admin-order-items">
-                  {order.items.map((item) => {
-                    const itemBusy = busyItemId === item.id || busy
-                    return (
-                      <li key={item.id} className="admin-order-item">
-                        <div className="admin-order-item-copy">
-                          <strong>
-                            {item.quantity}× {item.item_name}
-                          </strong>
-                          <span className={`admin-order-item-status is-${item.status}`}>
-                            {kitchenItemStatusLabel(t, item.status)}
-                          </span>
-                          {item.line_notes ? (
-                            <p className="muted">{item.line_notes}</p>
-                          ) : null}
-                        </div>
-                        {subtab === 'active' ? (
-                          <div className="admin-order-item-actions">
-                            {item.status === 'pending' ? (
-                              <button
-                                type="button"
-                                className="btn btn-small"
-                                disabled={itemBusy}
-                                onClick={() =>
-                                  onItemStatus(order.id, item.id, 'preparing')
-                                }
-                              >
-                                {t.adminOrdersStartPreparing}
-                              </button>
-                            ) : null}
-                            {item.status === 'preparing' ? (
-                              <button
-                                type="button"
-                                className="btn btn-small"
-                                disabled={itemBusy}
-                                onClick={() =>
-                                  onItemStatus(order.id, item.id, 'served')
-                                }
-                              >
-                                {t.adminOrdersMarkItemServed}
-                              </button>
-                            ) : null}
-                            {item.status === 'served' ? (
-                              <button
-                                type="button"
-                                className="btn btn-outline btn-small"
-                                disabled={itemBusy}
-                                onClick={() =>
-                                  onItemStatus(order.id, item.id, 'preparing')
-                                }
-                              >
-                                {t.adminOrdersReopenItem}
-                              </button>
-                            ) : null}
-                          </div>
-                        ) : null}
-                      </li>
-                    )
-                  })}
-                </ul>
-              </li>
-            ))}
-          </ul>
+          <>
+            <div className="admin-availability-cal-head">
+              <button
+                type="button"
+                className="btn btn-outline btn-small"
+                aria-label={t.adminCalendarPrevMonth}
+                disabled={busy}
+                onClick={() => {
+                  const next = shiftMonth(historyYear, historyMonth, -1)
+                  onHistoryMonthChange(next.year, next.month)
+                }}
+              >
+                ‹
+              </button>
+              <p>{monthLabel}</p>
+              <button
+                type="button"
+                className="btn btn-outline btn-small"
+                aria-label={t.adminCalendarNextMonth}
+                disabled={busy}
+                onClick={() => {
+                  const next = shiftMonth(historyYear, historyMonth, 1)
+                  onHistoryMonthChange(next.year, next.month)
+                }}
+              >
+                ›
+              </button>
+            </div>
+            <div className="admin-availability-grid admin-bookings-grid" role="grid">
+              {WEEKDAY_LABELS_ES.map((label) => (
+                <div className="admin-availability-dow" key={`orders-${label}`}>
+                  {label.slice(0, 2)}
+                </div>
+              ))}
+              {calendarCells.map((day, index) => {
+                if (day === null) {
+                  return (
+                    <div
+                      className="admin-availability-cell is-empty"
+                      key={`orders-empty-${index}`}
+                    />
+                  )
+                }
+                const key = `${historyYear}-${String(historyMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                const count = orderCountByDate.get(key) ?? 0
+                const hasOrders = count > 0
+                const selected = historySelectedDate === key
+                return (
+                  <button
+                    type="button"
+                    className={`admin-availability-cell${hasOrders ? ' is-booked' : ''}${selected ? ' is-selected' : ''}`}
+                    key={key}
+                    disabled={busy}
+                    aria-pressed={selected}
+                    onClick={() => onHistorySelectDate(key)}
+                  >
+                    <span>{day}</span>
+                    <small>{hasOrders ? String(count) : '·'}</small>
+                  </button>
+                )
+              })}
+            </div>
+          </>
         )}
       </fieldset>
+
+      {subtab === 'history' ? (
+        <fieldset className="admin-company-block">
+          <legend>
+            {historyDateLabel
+              ? `${t.adminOrdersForDate} ${historyDateLabel}`
+              : t.adminOrdersPickDate}
+          </legend>
+          {!historySelectedDate ? (
+            <p className="muted">{t.adminOrdersPickDate}</p>
+          ) : historyOrders.length === 0 ? (
+            <p className="muted">{t.adminOrdersEmptyHistory}</p>
+          ) : (
+            <KitchenOrderCards
+              orders={historyOrders}
+              busy={busy}
+              busyItemId={busyItemId}
+              t={t}
+              onItemStatus={onItemStatus}
+              onOrderStatus={onOrderStatus}
+            />
+          )}
+        </fieldset>
+      ) : null}
     </section>
   )
 }
@@ -2055,7 +2254,13 @@ export function AdminPage({
     null,
   )
   const [kitchenOrders, setKitchenOrders] = useState<KitchenOrder[]>([])
-  const [ordersSubtab, setOrdersSubtab] = useState<OrdersSubtab>('active')
+  const [ordersSubtab, setOrdersSubtab] = useState<OrdersSubtab>('today')
+  const [ordersTimezone, setOrdersTimezone] = useState(RESTAURANT_TIME_ZONE)
+  const [ordersHistoryYear, setOrdersHistoryYear] = useState(now.getFullYear())
+  const [ordersHistoryMonth, setOrdersHistoryMonth] = useState(now.getMonth())
+  const [ordersHistorySelectedDate, setOrdersHistorySelectedDate] = useState<
+    string | null
+  >(null)
   const [ordersBusy, setOrdersBusy] = useState(false)
   const [ordersBusyItemId, setOrdersBusyItemId] = useState<string | null>(null)
   const [ordersError, setOrdersError] = useState<string | null>(null)
@@ -2140,14 +2345,18 @@ export function AdminPage({
     }
   }
 
-  const loadOrders = async (includeClosed = ordersSubtab === 'finished') => {
+  const loadOrders = async () => {
     setOrdersBusy(true)
     try {
-      const query = includeClosed ? '?include_closed=true' : ''
-      const data = await api<{ orders?: KitchenOrder[] }>(
-        `/api/admin/orders${query}`,
+      const data = await api<{ orders?: KitchenOrder[]; timezone?: string }>(
+        '/api/admin/orders?include_closed=true',
       )
       setKitchenOrders(Array.isArray(data.orders) ? data.orders : [])
+      setOrdersTimezone(
+        typeof data.timezone === 'string' && data.timezone.trim()
+          ? data.timezone.trim()
+          : RESTAURANT_TIME_ZONE,
+      )
       setOrdersError(null)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'error'
@@ -2175,7 +2384,7 @@ export function AdminPage({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      await loadOrders(ordersSubtab === 'finished')
+      await loadOrders()
     } catch {
       setMessage(t.adminOrdersUpdateError)
     } finally {
@@ -2195,7 +2404,7 @@ export function AdminPage({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      await loadOrders(ordersSubtab === 'finished')
+      await loadOrders()
     } catch {
       setMessage(t.adminOrdersUpdateError)
     } finally {
@@ -2302,9 +2511,9 @@ export function AdminPage({
     if (status !== 'ready' || tab !== 'orders') {
       return
     }
-    void loadOrders(ordersSubtab === 'finished')
+    void loadOrders()
     const timer = window.setInterval(() => {
-      void loadOrders(ordersSubtab === 'finished')
+      void loadOrders()
     }, 15_000)
     return () => {
       window.clearInterval(timer)
@@ -2828,7 +3037,7 @@ export function AdminPage({
                   aria-selected={tab === 'orders'}
                   onClick={() => {
                     setTab('orders')
-                    void loadOrders(ordersSubtab === 'finished')
+                    void loadOrders()
                   }}
                 >
                   {t.adminTabOrders}
@@ -3082,15 +3291,31 @@ export function AdminPage({
                   <OrdersKitchenEditor
                     orders={kitchenOrders}
                     subtab={ordersSubtab}
+                    timeZone={ordersTimezone}
+                    historyYear={ordersHistoryYear}
+                    historyMonth={ordersHistoryMonth}
+                    historySelectedDate={ordersHistorySelectedDate}
                     busy={ordersBusy}
                     busyItemId={ordersBusyItemId}
                     loadError={ordersError}
                     t={t}
-                    onSubtabChange={(next) => {
-                      setOrdersSubtab(next)
-                      void loadOrders(next === 'finished')
+                    onSubtabChange={setOrdersSubtab}
+                    onHistoryMonthChange={(year, month) => {
+                      setOrdersHistoryYear(year)
+                      setOrdersHistoryMonth(month)
+                      setOrdersHistorySelectedDate((current) => {
+                        if (!current) {
+                          return current
+                        }
+                        const { from, to } = monthBounds(year, month)
+                        if (current >= from && current <= to) {
+                          return current
+                        }
+                        return null
+                      })
                     }}
-                    onRefresh={() => void loadOrders(ordersSubtab === 'finished')}
+                    onHistorySelectDate={setOrdersHistorySelectedDate}
+                    onRefresh={() => void loadOrders()}
                     onItemStatus={(orderId, itemId, status) =>
                       void patchOrderItemStatus(orderId, itemId, status)
                     }
