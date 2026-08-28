@@ -78,12 +78,14 @@ export type Copy = {
   takeoutPaidLead: string
   takeoutPaidNew: string
   takeoutNameLabel: string
+  takeoutEmailLabel: string
   takeoutPhoneLabel: string
   takeoutTimeLabel: string
   takeoutTimePlaceholder: string
   takeoutNotesLabel: string
   takeoutNotesPlaceholder: string
   takeoutNeedDetails: string
+  takeoutNeedEmail: string
   takeoutNeedTime: string
   takeoutNeedItems: string
   takeoutNoPickupTimes: string
@@ -177,6 +179,7 @@ export type Copy = {
   adminTabRestaurant: string
   adminTabAvailability: string
   adminTabCalendar: string
+  adminTabOrders: string
   adminTabTakeout: string
   adminTabInstagram: string
   adminRestaurantHeading: string
@@ -196,6 +199,31 @@ export type Copy = {
   adminCalendarNotes: string
   adminCalendarPhone: string
   adminCalendarEmail: string
+  adminOrdersHeading: string
+  adminOrdersLead: string
+  adminOrdersTabActive: string
+  adminOrdersTabFinished: string
+  adminOrdersRefresh: string
+  adminOrdersEmptyActive: string
+  adminOrdersEmptyFinished: string
+  adminOrdersNumberLabel: string
+  adminOrdersTableLabel: string
+  adminOrdersNoTable: string
+  adminOrdersStartPreparing: string
+  adminOrdersMarkItemServed: string
+  adminOrdersReopenItem: string
+  adminOrdersMarkServed: string
+  adminOrdersClose: string
+  adminOrdersStatusOpen: string
+  adminOrdersStatusSubmitted: string
+  adminOrdersStatusPreparing: string
+  adminOrdersStatusServed: string
+  adminOrdersStatusClosed: string
+  adminOrdersStatusCancelled: string
+  adminOrdersItemPending: string
+  adminOrdersError: string
+  adminOrdersUpdateError: string
+  adminOrdersNotConfigured: string
   adminAvailabilityHeading: string
   adminAvailabilityLead: string
   adminAvailabilitySubtabDefaults: string
