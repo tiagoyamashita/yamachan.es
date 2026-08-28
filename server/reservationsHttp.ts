@@ -41,9 +41,11 @@ function fail(error: unknown): Response {
 
 function bookingChatUrl(input: {
   name: string
+  email: string
+  phone: string
   partySize: number
   startDatetime: string
-  tableLabel: string | null
+  notes: string
 }): string {
   const when = new Date(input.startDatetime)
   const dateLabel = new Intl.DateTimeFormat('es-ES', {
@@ -60,10 +62,14 @@ function bookingChatUrl(input: {
   }).format(when)
   const lines = [
     `Hola, soy ${input.name}.`,
-    `Acabo de pedir mesa en ${restaurant.name} para ${String(input.partySize)} el ${dateLabel} a las ${timeLabel}.`,
+    `Acabo de hacer una reserva en ${restaurant.name} para ${String(input.partySize)} el ${dateLabel} a las ${timeLabel}.`,
+    `Correo: ${input.email}.`,
   ]
-  if (input.tableLabel) {
-    lines.push(`Mesa: ${input.tableLabel}.`)
+  if (input.phone) {
+    lines.push(`Teléfono: ${input.phone}.`)
+  }
+  if (input.notes) {
+    lines.push(`Ocasión / alergias: ${input.notes}.`)
   }
   lines.push('¿Me podéis confirmar o ayudarme por aquí?')
   return (
@@ -132,9 +138,11 @@ export async function handleReservationsRequest(request: Request): Promise<Respo
       const label = tableLabel(reservation)
       const chatUrl = bookingChatUrl({
         name: reservation.client_name,
+        email: clientEmail,
+        phone: clientPhone,
         partySize: reservation.party_size,
         startDatetime: reservation.start_datetime,
-        tableLabel: label,
+        notes: clientNotes,
       })
       const dateLabel = new Intl.DateTimeFormat('es-ES', {
         timeZone: 'Europe/Madrid',
