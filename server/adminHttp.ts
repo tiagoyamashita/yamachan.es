@@ -355,7 +355,11 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
         const includeClosed =
           url.searchParams.get('include_closed') === '1' ||
           url.searchParams.get('include_closed') === 'true'
-        return json({ orders: await loadTableOrders(includeClosed) })
+        const settings = await loadRestaurantSettings()
+        return json({
+          orders: await loadTableOrders(includeClosed),
+          timezone: settings.timezone || 'Europe/Madrid',
+        })
       } catch (error) {
         if (error instanceof GloballyBookedError) {
           return json({ error: error.message }, error.status)

@@ -201,11 +201,13 @@ export type Copy = {
   adminCalendarEmail: string
   adminOrdersHeading: string
   adminOrdersLead: string
-  adminOrdersTabActive: string
-  adminOrdersTabFinished: string
+  adminOrdersTabToday: string
+  adminOrdersTabHistory: string
   adminOrdersRefresh: string
-  adminOrdersEmptyActive: string
-  adminOrdersEmptyFinished: string
+  adminOrdersEmptyToday: string
+  adminOrdersEmptyHistory: string
+  adminOrdersPickDate: string
+  adminOrdersForDate: string
   adminOrdersNumberLabel: string
   adminOrdersTableLabel: string
   adminOrdersNoTable: string
