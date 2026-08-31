@@ -534,6 +534,26 @@ export async function loadRestaurantTables(): Promise<AdminRestaurantTable[]> {
   return loadTables()
 }
 
+function menuCategoryFromRow(row: Record<string, unknown>): string | null {
+  const nested = row.menu_category ?? row.category
+  if (nested && typeof nested === 'object') {
+    const obj = nested as Record<string, unknown>
+    for (const key of ['name', 'label', 'id'] as const) {
+      const value = obj[key]
+      if (typeof value === 'string' && value.trim()) {
+        return value.trim()
+      }
+    }
+  }
+  for (const key of ['category_name', 'category', 'section', 'group'] as const) {
+    const value = row[key]
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim()
+    }
+  }
+  return null
+}
+
 export async function loadGloballyBookedMenu(): Promise<GloballyBookedMenuItem[]> {
   const data = await gbFetch<Array<Record<string, unknown>>>(
     'GET',
@@ -551,6 +571,7 @@ export async function loadGloballyBookedMenu(): Promise<GloballyBookedMenuItem[]
           : Number(row.price_cents),
       is_available: row.is_available !== false,
       sort_order: Number(row.sort_order) || 0,
+      category: menuCategoryFromRow(row),
     }))
     .filter((item) => item.id && item.name)
 }
@@ -1032,6 +1053,7 @@ export type GloballyBookedMenuItem = {
   price_cents: number | null
   is_available: boolean
   sort_order: number
+  category: string | null
 }
 
 export type TableOrderSubmitItem = {
