@@ -7,7 +7,7 @@ import {
   type MenuItemId,
 } from './content.ts'
 import { copy } from './i18n/copy.ts'
-import type { Locale } from './i18n/locales.ts'
+import { LOCALES, type Locale } from './i18n/locales.ts'
 
 export type StoredMenuItem = {
   id: string
@@ -192,6 +192,74 @@ export function displayMenuItem(item: StoredMenuItem, locale: Locale) {
       return _exhaustive
     }
   }
+}
+
+function normalizeDishName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+}
+
+export function categoryIdFromLabel(label: string): MenuCategoryId | null {
+  const trimmed = label.trim()
+  if (isMenuCategoryId(trimmed)) {
+    return trimmed
+  }
+  const needle = normalizeDishName(trimmed)
+  if (!needle) {
+    return null
+  }
+  for (const locale of LOCALES) {
+    for (const id of MENU_CATEGORY_IDS) {
+      if (normalizeDishName(copy[locale].cartaCategories[id]) === needle) {
+        return id
+      }
+    }
+  }
+  return null
+}
+
+export function categoryIdForDishName(name: string): MenuCategoryId | null {
+  const needle = normalizeDishName(name)
+  if (!needle) {
+    return null
+  }
+  for (const category of menuCategories) {
+    for (const item of category.items) {
+      const names = [
+        item.nameJa,
+        item.nameRomaji,
+        copy.es.cartaItems[item.id].name,
+        copy.en.cartaItems[item.id].name,
+        copy.ja.cartaItems[item.id].name,
+        copy['pt-BR'].cartaItems[item.id].name,
+      ]
+      if (names.some((candidate) => normalizeDishName(candidate) === needle)) {
+        return category.id
+      }
+    }
+  }
+  return null
+}
+
+export function resolveTableMenuCategory(
+  name: string,
+  categoryHint: string | null,
+): string {
+  if (categoryHint) {
+    const fromHint = categoryIdFromLabel(categoryHint)
+    if (fromHint) {
+      return fromHint
+    }
+  }
+  const fromName = categoryIdForDishName(name)
+  if (fromName) {
+    return fromName
+  }
+  const leftover = categoryHint?.trim()
+  return leftover || 'other'
 }
 
 export function groupMenuByCategory(

@@ -248,6 +248,10 @@ export type Copy = {
   adminTablesOrderingLead: string
   adminTablesNoMenu: string
   adminTablesAddDish: string
+  adminTablesCurrentOrder: string
+  adminTablesFewerDish: string
+  adminTablesMoreDish: string
+  adminTablesOtherCategory: string
   adminTablesOrderNotes: string
   adminTablesSendOrder: string
   adminTablesCancelOrdering: string

@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react'
 import { WEEKDAY_LABELS_ES } from './companyInfo.ts'
 import type { Copy } from './i18n/index.ts'
+import {
+  categoryHeading,
+  isMenuCategoryId,
+  MENU_CATEGORY_IDS,
+  resolveTableMenuCategory,
+} from './menu.ts'
 
 const OPEN_TAB_STATUSES = ['open', 'submitted', 'preparing', 'served'] as const
 
@@ -37,6 +43,7 @@ export type GbMenuItemRow = {
   price_cents: number | null
   is_available: boolean
   sort_order: number
+  category?: string | null
 }
 
 type CartLine = {
@@ -113,6 +120,109 @@ function orderStatusLabel(t: Copy, status: string): string {
     default:
       return status
   }
+}
+
+function DishQtyControl({
+  name,
+  qty,
+  busy,
+  addLabel,
+  fewerLabel,
+  moreLabel,
+  onChange,
+}: {
+  name: string
+  qty: number
+  busy: boolean
+  addLabel: string
+  fewerLabel: string
+  moreLabel: string
+  onChange: (qty: number) => void
+}) {
+  if (qty <= 0) {
+    return (
+      <button
+        type="button"
+        className="btn btn-outline btn-small"
+        disabled={busy}
+        onClick={() => onChange(1)}
+      >
+        {addLabel}
+      </button>
+    )
+  }
+
+  return (
+    <div className="takeout-qty">
+      <button
+        type="button"
+        aria-label={`${fewerLabel} ${name}`}
+        disabled={busy}
+        onClick={() => onChange(qty - 1)}
+      >
+        −
+      </button>
+      <span>{qty}</span>
+      <button
+        type="button"
+        aria-label={`${moreLabel} ${name}`}
+        disabled={busy || qty >= 99}
+        onClick={() => onChange(qty + 1)}
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
+function tableMenuGroupLabel(t: Copy, groupId: string): string {
+  if (isMenuCategoryId(groupId)) {
+    return categoryHeading(groupId, t.cartaCategories[groupId])
+  }
+  if (groupId === 'other') {
+    return t.adminTablesOtherCategory
+  }
+  return groupId
+}
+
+function groupTableMenu(
+  items: GbMenuItemRow[],
+  t: Copy,
+): Array<{ id: string; label: string; items: GbMenuItemRow[] }> {
+  const buckets = new Map<string, GbMenuItemRow[]>()
+  for (const item of items) {
+    const key = resolveTableMenuCategory(item.name, item.category ?? null)
+    const list = buckets.get(key) ?? []
+    list.push(item)
+    buckets.set(key, list)
+  }
+
+  const groups: Array<{ id: string; label: string; items: GbMenuItemRow[] }> = []
+  for (const id of MENU_CATEGORY_IDS) {
+    const grouped = buckets.get(id)
+    if (!grouped?.length) {
+      continue
+    }
+    groups.push({ id, label: tableMenuGroupLabel(t, id), items: grouped })
+    buckets.delete(id)
+  }
+
+  const extras = [...buckets.entries()]
+    .filter(([id]) => id !== 'other')
+    .sort((left, right) => left[0].localeCompare(right[0]))
+  for (const [id, grouped] of extras) {
+    groups.push({ id, label: tableMenuGroupLabel(t, id), items: grouped })
+  }
+
+  const other = buckets.get('other')
+  if (other?.length) {
+    groups.push({
+      id: 'other',
+      label: tableMenuGroupLabel(t, 'other'),
+      items: other,
+    })
+  }
+  return groups
 }
 
 function itemStatusLabel(t: Copy, status: string): string {
@@ -324,6 +434,9 @@ export function AdminTablesEditor({
     .filter((item) => item.is_available)
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
+  const menuGroups = groupTableMenu(availableMenu, t)
+  const cartQty = (menuItemId: string) =>
+    cart.find((line) => line.menu_item_id === menuItemId)?.quantity ?? 0
 
   const historyDateLabel = historySelectedDate
     ? formatHistoryDateLabel(historySelectedDate)
@@ -345,14 +458,15 @@ export function AdminTablesEditor({
     setOrderNotes('')
   }
 
-  const addToCart = (item: GbMenuItemRow) => {
+  const setItemQty = (item: GbMenuItemRow, quantity: number) => {
     setCart((current) => {
+      if (quantity < 1) {
+        return current.filter((line) => line.menu_item_id !== item.id)
+      }
       const existing = current.find((line) => line.menu_item_id === item.id)
       if (existing) {
         return current.map((line) =>
-          line.menu_item_id === item.id
-            ? { ...line, quantity: line.quantity + 1 }
-            : line,
+          line.menu_item_id === item.id ? { ...line, quantity } : line,
         )
       }
       return [
@@ -360,21 +474,10 @@ export function AdminTablesEditor({
         {
           menu_item_id: item.id,
           name: item.name,
-          quantity: 1,
+          quantity,
           line_notes: orderNotes.trim(),
         },
       ]
-    })
-  }
-
-  const setCartQty = (menuItemId: string, quantity: number) => {
-    setCart((current) => {
-      if (quantity < 1) {
-        return current.filter((line) => line.menu_item_id !== menuItemId)
-      }
-      return current.map((line) =>
-        line.menu_item_id === menuItemId ? { ...line, quantity } : line,
-      )
     })
   }
 
@@ -646,27 +749,79 @@ export function AdminTablesEditor({
           {editable && ordering ? (
             <div className="admin-tables-ordering">
               <p className="muted">{t.adminTablesOrderingLead}</p>
+              {cart.length > 0 ? (
+                <div className="admin-tables-current">
+                  <h3>{t.adminTablesCurrentOrder}</h3>
+                  <ul className="admin-tables-cart">
+                    {cart.map((line) => {
+                      const menuItem =
+                        availableMenu.find((item) => item.id === line.menu_item_id) ?? {
+                          id: line.menu_item_id,
+                          name: line.name,
+                          price_cents: null,
+                          is_available: true,
+                          sort_order: 0,
+                          category: null,
+                        }
+                      return (
+                        <li key={line.menu_item_id} className="admin-tables-cart-line">
+                          <span>
+                            {line.name}
+                            {menuItem.price_cents ? (
+                              <span className="muted">
+                                {' '}
+                                {formatMoney(menuItem.price_cents)}
+                              </span>
+                            ) : null}
+                          </span>
+                          <DishQtyControl
+                            name={line.name}
+                            qty={line.quantity}
+                            busy={busy}
+                            addLabel={t.adminTablesAddDish}
+                            fewerLabel={t.adminTablesFewerDish}
+                            moreLabel={t.adminTablesMoreDish}
+                            onChange={(qty) => setItemQty(menuItem, qty)}
+                          />
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              ) : null}
               {availableMenu.length === 0 ? (
                 <p className="muted">{t.adminTablesNoMenu}</p>
               ) : (
-                <ul className="admin-tables-menu">
-                  {availableMenu.map((item) => (
-                    <li key={item.id} className="admin-tables-menu-item">
-                      <div>
-                        <strong>{item.name}</strong>
-                        <span className="muted">{formatMoney(item.price_cents)}</span>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-outline btn-small"
-                        disabled={busy}
-                        onClick={() => addToCart(item)}
-                      >
-                        {t.adminTablesAddDish}
-                      </button>
-                    </li>
+                <div className="admin-tables-menu-groups">
+                  {menuGroups.map((group) => (
+                    <section
+                      key={group.id}
+                      className="admin-tables-menu-group"
+                      aria-labelledby={`table-menu-${group.id}`}
+                    >
+                      <h3 id={`table-menu-${group.id}`}>{group.label}</h3>
+                      <ul className="admin-tables-menu">
+                        {group.items.map((item) => (
+                          <li key={item.id} className="admin-tables-menu-item">
+                            <div>
+                              <strong>{item.name}</strong>
+                              <span className="muted">{formatMoney(item.price_cents)}</span>
+                            </div>
+                            <DishQtyControl
+                              name={item.name}
+                              qty={cartQty(item.id)}
+                              busy={busy}
+                              addLabel={t.adminTablesAddDish}
+                              fewerLabel={t.adminTablesFewerDish}
+                              moreLabel={t.adminTablesMoreDish}
+                              onChange={(qty) => setItemQty(item, qty)}
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
                   ))}
-                </ul>
+                </div>
               )}
               <label className="takeout-field">
                 <span>{t.adminTablesOrderNotes}</span>
@@ -677,25 +832,6 @@ export function AdminTablesEditor({
                   onChange={(event) => setOrderNotes(event.target.value)}
                 />
               </label>
-              {cart.length > 0 ? (
-                <ul className="admin-tables-cart">
-                  {cart.map((line) => (
-                    <li key={line.menu_item_id} className="admin-tables-cart-line">
-                      <span>{line.name}</span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={99}
-                        value={line.quantity}
-                        disabled={busy}
-                        onChange={(event) =>
-                          setCartQty(line.menu_item_id, Number(event.target.value) || 1)
-                        }
-                      />
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
               <div className="admin-dish-actions">
                 <button
                   type="button"
