@@ -675,6 +675,10 @@ function resolveMenuCategoryId(
   return null
 }
 
+function menuNameKey(value: string): string {
+  return normalizeMenuName(value.replace(/\([^)]*\)/g, ''))
+}
+
 function findMatchingMenuItem(
   items: GloballyBookedMenuItem[],
   aliases: string[],
@@ -690,12 +694,22 @@ function findMatchingMenuItem(
     }
   }
   for (const alias of unique) {
-    const needle = normalizeMenuName(alias)
+    const needle = menuNameKey(alias)
+    if (!needle) {
+      continue
+    }
+    const exactCore = items.find((item) => menuNameKey(item.name) === needle)
+    if (exactCore) {
+      return exactCore
+    }
+  }
+  for (const alias of unique) {
+    const needle = menuNameKey(alias)
     if (needle.length < 6) {
       continue
     }
     const fuzzy = items.find((item) => {
-      const name = normalizeMenuName(item.name)
+      const name = menuNameKey(item.name)
       return name.startsWith(needle) || needle.startsWith(name)
     })
     if (fuzzy) {

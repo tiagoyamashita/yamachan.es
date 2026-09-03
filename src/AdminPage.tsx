@@ -14,7 +14,7 @@ import {
   type StoredCompanyInfo,
 } from './companyInfo.ts'
 import { LanguagePicker } from './LanguagePicker.tsx'
-import { type Copy, type Locale } from './i18n/index.ts'
+import { type Copy, formatEuros, type Locale } from './i18n/index.ts'
 import type { TakeoutCatalog, TakeoutCatalogItem } from './takeoutCatalog.ts'
 import { RESTAURANT_TIME_ZONE } from './openingHours.ts'
 import {
@@ -278,6 +278,7 @@ function DishEditor({
   onDelete,
   onPhoto,
   busy,
+  status,
 }: {
   item: StoredMenuItem
   t: Copy
@@ -286,6 +287,7 @@ function DishEditor({
   onDelete: () => void
   onPhoto: (file: File) => void
   busy: boolean
+  status: string | null
 }) {
   const [priceInput, setPriceInput] = useState(
     item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '',
@@ -478,6 +480,7 @@ function DishEditor({
             </button>
           ) : null}
         </div>
+        {status ? <p className="admin-dish-status">{status}</p> : null}
       </div>
     </article>
   )
@@ -2224,6 +2227,7 @@ export function AdminPage({
   const [drafts, setDrafts] = useState<Record<string, StoredMenuItem>>({})
   const [message, setMessage] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [dishStatus, setDishStatus] = useState<Record<string, string>>({})
   const [tab, setTab] = useState<AdminTab>('menu')
   const [companyInfo, setCompanyInfo] = useState<StoredCompanyInfo>(
     fallbackCompanyInfo(),
@@ -3034,9 +3038,17 @@ export function AdminPage({
   const saveItem = async (item: StoredMenuItem) => {
     const key = item.id || 'new'
     setBusyId(key)
-    setMessage(null)
+    setDishStatus((prev) => {
+      const next = { ...prev }
+      delete next[key]
+      return next
+    })
     try {
-      const data = await api<{ item: StoredMenuItem }>('/api/admin/menu', {
+      const data = await api<{
+        item: StoredMenuItem
+        inventoryPriceCents?: number | null
+        inventoryError?: boolean
+      }>('/api/admin/menu', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item),
@@ -3052,9 +3064,21 @@ export function AdminPage({
         delete next[key]
         return next
       })
-      setMessage(t.adminSaved)
+      const statusKey = data.item.id || key
+      const kitchenPrice =
+        typeof data.inventoryPriceCents === 'number' && data.inventoryPriceCents > 0
+          ? formatEuros(data.inventoryPriceCents, locale)
+          : null
+      setDishStatus((prev) => ({
+        ...prev,
+        [statusKey]: data.inventoryError
+          ? t.adminSavedKitchenError
+          : kitchenPrice
+            ? t.adminSavedKitchen.replace('{price}', kitchenPrice)
+            : t.adminSaved,
+      }))
     } catch {
-      setMessage(t.adminSaveError)
+      setDishStatus((prev) => ({ ...prev, [key]: t.adminSaveError }))
     } finally {
       setBusyId(null)
     }
@@ -3616,6 +3640,7 @@ export function AdminPage({
                               item={current(item)}
                               t={t}
                               busy={busyId === item.id}
+                              status={dishStatus[item.id] ?? null}
                               onChange={(next) =>
                                 setDrafts((prev) => ({ ...prev, [item.id]: next }))
                               }
@@ -3638,6 +3663,7 @@ export function AdminPage({
                         )}
                         t={t}
                         busy={busyId === 'new'}
+                        status={dishStatus.new ?? null}
                         onChange={(next) =>
                           setDrafts((prev) => ({ ...prev, new: next }))
                         }

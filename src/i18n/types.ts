@@ -157,6 +157,8 @@ export type Copy = {
   adminLoading: string
   adminSave: string
   adminSaved: string
+  adminSavedKitchen: string
+  adminSavedKitchenError: string
   adminSaveError: string
   adminDelete: string
   adminDeleted: string

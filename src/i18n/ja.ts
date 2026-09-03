@@ -198,6 +198,9 @@ export const ja: Copy = {
   adminLoading: '読み込み中…',
   adminSave: '保存',
   adminSaved: '保存しました。',
+  adminSavedKitchen: '保存しました。厨房の価格は {price} です。',
+  adminSavedKitchenError:
+    'サイトには保存しましたが、厨房の価格を更新できませんでした。',
   adminSaveError: '保存できませんでした。もう一度お試しください。',
   adminDelete: '削除',
   adminDeleted: '料理を削除しました。',

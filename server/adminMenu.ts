@@ -56,17 +56,6 @@ function toGloballyBookedMenuInput(item: StoredMenuItem) {
   }
 }
 
-async function syncMenuItemToGloballyBooked(item: StoredMenuItem): Promise<void> {
-  try {
-    await upsertRestaurantMenuItem(toGloballyBookedMenuInput(item))
-  } catch (error) {
-    if (error instanceof GloballyBookedError && error.message === 'not-configured') {
-      return
-    }
-    throw error
-  }
-}
-
 async function hideMenuItemInGloballyBooked(item: StoredMenuItem): Promise<void> {
   try {
     await hideRestaurantMenuItem({
@@ -117,9 +106,16 @@ export async function listAdminMenu(): Promise<StoredMenuItem[]> {
   })
 }
 
+export type AdminMenuSaveResult = {
+  item: StoredMenuItem
+  inventoryName: string | null
+  inventoryPriceCents: number | null
+  inventoryError: boolean
+}
+
 export async function upsertAdminMenuItem(
   item: StoredMenuItem,
-): Promise<StoredMenuItem> {
+): Promise<AdminMenuSaveResult> {
   const secret = adminWriteSecret()
   const supabase = getAdminSupabase()
   if (!secret || !supabase) {
@@ -139,8 +135,35 @@ export async function upsertAdminMenuItem(
   if (!saved) {
     throw new Error('invalid-menu-item')
   }
-  await syncMenuItemToGloballyBooked(saved)
-  return saved
+  try {
+    const inventory = await upsertRestaurantMenuItem(
+      toGloballyBookedMenuInput(saved),
+    )
+    return {
+      item: saved,
+      inventoryName: inventory.name,
+      inventoryPriceCents: inventory.price_cents,
+      inventoryError: false,
+    }
+  } catch (syncError) {
+    if (
+      syncError instanceof GloballyBookedError &&
+      syncError.message === 'not-configured'
+    ) {
+      return {
+        item: saved,
+        inventoryName: null,
+        inventoryPriceCents: null,
+        inventoryError: false,
+      }
+    }
+    return {
+      item: saved,
+      inventoryName: null,
+      inventoryPriceCents: null,
+      inventoryError: true,
+    }
+  }
 }
 
 export async function deleteAdminMenuItem(id: string): Promise<void> {
