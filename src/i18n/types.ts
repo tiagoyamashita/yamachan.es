@@ -166,6 +166,12 @@ export type Copy = {
   adminNewDish: string
   adminAddItem: string
   adminAddItemLead: string
+  adminAddCategory: string
+  adminAddCategoryLead: string
+  adminKitchenCategoryName: string
+  adminKitchenCategories: string
+  adminAddCategoryDone: string
+  adminAddCategoryError: string
   adminClose: string
   adminUploadPhoto: string
   adminNoPhoto: string

@@ -209,6 +209,13 @@ export const en: Copy = {
   adminAddItem: 'Add new item',
   adminAddItemLead:
     'Set the name, price, and photo, then save. The dish is added to the menu and to Globally Booked.',
+  adminAddCategory: 'Add category',
+  adminAddCategoryLead:
+    'Create a kitchen section in Globally Booked. Use the name the kitchen already knows.',
+  adminKitchenCategoryName: 'Category name',
+  adminKitchenCategories: 'Kitchen categories',
+  adminAddCategoryDone: 'Category “{name}” added to Globally Booked.',
+  adminAddCategoryError: 'Could not add that category. Try again.',
   adminClose: 'Close',
   adminUploadPhoto: 'Upload photo',
   adminNoPhoto: 'No photo',

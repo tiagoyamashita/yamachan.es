@@ -615,9 +615,25 @@ export async function loadGloballyBookedMenu(): Promise<GloballyBookedMenuItem[]
     .filter((item): item is GloballyBookedMenuItem => item !== null)
 }
 
-type MenuCategoryRow = {
+export type GloballyBookedMenuCategory = {
   id: string
   name: string
+  sort_order: number
+}
+
+type MenuCategoryRow = GloballyBookedMenuCategory
+
+function mapCategoryRow(row: Record<string, unknown>): MenuCategoryRow | null {
+  const id = String(row.id ?? '')
+  const name = typeof row.name === 'string' ? row.name.trim() : ''
+  if (!id || !name) {
+    return null
+  }
+  return {
+    id,
+    name,
+    sort_order: Number(row.sort_order) || 0,
+  }
 }
 
 export type SiteMenuSyncInput = {
@@ -654,11 +670,40 @@ async function loadMenuCategories(): Promise<MenuCategoryRow[]> {
     restaurantPath('/menu-categories'),
   )
   return (Array.isArray(data) ? data : [])
-    .map((row) => ({
-      id: String(row.id ?? ''),
-      name: typeof row.name === 'string' ? row.name.trim() : '',
-    }))
-    .filter((row) => row.id && row.name)
+    .map((row) => mapCategoryRow(row))
+    .filter((row): row is MenuCategoryRow => row !== null)
+}
+
+export async function loadRestaurantMenuCategories(): Promise<
+  GloballyBookedMenuCategory[]
+> {
+  return loadMenuCategories()
+}
+
+export async function createRestaurantMenuCategory(input: {
+  name: string
+  sort_order?: number
+}): Promise<GloballyBookedMenuCategory> {
+  const name = input.name.trim()
+  if (!name) {
+    throw new GloballyBookedError('invalid-category', 400)
+  }
+  const sortOrder = Number.isFinite(input.sort_order)
+    ? Math.floor(Number(input.sort_order))
+    : 0
+  const data = await gbFetch<Record<string, unknown>>(
+    'POST',
+    restaurantPath('/menu-categories'),
+    {
+      name,
+      sort_order: sortOrder,
+    },
+  )
+  const mapped = mapCategoryRow(data)
+  if (!mapped) {
+    throw new GloballyBookedError('category-create-failed', 502)
+  }
+  return mapped
 }
 
 function resolveMenuCategoryId(

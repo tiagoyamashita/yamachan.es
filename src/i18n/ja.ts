@@ -209,6 +209,13 @@ export const ja: Copy = {
   adminAddItem: '料理を追加',
   adminAddItemLead:
     '名前・価格・写真を入力して保存します。メニューと Globally Booked に追加されます。',
+  adminAddCategory: 'カテゴリーを追加',
+  adminAddCategoryLead:
+    'Globally Booked に厨房用のカテゴリーを作ります。厨房で使う名前を入力してください。',
+  adminKitchenCategoryName: 'カテゴリー名',
+  adminKitchenCategories: '厨房のカテゴリー',
+  adminAddCategoryDone: '「{name}」を Globally Booked に追加しました。',
+  adminAddCategoryError: 'カテゴリーを追加できませんでした。もう一度お試しください。',
   adminClose: '閉じる',
   adminUploadPhoto: '写真をアップロード',
   adminNoPhoto: '写真なし',

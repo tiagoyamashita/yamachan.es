@@ -56,6 +56,8 @@ import {
   loadRestaurantSettings,
   loadRestaurantTables,
   loadGloballyBookedMenu,
+  loadRestaurantMenuCategories,
+  createRestaurantMenuCategory,
   loadTableOrders,
   submitTableOrderForTable,
   deleteTableOrderItem,
@@ -300,6 +302,44 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
   try {
     if (path === '/api/admin/menu' && request.method === 'GET') {
       return json({ items: await listAdminMenu() })
+    }
+
+    if (path === '/api/admin/menu/categories' && request.method === 'GET') {
+      try {
+        return json({ categories: await loadRestaurantMenuCategories() })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
+    }
+
+    if (path === '/api/admin/menu/categories' && request.method === 'POST') {
+      const body: unknown = await request.json().catch(() => null)
+      const name =
+        body && typeof body === 'object' && typeof (body as { name?: unknown }).name === 'string'
+          ? (body as { name: string }).name.trim()
+          : ''
+      if (!name) {
+        return json({ error: 'invalid-category' }, 400)
+      }
+      const rawSort =
+        body && typeof body === 'object' ? (body as { sort_order?: unknown }).sort_order : undefined
+      const sortOrder = Number(rawSort)
+      try {
+        return json({
+          category: await createRestaurantMenuCategory({
+            name,
+            sort_order: Number.isFinite(sortOrder) ? Math.floor(sortOrder) : 0,
+          }),
+        })
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
     }
 
     if (path === '/api/admin/menu/import-inventory' && request.method === 'POST') {

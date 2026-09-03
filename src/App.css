@@ -1124,6 +1124,26 @@ h3 {
   border-bottom: 0;
 }
 
+.admin-kitchen-cats {
+  margin-top: 0.85rem;
+}
+
+.admin-kitchen-cats .muted {
+  margin: 0 0 0.4rem;
+}
+
+.admin-kitchen-cats ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-kitchen-cats li {
+  font-size: 0.92rem;
+}
+
 .admin-menu-layout {
   display: grid;
   gap: 1.5rem;

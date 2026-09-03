@@ -211,6 +211,13 @@ export const ptBR: Copy = {
   adminAddItem: 'Adicionar prato',
   adminAddItemLead:
     'Defina o nome, o preço e a foto e salve. O prato entra no cardápio e no Globally Booked.',
+  adminAddCategory: 'Adicionar seção',
+  adminAddCategoryLead:
+    'Cria uma seção da cozinha no Globally Booked. Use o nome que a cozinha já conhece.',
+  adminKitchenCategoryName: 'Nome da seção',
+  adminKitchenCategories: 'Seções da cozinha',
+  adminAddCategoryDone: 'Seção “{name}” adicionada no Globally Booked.',
+  adminAddCategoryError: 'Não foi possível adicionar essa seção. Tente de novo.',
   adminClose: 'Fechar',
   adminUploadPhoto: 'Enviar foto',
   adminNoPhoto: 'Sem foto',

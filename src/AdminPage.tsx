@@ -2288,6 +2288,14 @@ export function AdminPage({
   const [dishStatus, setDishStatus] = useState<Record<string, string>>({})
   const [menuFocusId, setMenuFocusId] = useState<string | null>(null)
   const [newDishOpen, setNewDishOpen] = useState(false)
+  const [newCategoryOpen, setNewCategoryOpen] = useState(false)
+  const [kitchenCategories, setKitchenCategories] = useState<
+    Array<{ id: string; name: string; sort_order: number }>
+  >([])
+  const [categoryName, setCategoryName] = useState('')
+  const [categorySort, setCategorySort] = useState('0')
+  const [categoryBusy, setCategoryBusy] = useState(false)
+  const [categoryStatus, setCategoryStatus] = useState<string | null>(null)
   const [inventoryBusy, setInventoryBusy] = useState(false)
   const [inventoryStatus, setInventoryStatus] = useState<string | null>(null)
   const [tab, setTab] = useState<AdminTab>('menu')
@@ -3125,18 +3133,90 @@ export function AdminPage({
     })
   }
 
+  const closeNewCategory = () => {
+    if (categoryBusy) {
+      return
+    }
+    setNewCategoryOpen(false)
+    setCategoryName('')
+  }
+
+  const openNewCategory = async () => {
+    setCategoryStatus(null)
+    setNewCategoryOpen(true)
+    setCategoryBusy(true)
+    try {
+      const data = await api<{
+        categories?: Array<{ id: string; name: string; sort_order: number }>
+      }>('/api/admin/menu/categories')
+      const rows = Array.isArray(data.categories) ? data.categories : []
+      setKitchenCategories(rows)
+      const nextSort =
+        rows.reduce((max, row) => Math.max(max, row.sort_order ?? 0), 0) + 10
+      setCategorySort(String(nextSort))
+      setCategoryName('')
+    } catch {
+      setKitchenCategories([])
+      setCategorySort('0')
+    } finally {
+      setCategoryBusy(false)
+    }
+  }
+
+  const saveNewCategory = async () => {
+    const name = categoryName.trim()
+    if (!name) {
+      setCategoryStatus(t.adminAddCategoryError)
+      return
+    }
+    setCategoryBusy(true)
+    setCategoryStatus(null)
+    try {
+      const data = await api<{
+        category: { id: string; name: string; sort_order: number }
+      }>('/api/admin/menu/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          sort_order: Number.parseInt(categorySort, 10) || 0,
+        }),
+      })
+      setNewCategoryOpen(false)
+      setCategoryName('')
+      setCategoryStatus(
+        t.adminAddCategoryDone.replace('{name}', data.category.name),
+      )
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      setCategoryStatus(
+        code === 'not-configured'
+          ? t.adminPullKitchenInventoryMissing
+          : t.adminAddCategoryError,
+      )
+    } finally {
+      setCategoryBusy(false)
+    }
+  }
+
   useEffect(() => {
-    if (!newDishOpen) {
+    if (!newDishOpen && !newCategoryOpen) {
       return
     }
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key !== 'Escape') {
+        return
+      }
+      if (newDishOpen) {
         closeNewDish()
+      }
+      if (newCategoryOpen) {
+        closeNewCategory()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [newDishOpen, busyId])
+  }, [newDishOpen, newCategoryOpen, busyId, categoryBusy])
 
   const jumpToMenuItem = (id: string) => {
     setMenuFocusId(id)
@@ -3797,6 +3877,14 @@ export function AdminPage({
                           <button
                             className="btn btn-outline"
                             type="button"
+                            disabled={inventoryBusy || categoryBusy}
+                            onClick={() => void openNewCategory()}
+                          >
+                            {t.adminAddCategory}
+                          </button>
+                          <button
+                            className="btn btn-outline"
+                            type="button"
                             disabled={inventoryBusy}
                             onClick={() => void pullKitchenInventory()}
                           >
@@ -3807,6 +3895,9 @@ export function AdminPage({
                         </div>
                         {inventoryStatus ? (
                           <p className="admin-dish-status">{inventoryStatus}</p>
+                        ) : null}
+                        {categoryStatus ? (
+                          <p className="admin-dish-status">{categoryStatus}</p>
                         ) : null}
                       </section>
                       {MENU_CATEGORY_IDS.map((categoryId) => {
@@ -3890,6 +3981,91 @@ export function AdminPage({
                               void uploadPhoto(newDishDraft(), file)
                             }
                           />
+                        </div>
+                      </div>
+                    ) : null}
+                    {newCategoryOpen ? (
+                      <div
+                        className="admin-modal-overlay"
+                        role="presentation"
+                        onClick={() => closeNewCategory()}
+                      >
+                        <div
+                          className="admin-modal"
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="admin-new-category-title"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <div className="admin-modal-head">
+                            <div>
+                              <h2 id="admin-new-category-title">
+                                {t.adminAddCategory}
+                              </h2>
+                              <p className="muted">{t.adminAddCategoryLead}</p>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-small"
+                              disabled={categoryBusy}
+                              onClick={closeNewCategory}
+                            >
+                              {t.adminClose}
+                            </button>
+                          </div>
+                          <div className="admin-dish-fields">
+                            <label className="takeout-field">
+                              <span>{t.adminKitchenCategoryName}</span>
+                              <input
+                                value={categoryName}
+                                disabled={categoryBusy}
+                                onChange={(event) =>
+                                  setCategoryName(event.target.value)
+                                }
+                              />
+                            </label>
+                            <label className="takeout-field">
+                              <span>{t.adminSort}</span>
+                              <input
+                                type="number"
+                                value={categorySort}
+                                disabled={categoryBusy}
+                                onChange={(event) =>
+                                  setCategorySort(event.target.value)
+                                }
+                              />
+                            </label>
+                            <div className="admin-dish-actions">
+                              <button
+                                className="btn"
+                                type="button"
+                                disabled={categoryBusy || !categoryName.trim()}
+                                onClick={() => void saveNewCategory()}
+                              >
+                                {categoryBusy ? t.adminLoading : t.adminSave}
+                              </button>
+                            </div>
+                            {categoryStatus && newCategoryOpen ? (
+                              <p className="admin-dish-status">{categoryStatus}</p>
+                            ) : null}
+                            {kitchenCategories.length > 0 ? (
+                              <div className="admin-kitchen-cats">
+                                <p className="muted">{t.adminKitchenCategories}</p>
+                                <ul>
+                                  {kitchenCategories
+                                    .slice()
+                                    .sort(
+                                      (left, right) =>
+                                        left.sort_order - right.sort_order ||
+                                        left.name.localeCompare(right.name),
+                                    )
+                                    .map((row) => (
+                                      <li key={row.id}>{row.name}</li>
+                                    ))}
+                                </ul>
+                              </div>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                     ) : null}
