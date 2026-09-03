@@ -2,7 +2,11 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { LOCALES } from '../src/i18n/locales.ts'
 import {
   catalogCopy,
+  categoryIdForDishName,
+  categoryIdFromLabel,
+  dishNamesMatch,
   parseStoredMenuItem,
+  slugFromName,
   type StoredMenuItem,
 } from '../src/menu.ts'
 import {
@@ -13,7 +17,9 @@ import {
 import {
   GloballyBookedError,
   hideRestaurantMenuItem,
+  loadGloballyBookedMenu,
   upsertRestaurantMenuItem,
+  type GloballyBookedMenuItem,
 } from './globallyBooked.ts'
 
 const MENU_BUCKET = 'yamachan-menu'
@@ -115,6 +121,7 @@ export type AdminMenuSaveResult = {
 
 export async function upsertAdminMenuItem(
   item: StoredMenuItem,
+  options?: { syncInventory?: boolean },
 ): Promise<AdminMenuSaveResult> {
   const secret = adminWriteSecret()
   const supabase = getAdminSupabase()
@@ -134,6 +141,14 @@ export async function upsertAdminMenuItem(
   const saved = parseStoredMenuItem(data)
   if (!saved) {
     throw new Error('invalid-menu-item')
+  }
+  if (options?.syncInventory === false) {
+    return {
+      item: saved,
+      inventoryName: null,
+      inventoryPriceCents: null,
+      inventoryError: false,
+    }
   }
   try {
     const inventory = await upsertRestaurantMenuItem(
@@ -218,4 +233,144 @@ export async function uploadMenuPhoto(
   }
   const { data } = supabase.storage.from(MENU_BUCKET).getPublicUrl(path)
   return { url: data.publicUrl }
+}
+
+function findMatchingSiteItem(
+  items: StoredMenuItem[],
+  inventoryName: string,
+  usedIds: Set<string>,
+): StoredMenuItem | null {
+  for (const item of items) {
+    if (usedIds.has(item.id)) {
+      continue
+    }
+    if (menuAliases(item).some((alias) => dishNamesMatch(alias, inventoryName))) {
+      return item
+    }
+  }
+  return null
+}
+
+function uniqueSlug(name: string, used: Set<string>): string {
+  const base = slugFromName(name).toLowerCase() || 'plato'
+  let slug = base
+  let n = 2
+  while (used.has(slug)) {
+    slug = `${base}-${n}`
+    n += 1
+  }
+  used.add(slug)
+  return slug
+}
+
+function categoryForInventoryItem(
+  inventory: GloballyBookedMenuItem,
+  fallback: StoredMenuItem['category_id'],
+): StoredMenuItem['category_id'] {
+  return (
+    (inventory.category ? categoryIdFromLabel(inventory.category) : null) ??
+    categoryIdForDishName(inventory.name) ??
+    fallback
+  )
+}
+
+function siteItemFromInventory(
+  current: StoredMenuItem,
+  inventory: GloballyBookedMenuItem,
+): StoredMenuItem {
+  return {
+    ...current,
+    name_es: inventory.name,
+    blurb_es: inventory.description ?? current.blurb_es,
+    image_url: current.image_url.trim() || inventory.image_url || '',
+    category_id: categoryForInventoryItem(inventory, current.category_id),
+    sort_order: inventory.sort_order,
+    published: inventory.is_available,
+    price_cents:
+      inventory.price_cents !== null ? inventory.price_cents : current.price_cents,
+  }
+}
+
+function newItemFromInventory(
+  inventory: GloballyBookedMenuItem,
+  slug: string,
+): StoredMenuItem {
+  return {
+    id: '',
+    slug,
+    category_id: categoryForInventoryItem(inventory, 'starters'),
+    name_es: inventory.name,
+    name_en: '',
+    name_ja: '',
+    blurb_es: inventory.description ?? '',
+    blurb_en: '',
+    image_url: inventory.image_url ?? '',
+    vegetarian: false,
+    sort_order: inventory.sort_order,
+    published: inventory.is_available,
+    allergens: [],
+    price_cents: inventory.price_cents ?? 0,
+  }
+}
+
+function inventoryChanged(current: StoredMenuItem, next: StoredMenuItem): boolean {
+  return (
+    current.name_es !== next.name_es ||
+    current.blurb_es !== next.blurb_es ||
+    current.image_url !== next.image_url ||
+    current.category_id !== next.category_id ||
+    current.sort_order !== next.sort_order ||
+    current.published !== next.published ||
+    current.price_cents !== next.price_cents
+  )
+}
+
+export type InventoryImportResult = {
+  items: StoredMenuItem[]
+  updated: number
+  created: number
+}
+
+export async function importInventoryFromGloballyBooked(): Promise<InventoryImportResult> {
+  const [inventory, existing] = await Promise.all([
+    loadGloballyBookedMenu(),
+    listAdminMenu(),
+  ])
+  const usedIds = new Set<string>()
+  const usedSlugs = new Set(
+    existing.map((item) => item.slug.toLowerCase()).filter(Boolean),
+  )
+  let updated = 0
+  let created = 0
+  const sorted = inventory.slice().sort((left, right) => {
+    if (left.sort_order !== right.sort_order) {
+      return left.sort_order - right.sort_order
+    }
+    return left.name.localeCompare(right.name)
+  })
+
+  for (const row of sorted) {
+    const match = findMatchingSiteItem(existing, row.name, usedIds)
+    if (match) {
+      usedIds.add(match.id)
+      const next = siteItemFromInventory(match, row)
+      if (!inventoryChanged(match, next)) {
+        continue
+      }
+      await upsertAdminMenuItem(next, { syncInventory: false })
+      updated += 1
+      continue
+    }
+    await upsertAdminMenuItem(
+      newItemFromInventory(row, uniqueSlug(row.name, usedSlugs)),
+      { syncInventory: false },
+    )
+    created += 1
+  }
+
+  return {
+    items: await listAdminMenu(),
+    updated,
+    created,
+  }
 }

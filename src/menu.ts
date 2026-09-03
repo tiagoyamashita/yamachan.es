@@ -202,6 +202,34 @@ function normalizeDishName(value: string): string {
     .replace(/[^a-z0-9]+/g, '')
 }
 
+export function menuNameKey(value: string): string {
+  return normalizeDishName(value.replace(/\([^)]*\)/g, ''))
+}
+
+export function dishNamesMatch(left: string, right: string): boolean {
+  const exactLeft = normalizeDishName(left)
+  const exactRight = normalizeDishName(right)
+  if (exactLeft && exactLeft === exactRight) {
+    return true
+  }
+  const coreLeft = menuNameKey(left)
+  const coreRight = menuNameKey(right)
+  if (coreLeft && coreLeft === coreRight) {
+    return true
+  }
+  if (coreLeft.length < 6 || coreRight.length < 6) {
+    return false
+  }
+  return coreLeft.startsWith(coreRight) || coreRight.startsWith(coreLeft)
+}
+
+const INVENTORY_CATEGORY_ALIASES: Record<string, MenuCategoryId> = {
+  platosprincipales: 'mains',
+  platos: 'mains',
+  shushoku: 'mains',
+  sashimi: 'sushi',
+}
+
 export function categoryIdFromLabel(label: string): MenuCategoryId | null {
   const trimmed = label.trim()
   if (isMenuCategoryId(trimmed)) {
@@ -210,6 +238,10 @@ export function categoryIdFromLabel(label: string): MenuCategoryId | null {
   const needle = normalizeDishName(trimmed)
   if (!needle) {
     return null
+  }
+  const alias = INVENTORY_CATEGORY_ALIASES[needle]
+  if (alias) {
+    return alias
   }
   for (const locale of LOCALES) {
     for (const id of MENU_CATEGORY_IDS) {

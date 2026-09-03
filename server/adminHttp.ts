@@ -23,6 +23,7 @@ import {
 } from './adminResetToken.ts'
 import {
   deleteAdminMenuItem,
+  importInventoryFromGloballyBooked,
   listAdminMenu,
   upsertAdminMenuItem,
   uploadMenuPhoto,
@@ -299,6 +300,17 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
   try {
     if (path === '/api/admin/menu' && request.method === 'GET') {
       return json({ items: await listAdminMenu() })
+    }
+
+    if (path === '/api/admin/menu/import-inventory' && request.method === 'POST') {
+      try {
+        return json(await importInventoryFromGloballyBooked())
+      } catch (error) {
+        if (error instanceof GloballyBookedError) {
+          return json({ error: error.message }, error.status)
+        }
+        throw error
+      }
     }
 
     if (path === '/api/admin/menu' && request.method === 'PUT') {

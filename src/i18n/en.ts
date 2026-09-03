@@ -220,6 +220,14 @@ export const en: Copy = {
   adminPublished: 'Visible on the menu',
   adminAllergens: 'Allergens',
   adminEmptyCategory: 'No dishes in this section.',
+  adminPullKitchenInventory: 'Pull kitchen inventory',
+  adminPullKitchenInventoryLead:
+    'Copy kitchen dishes and prices from Globally Booked into this menu.',
+  adminPullKitchenInventoryDone:
+    'Updated {updated} dishes and added {created} new ones.',
+  adminPullKitchenInventoryError:
+    'Could not pull kitchen inventory. Try again.',
+  adminPullKitchenInventoryMissing: 'Kitchen inventory is not connected.',
   adminTabMenu: 'Menu',
   adminTabAccount: 'Account',
   adminTabRestaurant: 'Restaurant',

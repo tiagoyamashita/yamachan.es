@@ -2228,6 +2228,8 @@ export function AdminPage({
   const [message, setMessage] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [dishStatus, setDishStatus] = useState<Record<string, string>>({})
+  const [inventoryBusy, setInventoryBusy] = useState(false)
+  const [inventoryStatus, setInventoryStatus] = useState<string | null>(null)
   const [tab, setTab] = useState<AdminTab>('menu')
   const [companyInfo, setCompanyInfo] = useState<StoredCompanyInfo>(
     fallbackCompanyInfo(),
@@ -3035,6 +3037,35 @@ export function AdminPage({
 
   const current = (item: StoredMenuItem) => drafts[item.id || 'new'] ?? item
 
+  const pullKitchenInventory = async () => {
+    setInventoryBusy(true)
+    setInventoryStatus(null)
+    try {
+      const data = await api<{
+        items: StoredMenuItem[]
+        updated: number
+        created: number
+      }>('/api/admin/menu/import-inventory', { method: 'POST' })
+      setItems(data.items)
+      setDrafts({})
+      setDishStatus({})
+      setInventoryStatus(
+        t.adminPullKitchenInventoryDone
+          .replace('{updated}', String(data.updated))
+          .replace('{created}', String(data.created)),
+      )
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      setInventoryStatus(
+        code === 'not-configured'
+          ? t.adminPullKitchenInventoryMissing
+          : t.adminPullKitchenInventoryError,
+      )
+    } finally {
+      setInventoryBusy(false)
+    }
+  }
+
   const saveItem = async (item: StoredMenuItem) => {
     const key = item.id || 'new'
     setBusyId(key)
@@ -3624,6 +3655,24 @@ export function AdminPage({
                 ) : null}
                 {tab === 'menu' ? (
                   <>
+                    <section className="carta-section admin-menu-inventory">
+                      <p className="muted">{t.adminPullKitchenInventoryLead}</p>
+                      <div className="admin-dish-actions">
+                        <button
+                          className="btn"
+                          type="button"
+                          disabled={inventoryBusy}
+                          onClick={() => void pullKitchenInventory()}
+                        >
+                          {inventoryBusy
+                            ? t.adminLoading
+                            : t.adminPullKitchenInventory}
+                        </button>
+                      </div>
+                      {inventoryStatus ? (
+                        <p className="admin-dish-status">{inventoryStatus}</p>
+                      ) : null}
+                    </section>
                     {MENU_CATEGORY_IDS.map((categoryId) => {
                       const rows = items.filter(
                         (item) => item.category_id === categoryId,

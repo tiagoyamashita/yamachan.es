@@ -222,6 +222,14 @@ export const ptBR: Copy = {
   adminPublished: 'Visível no cardápio',
   adminAllergens: 'Alergênicos',
   adminEmptyCategory: 'Não há pratos nesta seção.',
+  adminPullKitchenInventory: 'Trazer estoque da cozinha',
+  adminPullKitchenInventoryLead:
+    'Copia os pratos e preços da cozinha do Globally Booked para este cardápio.',
+  adminPullKitchenInventoryDone:
+    'Atualizados {updated} pratos e adicionados {created} novos.',
+  adminPullKitchenInventoryError:
+    'Não foi possível trazer o estoque da cozinha. Tente de novo.',
+  adminPullKitchenInventoryMissing: 'O estoque da cozinha não está conectado.',
   adminTabMenu: 'Cardápio',
   adminTabAccount: 'Conta',
   adminTabRestaurant: 'Restaurante',

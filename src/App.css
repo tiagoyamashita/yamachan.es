@@ -1071,6 +1071,10 @@ h3 {
   font-size: 0.92rem;
 }
 
+.admin-menu-inventory .muted {
+  margin: 0 0 0.75rem;
+}
+
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;
