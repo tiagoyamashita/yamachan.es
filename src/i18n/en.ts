@@ -206,6 +206,10 @@ export const en: Copy = {
   adminDeleted: 'Dish removed.',
   adminDeleteConfirm: 'Remove this dish from the menu?',
   adminNewDish: 'New dish',
+  adminAddItem: 'Add new item',
+  adminAddItemLead:
+    'Set the name, price, and photo, then save. The dish is added to the menu and to Globally Booked.',
+  adminClose: 'Close',
   adminUploadPhoto: 'Upload photo',
   adminNoPhoto: 'No photo',
   adminPhotoError: 'Could not upload the photo.',

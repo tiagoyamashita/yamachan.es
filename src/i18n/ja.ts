@@ -206,6 +206,10 @@ export const ja: Copy = {
   adminDeleted: '料理を削除しました。',
   adminDeleteConfirm: 'この料理をメニューから削除しますか？',
   adminNewDish: '新しい料理',
+  adminAddItem: '料理を追加',
+  adminAddItemLead:
+    '名前・価格・写真を入力して保存します。メニューと Globally Booked に追加されます。',
+  adminClose: '閉じる',
   adminUploadPhoto: '写真をアップロード',
   adminNoPhoto: '写真なし',
   adminPhotoError: '写真をアップロードできませんでした。',

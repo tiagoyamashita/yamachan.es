@@ -501,11 +501,13 @@ function AdminMenuNav({
   currentId,
   t,
   onJump,
+  onAddNew,
 }: {
   items: StoredMenuItem[]
   currentId: string | null
   t: Copy
   onJump: (id: string) => void
+  onAddNew: () => void
 }) {
   return (
     <nav className="admin-menu-nav" aria-label={t.adminMenuNav}>
@@ -542,10 +544,10 @@ function AdminMenuNav({
       })}
       <button
         type="button"
-        className={`admin-menu-nav-new${currentId === 'new' ? ' is-current' : ''}`}
-        onClick={() => onJump('new')}
+        className="admin-menu-nav-new"
+        onClick={onAddNew}
       >
-        {t.adminNewDish}
+        {t.adminAddItem}
       </button>
     </nav>
   )
@@ -2294,6 +2296,7 @@ export function AdminPage({
   const [busyId, setBusyId] = useState<string | null>(null)
   const [dishStatus, setDishStatus] = useState<Record<string, string>>({})
   const [menuFocusId, setMenuFocusId] = useState<string | null>(null)
+  const [newDishOpen, setNewDishOpen] = useState(false)
   const [inventoryBusy, setInventoryBusy] = useState(false)
   const [inventoryStatus, setInventoryStatus] = useState<string | null>(null)
   const [tab, setTab] = useState<AdminTab>('menu')
@@ -3103,6 +3106,47 @@ export function AdminPage({
 
   const current = (item: StoredMenuItem) => drafts[item.id || 'new'] ?? item
 
+  const newDishDraft = () =>
+    current(emptyItem((items.at(-1)?.sort_order ?? 0) + 10))
+
+  const openNewDish = () => {
+    setDrafts((prev) => ({
+      ...prev,
+      new: emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
+    }))
+    setDishStatus((prev) => {
+      const next = { ...prev }
+      delete next.new
+      return next
+    })
+    setNewDishOpen(true)
+  }
+
+  const closeNewDish = () => {
+    if (busyId === 'new') {
+      return
+    }
+    setNewDishOpen(false)
+    setDrafts((prev) => {
+      const next = { ...prev }
+      delete next.new
+      return next
+    })
+  }
+
+  useEffect(() => {
+    if (!newDishOpen) {
+      return
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeNewDish()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [newDishOpen, busyId])
+
   const jumpToMenuItem = (id: string) => {
     setMenuFocusId(id)
     window.requestAnimationFrame(() => {
@@ -3184,6 +3228,16 @@ export function AdminPage({
             ? t.adminSavedKitchen.replace('{price}', kitchenPrice)
             : t.adminSaved,
       }))
+      if (!item.id) {
+        setNewDishOpen(false)
+        setMenuFocusId(data.item.id)
+        window.requestAnimationFrame(() => {
+          document.getElementById(dishDomId(data.item.id))?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          })
+        })
+      }
     } catch {
       setDishStatus((prev) => ({ ...prev, [key]: t.adminSaveError }))
     } finally {
@@ -3736,6 +3790,7 @@ export function AdminPage({
                       currentId={menuFocusId}
                       t={t}
                       onJump={jumpToMenuItem}
+                      onAddNew={openNewDish}
                     />
                     <div className="admin-menu-body">
                       <section className="carta-section admin-menu-inventory">
@@ -3743,6 +3798,14 @@ export function AdminPage({
                         <div className="admin-dish-actions">
                           <button
                             className="btn"
+                            type="button"
+                            disabled={inventoryBusy || busyId === 'new'}
+                            onClick={openNewDish}
+                          >
+                            {t.adminAddItem}
+                          </button>
+                          <button
+                            className="btn btn-outline"
                             type="button"
                             disabled={inventoryBusy}
                             onClick={() => void pullKitchenInventory()}
@@ -3794,39 +3857,52 @@ export function AdminPage({
                           </section>
                         )
                       })}
-
-                      <section className="carta-section" id="admin-menu-cat-new">
-                        <h2>{t.adminNewDish}</h2>
-                        <DishEditor
-                          item={current(
-                            emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
-                          )}
-                          t={t}
-                          busy={busyId === 'new'}
-                          status={dishStatus.new ?? null}
-                          highlighted={menuFocusId === 'new'}
-                          onChange={(next) =>
-                            setDrafts((prev) => ({ ...prev, new: next }))
-                          }
-                          onSave={() =>
-                            void saveItem(
-                              current(
-                                emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
-                              ),
-                            )
-                          }
-                          onDelete={() => undefined}
-                          onPhoto={(file) =>
-                            void uploadPhoto(
-                              current(
-                                emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
-                              ),
-                              file,
-                            )
-                          }
-                        />
-                      </section>
                     </div>
+                    {newDishOpen ? (
+                      <div
+                        className="admin-modal-overlay"
+                        role="presentation"
+                        onClick={() => closeNewDish()}
+                      >
+                        <div
+                          className="admin-modal"
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="admin-new-dish-title"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <div className="admin-modal-head">
+                            <div>
+                              <h2 id="admin-new-dish-title">{t.adminNewDish}</h2>
+                              <p className="muted">{t.adminAddItemLead}</p>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-small"
+                              disabled={busyId === 'new'}
+                              onClick={closeNewDish}
+                            >
+                              {t.adminClose}
+                            </button>
+                          </div>
+                          <DishEditor
+                            item={newDishDraft()}
+                            t={t}
+                            busy={busyId === 'new'}
+                            status={dishStatus.new ?? null}
+                            highlighted={false}
+                            onChange={(next) =>
+                              setDrafts((prev) => ({ ...prev, new: next }))
+                            }
+                            onSave={() => void saveItem(newDishDraft())}
+                            onDelete={() => undefined}
+                            onPhoto={(file) =>
+                              void uploadPhoto(newDishDraft(), file)
+                            }
+                          />
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </>

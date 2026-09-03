@@ -164,6 +164,9 @@ export type Copy = {
   adminDeleted: string
   adminDeleteConfirm: string
   adminNewDish: string
+  adminAddItem: string
+  adminAddItemLead: string
+  adminClose: string
   adminUploadPhoto: string
   adminNoPhoto: string
   adminPhotoError: string

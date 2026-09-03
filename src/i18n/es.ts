@@ -208,6 +208,10 @@ export const es: Copy = {
   adminDeleted: 'Plato quitado.',
   adminDeleteConfirm: '¿Quitar este plato de la carta?',
   adminNewDish: 'Plato nuevo',
+  adminAddItem: 'Añadir plato',
+  adminAddItemLead:
+    'Pon el nombre, el precio y la foto, y guarda. El plato se añade a la carta y a Globally Booked.',
+  adminClose: 'Cerrar',
   adminUploadPhoto: 'Subir foto',
   adminNoPhoto: 'Sin foto',
   adminPhotoError: 'No se ha podido subir la foto.',

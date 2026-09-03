@@ -208,6 +208,10 @@ export const ptBR: Copy = {
   adminDeleted: 'Prato removido.',
   adminDeleteConfirm: 'Remover este prato do cardápio?',
   adminNewDish: 'Prato novo',
+  adminAddItem: 'Adicionar prato',
+  adminAddItemLead:
+    'Defina o nome, o preço e a foto e salve. O prato entra no cardápio e no Globally Booked.',
+  adminClose: 'Fechar',
   adminUploadPhoto: 'Enviar foto',
   adminNoPhoto: 'Sem foto',
   adminPhotoError: 'Não foi possível enviar a foto.',
