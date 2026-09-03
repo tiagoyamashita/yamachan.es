@@ -200,6 +200,9 @@ export const ptBR: Copy = {
   adminLoading: 'Carregando…',
   adminSave: 'Salvar',
   adminSaved: 'Salvo.',
+  adminSavedKitchen: 'Salvo. Preço na cozinha: {price}.',
+  adminSavedKitchenError:
+    'Salvo no site, mas não foi possível atualizar o preço na cozinha.',
   adminSaveError: 'Não foi possível salvar. Tente de novo.',
   adminDelete: 'Remover',
   adminDeleted: 'Prato removido.',

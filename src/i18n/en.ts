@@ -198,6 +198,9 @@ export const en: Copy = {
   adminLoading: 'Loading…',
   adminSave: 'Save',
   adminSaved: 'Saved.',
+  adminSavedKitchen: 'Saved. Kitchen price is {price}.',
+  adminSavedKitchenError:
+    'Saved on the site, but the kitchen price could not be updated.',
   adminSaveError: 'Could not save. Try again.',
   adminDelete: 'Remove',
   adminDeleted: 'Dish removed.',

@@ -306,7 +306,7 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
       if (!item || !item.name_es) {
         return json({ error: 'invalid-item' }, 400)
       }
-      return json({ item: await upsertAdminMenuItem(item) })
+      return json(await upsertAdminMenuItem(item))
     }
 
     if (path === '/api/admin/menu' && request.method === 'DELETE') {

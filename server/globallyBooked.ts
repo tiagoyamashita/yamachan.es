@@ -99,6 +99,32 @@ async function gbFetch<T>(
   return json.data
 }
 
+async function gbWrite(
+  method: 'POST' | 'PATCH' | 'PUT' | 'DELETE',
+  path: string,
+  body?: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  const response = await fetch(`${apiBase()}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${restaurantToken()}`,
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  const json = (await response.json().catch(() => ({}))) as Envelope<
+    Record<string, unknown>
+  >
+  if (!response.ok || json.ok === false) {
+    const status = response.status === 401 || response.status === 403 ? 502 : response.status
+    throw new GloballyBookedError(json.error || `Request failed (${response.status})`, status)
+  }
+  if (!json.data || typeof json.data !== 'object' || Array.isArray(json.data)) {
+    return null
+  }
+  return json.data
+}
+
 function normalizeTime(value: string): string | null {
   const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(value.trim())
   if (!match) {
@@ -535,7 +561,8 @@ export async function loadRestaurantTables(): Promise<AdminRestaurantTable[]> {
 }
 
 function menuCategoryFromRow(row: Record<string, unknown>): string | null {
-  const nested = row.menu_category ?? row.category
+  const nested =
+    row.restaurant_menu_categories ?? row.menu_category ?? row.category
   if (nested && typeof nested === 'object') {
     const obj = nested as Record<string, unknown>
     for (const key of ['name', 'label', 'id'] as const) {
@@ -554,26 +581,214 @@ function menuCategoryFromRow(row: Record<string, unknown>): string | null {
   return null
 }
 
+function mapMenuRow(row: Record<string, unknown>): GloballyBookedMenuItem | null {
+  const id = String(row.id ?? '')
+  const name = typeof row.name === 'string' ? row.name.trim() : ''
+  if (!id || !name) {
+    return null
+  }
+  const price =
+    row.price_cents === null || row.price_cents === undefined
+      ? null
+      : Number(row.price_cents)
+  return {
+    id,
+    name,
+    description:
+      typeof row.description === 'string' ? row.description.trim() || null : null,
+    price_cents: Number.isFinite(price) ? price : null,
+    is_available: row.is_available !== false,
+    sort_order: Number(row.sort_order) || 0,
+    category: menuCategoryFromRow(row),
+  }
+}
+
 export async function loadGloballyBookedMenu(): Promise<GloballyBookedMenuItem[]> {
   const data = await gbFetch<Array<Record<string, unknown>>>(
     'GET',
     restaurantPath('/menu'),
   )
   return (Array.isArray(data) ? data : [])
+    .map((row) => mapMenuRow(row))
+    .filter((item): item is GloballyBookedMenuItem => item !== null)
+}
+
+type MenuCategoryRow = {
+  id: string
+  name: string
+}
+
+export type SiteMenuSyncInput = {
+  name: string
+  aliases: string[]
+  description: string | null
+  price_cents: number | null
+  image_url: string | null
+  is_available: boolean
+  sort_order: number
+  categoryHint: string
+}
+
+function normalizeMenuName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+}
+
+const CATEGORY_NEEDLES: Record<string, string[]> = {
+  starters: ['entrantes', 'starters'],
+  sushi: ['sushi'],
+  sashimi: ['sashimi'],
+  mains: ['platosprincipales', 'platos', 'mains'],
+  dessert: ['postres', 'desserts', 'dessert'],
+  drinks: ['bebidas', 'drinks'],
+}
+
+async function loadMenuCategories(): Promise<MenuCategoryRow[]> {
+  const data = await gbFetch<Array<Record<string, unknown>>>(
+    'GET',
+    restaurantPath('/menu-categories'),
+  )
+  return (Array.isArray(data) ? data : [])
     .map((row) => ({
       id: String(row.id ?? ''),
       name: typeof row.name === 'string' ? row.name.trim() : '',
-      description:
-        typeof row.description === 'string' ? row.description.trim() || null : null,
-      price_cents:
-        row.price_cents === null || row.price_cents === undefined
-          ? null
-          : Number(row.price_cents),
-      is_available: row.is_available !== false,
-      sort_order: Number(row.sort_order) || 0,
-      category: menuCategoryFromRow(row),
     }))
-    .filter((item) => item.id && item.name)
+    .filter((row) => row.id && row.name)
+}
+
+function resolveMenuCategoryId(
+  categories: MenuCategoryRow[],
+  hint: string,
+): string | null {
+  const needles = new Set<string>([
+    normalizeMenuName(hint),
+    ...(CATEGORY_NEEDLES[hint] ?? []),
+  ])
+  for (const category of categories) {
+    if (needles.has(normalizeMenuName(category.name))) {
+      return category.id
+    }
+  }
+  return null
+}
+
+function menuNameKey(value: string): string {
+  return normalizeMenuName(value.replace(/\([^)]*\)/g, ''))
+}
+
+function findMatchingMenuItem(
+  items: GloballyBookedMenuItem[],
+  aliases: string[],
+): GloballyBookedMenuItem | null {
+  const unique = [
+    ...new Set(aliases.map((alias) => alias.trim()).filter(Boolean)),
+  ]
+  for (const alias of unique) {
+    const needle = normalizeMenuName(alias)
+    const exact = items.find((item) => normalizeMenuName(item.name) === needle)
+    if (exact) {
+      return exact
+    }
+  }
+  for (const alias of unique) {
+    const needle = menuNameKey(alias)
+    if (!needle) {
+      continue
+    }
+    const exactCore = items.find((item) => menuNameKey(item.name) === needle)
+    if (exactCore) {
+      return exactCore
+    }
+  }
+  for (const alias of unique) {
+    const needle = menuNameKey(alias)
+    if (needle.length < 6) {
+      continue
+    }
+    const fuzzy = items.find((item) => {
+      const name = menuNameKey(item.name)
+      return name.startsWith(needle) || needle.startsWith(name)
+    })
+    if (fuzzy) {
+      return fuzzy
+    }
+  }
+  return null
+}
+
+function menuWriteBody(
+  input: SiteMenuSyncInput,
+  categoryId: string | null,
+): Record<string, unknown> {
+  return {
+    name: input.name,
+    description: input.description,
+    price_cents: input.price_cents,
+    image_url: input.image_url,
+    is_available: input.is_available,
+    sort_order: input.sort_order,
+    ...(categoryId ? { category_id: categoryId } : {}),
+  }
+}
+
+export async function upsertRestaurantMenuItem(
+  input: SiteMenuSyncInput,
+): Promise<GloballyBookedMenuItem> {
+  const [items, categories] = await Promise.all([
+    loadGloballyBookedMenu(),
+    loadMenuCategories(),
+  ])
+  const categoryId = resolveMenuCategoryId(categories, input.categoryHint)
+  const existing = findMatchingMenuItem(items, [input.name, ...input.aliases])
+  const body = menuWriteBody(input, categoryId)
+  let row: Record<string, unknown> | null = null
+  let wrote = false
+  if (existing) {
+    try {
+      row = await gbWrite(
+        'PATCH',
+        `${restaurantPath('/menu')}/${encodeURIComponent(existing.id)}`,
+        body,
+      )
+      wrote = true
+    } catch (error) {
+      if (!(error instanceof GloballyBookedError && error.status === 404)) {
+        throw error
+      }
+    }
+  }
+  if (!wrote) {
+    row = await gbWrite('POST', restaurantPath('/menu'), body)
+  }
+  const mapped = row ? mapMenuRow(row) : null
+  if (mapped) {
+    return mapped
+  }
+  const refreshed = await loadGloballyBookedMenu()
+  const found = findMatchingMenuItem(refreshed, [input.name, ...input.aliases])
+  if (!found) {
+    throw new GloballyBookedError('menu-sync-failed', 502)
+  }
+  return found
+}
+
+export async function hideRestaurantMenuItem(input: {
+  name: string
+  aliases: string[]
+}): Promise<void> {
+  const items = await loadGloballyBookedMenu()
+  const existing = findMatchingMenuItem(items, [input.name, ...input.aliases])
+  if (!existing) {
+    return
+  }
+  await gbWrite(
+    'PATCH',
+    `${restaurantPath('/menu')}/${encodeURIComponent(existing.id)}`,
+    { is_available: false },
+  )
 }
 
 type GuestSessionClaim = {

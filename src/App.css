@@ -1065,6 +1065,12 @@ h3 {
   margin-top: 0.5rem;
 }
 
+.admin-dish-status {
+  margin: 0.55rem 0 0;
+  color: var(--vermillion);
+  font-size: 0.92rem;
+}
+
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;

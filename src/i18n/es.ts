@@ -200,6 +200,9 @@ export const es: Copy = {
   adminLoading: 'Cargando…',
   adminSave: 'Guardar',
   adminSaved: 'Guardado.',
+  adminSavedKitchen: 'Guardado. Precio en cocina: {price}.',
+  adminSavedKitchenError:
+    'Guardado en la web, pero no se pudo actualizar el precio en cocina.',
   adminSaveError: 'No se ha podido guardar. Prueba otra vez.',
   adminDelete: 'Quitar',
   adminDeleted: 'Plato quitado.',
