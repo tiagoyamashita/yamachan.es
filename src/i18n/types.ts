@@ -178,6 +178,11 @@ export type Copy = {
   adminPublished: string
   adminAllergens: string
   adminEmptyCategory: string
+  adminPullKitchenInventory: string
+  adminPullKitchenInventoryLead: string
+  adminPullKitchenInventoryDone: string
+  adminPullKitchenInventoryError: string
+  adminPullKitchenInventoryMissing: string
   adminTabMenu: string
   adminTabAccount: string
   adminTabRestaurant: string

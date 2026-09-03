@@ -222,6 +222,14 @@ export const es: Copy = {
   adminPublished: 'Visible en la carta',
   adminAllergens: 'Alérgenos',
   adminEmptyCategory: 'No hay platos en esta sección.',
+  adminPullKitchenInventory: 'Traer inventario de cocina',
+  adminPullKitchenInventoryLead:
+    'Copia los platos y precios de cocina de Globally Booked a esta carta.',
+  adminPullKitchenInventoryDone:
+    'Actualizados {updated} platos y añadidos {created} nuevos.',
+  adminPullKitchenInventoryError:
+    'No se ha podido traer el inventario de cocina. Prueba otra vez.',
+  adminPullKitchenInventoryMissing: 'El inventario de cocina no está conectado.',
   adminTabMenu: 'Carta',
   adminTabAccount: 'Cuenta',
   adminTabRestaurant: 'Restaurante',

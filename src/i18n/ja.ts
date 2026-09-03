@@ -220,6 +220,14 @@ export const ja: Copy = {
   adminPublished: 'メニューに表示',
   adminAllergens: 'アレルギー',
   adminEmptyCategory: 'このカテゴリーに料理はありません。',
+  adminPullKitchenInventory: '厨房の在庫を取り込む',
+  adminPullKitchenInventoryLead:
+    'Globally Booked の厨房メニューをこのメニューに取り込みます。',
+  adminPullKitchenInventoryDone:
+    '{updated} 件を更新し、{created} 件を追加しました。',
+  adminPullKitchenInventoryError:
+    '厨房の在庫を取り込めませんでした。もう一度お試しください。',
+  adminPullKitchenInventoryMissing: '厨房の在庫が接続されていません。',
   adminTabMenu: 'メニュー',
   adminTabAccount: 'アカウント',
   adminTabRestaurant: '店舗',

@@ -600,6 +600,8 @@ function mapMenuRow(row: Record<string, unknown>): GloballyBookedMenuItem | null
     is_available: row.is_available !== false,
     sort_order: Number(row.sort_order) || 0,
     category: menuCategoryFromRow(row),
+    image_url:
+      typeof row.image_url === 'string' ? row.image_url.trim() || null : null,
   }
 }
 
@@ -1269,6 +1271,7 @@ export type GloballyBookedMenuItem = {
   is_available: boolean
   sort_order: number
   category: string | null
+  image_url: string | null
 }
 
 export type TableOrderSubmitItem = {
