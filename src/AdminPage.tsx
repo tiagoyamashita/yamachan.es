@@ -270,6 +270,10 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return data as T
 }
 
+function dishDomId(id: string) {
+  return `admin-dish-${id || 'new'}`
+}
+
 function DishEditor({
   item,
   t,
@@ -279,6 +283,7 @@ function DishEditor({
   onPhoto,
   busy,
   status,
+  highlighted,
 }: {
   item: StoredMenuItem
   t: Copy
@@ -288,7 +293,9 @@ function DishEditor({
   onPhoto: (file: File) => void
   busy: boolean
   status: string | null
+  highlighted: boolean
 }) {
+  const anchorId = dishDomId(item.id || 'new')
   const [priceInput, setPriceInput] = useState(
     item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '',
   )
@@ -304,7 +311,10 @@ function DishEditor({
   }
 
   return (
-    <article className="admin-dish">
+    <article
+      className={`admin-dish${highlighted ? ' is-target' : ''}`}
+      id={anchorId}
+    >
       <div className="admin-dish-photo">
         {item.image_url ? (
           <img src={item.image_url} alt="" />
@@ -483,6 +493,61 @@ function DishEditor({
         {status ? <p className="admin-dish-status">{status}</p> : null}
       </div>
     </article>
+  )
+}
+
+function AdminMenuNav({
+  items,
+  currentId,
+  t,
+  onJump,
+}: {
+  items: StoredMenuItem[]
+  currentId: string | null
+  t: Copy
+  onJump: (id: string) => void
+}) {
+  return (
+    <nav className="admin-menu-nav" aria-label={t.adminMenuNav}>
+      {MENU_CATEGORY_IDS.map((categoryId) => {
+        const rows = items
+          .filter((item) => item.category_id === categoryId)
+          .slice()
+          .sort((a, b) => a.sort_order - b.sort_order)
+        return (
+          <details key={categoryId} className="admin-menu-nav-cat">
+            <summary>
+              {t.cartaCategories[categoryId]}
+              <span className="admin-menu-nav-count">{rows.length}</span>
+            </summary>
+            {rows.length === 0 ? (
+              <p className="muted">{t.adminEmptyCategory}</p>
+            ) : (
+              <ul>
+                {rows.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className={currentId === item.id ? 'is-current' : undefined}
+                      onClick={() => onJump(item.id)}
+                    >
+                      {item.name_es.trim() || item.name_en.trim() || item.slug}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </details>
+        )
+      })}
+      <button
+        type="button"
+        className={`admin-menu-nav-new${currentId === 'new' ? ' is-current' : ''}`}
+        onClick={() => onJump('new')}
+      >
+        {t.adminNewDish}
+      </button>
+    </nav>
   )
 }
 
@@ -2228,6 +2293,7 @@ export function AdminPage({
   const [message, setMessage] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [dishStatus, setDishStatus] = useState<Record<string, string>>({})
+  const [menuFocusId, setMenuFocusId] = useState<string | null>(null)
   const [inventoryBusy, setInventoryBusy] = useState(false)
   const [inventoryStatus, setInventoryStatus] = useState<string | null>(null)
   const [tab, setTab] = useState<AdminTab>('menu')
@@ -3037,6 +3103,16 @@ export function AdminPage({
 
   const current = (item: StoredMenuItem) => drafts[item.id || 'new'] ?? item
 
+  const jumpToMenuItem = (id: string) => {
+    setMenuFocusId(id)
+    window.requestAnimationFrame(() => {
+      document.getElementById(dishDomId(id))?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }
+
   const pullKitchenInventory = async () => {
     setInventoryBusy(true)
     setInventoryStatus(null)
@@ -3654,87 +3730,104 @@ export function AdminPage({
                   />
                 ) : null}
                 {tab === 'menu' ? (
-                  <>
-                    <section className="carta-section admin-menu-inventory">
-                      <p className="muted">{t.adminPullKitchenInventoryLead}</p>
-                      <div className="admin-dish-actions">
-                        <button
-                          className="btn"
-                          type="button"
-                          disabled={inventoryBusy}
-                          onClick={() => void pullKitchenInventory()}
-                        >
-                          {inventoryBusy
-                            ? t.adminLoading
-                            : t.adminPullKitchenInventory}
-                        </button>
-                      </div>
-                      {inventoryStatus ? (
-                        <p className="admin-dish-status">{inventoryStatus}</p>
-                      ) : null}
-                    </section>
-                    {MENU_CATEGORY_IDS.map((categoryId) => {
-                      const rows = items.filter(
-                        (item) => item.category_id === categoryId,
-                      )
-                      return (
-                        <section className="carta-section" key={categoryId}>
-                          <h2>{t.cartaCategories[categoryId]}</h2>
-                          {rows.length === 0 ? (
-                            <p className="muted">{t.adminEmptyCategory}</p>
-                          ) : null}
-                          {rows.map((item) => (
-                            <DishEditor
-                              key={item.id}
-                              item={current(item)}
-                              t={t}
-                              busy={busyId === item.id}
-                              status={dishStatus[item.id] ?? null}
-                              onChange={(next) =>
-                                setDrafts((prev) => ({ ...prev, [item.id]: next }))
-                              }
-                              onSave={() => void saveItem(current(item))}
-                              onDelete={() => void deleteItem(item)}
-                              onPhoto={(file) =>
-                                void uploadPhoto(current(item), file)
-                              }
-                            />
-                          ))}
-                        </section>
-                      )
-                    })}
+                  <div className="admin-menu-layout">
+                    <AdminMenuNav
+                      items={items.map((item) => current(item))}
+                      currentId={menuFocusId}
+                      t={t}
+                      onJump={jumpToMenuItem}
+                    />
+                    <div className="admin-menu-body">
+                      <section className="carta-section admin-menu-inventory">
+                        <p className="muted">{t.adminPullKitchenInventoryLead}</p>
+                        <div className="admin-dish-actions">
+                          <button
+                            className="btn"
+                            type="button"
+                            disabled={inventoryBusy}
+                            onClick={() => void pullKitchenInventory()}
+                          >
+                            {inventoryBusy
+                              ? t.adminLoading
+                              : t.adminPullKitchenInventory}
+                          </button>
+                        </div>
+                        {inventoryStatus ? (
+                          <p className="admin-dish-status">{inventoryStatus}</p>
+                        ) : null}
+                      </section>
+                      {MENU_CATEGORY_IDS.map((categoryId) => {
+                        const rows = items.filter(
+                          (item) => item.category_id === categoryId,
+                        )
+                        return (
+                          <section
+                            className="carta-section"
+                            id={`admin-menu-cat-${categoryId}`}
+                            key={categoryId}
+                          >
+                            <h2>{t.cartaCategories[categoryId]}</h2>
+                            {rows.length === 0 ? (
+                              <p className="muted">{t.adminEmptyCategory}</p>
+                            ) : null}
+                            {rows.map((item) => (
+                              <DishEditor
+                                key={item.id}
+                                item={current(item)}
+                                t={t}
+                                busy={busyId === item.id}
+                                status={dishStatus[item.id] ?? null}
+                                highlighted={menuFocusId === item.id}
+                                onChange={(next) =>
+                                  setDrafts((prev) => ({
+                                    ...prev,
+                                    [item.id]: next,
+                                  }))
+                                }
+                                onSave={() => void saveItem(current(item))}
+                                onDelete={() => void deleteItem(item)}
+                                onPhoto={(file) =>
+                                  void uploadPhoto(current(item), file)
+                                }
+                              />
+                            ))}
+                          </section>
+                        )
+                      })}
 
-                    <section className="carta-section">
-                      <h2>{t.adminNewDish}</h2>
-                      <DishEditor
-                        item={current(
-                          emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
-                        )}
-                        t={t}
-                        busy={busyId === 'new'}
-                        status={dishStatus.new ?? null}
-                        onChange={(next) =>
-                          setDrafts((prev) => ({ ...prev, new: next }))
-                        }
-                        onSave={() =>
-                          void saveItem(
-                            current(
-                              emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
-                            ),
-                          )
-                        }
-                        onDelete={() => undefined}
-                        onPhoto={(file) =>
-                          void uploadPhoto(
-                            current(
-                              emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
-                            ),
-                            file,
-                          )
-                        }
-                      />
-                    </section>
-                  </>
+                      <section className="carta-section" id="admin-menu-cat-new">
+                        <h2>{t.adminNewDish}</h2>
+                        <DishEditor
+                          item={current(
+                            emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
+                          )}
+                          t={t}
+                          busy={busyId === 'new'}
+                          status={dishStatus.new ?? null}
+                          highlighted={menuFocusId === 'new'}
+                          onChange={(next) =>
+                            setDrafts((prev) => ({ ...prev, new: next }))
+                          }
+                          onSave={() =>
+                            void saveItem(
+                              current(
+                                emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
+                              ),
+                            )
+                          }
+                          onDelete={() => undefined}
+                          onPhoto={(file) =>
+                            void uploadPhoto(
+                              current(
+                                emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
+                              ),
+                              file,
+                            )
+                          }
+                        />
+                      </section>
+                    </div>
+                  </div>
                 ) : null}
               </>
             ) : null}

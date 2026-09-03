@@ -222,6 +222,7 @@ export const es: Copy = {
   adminPublished: 'Visible en la carta',
   adminAllergens: 'Alérgenos',
   adminEmptyCategory: 'No hay platos en esta sección.',
+  adminMenuNav: 'Secciones de la carta',
   adminPullKitchenInventory: 'Traer inventario de cocina',
   adminPullKitchenInventoryLead:
     'Copia los platos y precios de cocina de Globally Booked a esta carta.',

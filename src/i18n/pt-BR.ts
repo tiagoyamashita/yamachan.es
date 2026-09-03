@@ -222,6 +222,7 @@ export const ptBR: Copy = {
   adminPublished: 'Visível no cardápio',
   adminAllergens: 'Alergênicos',
   adminEmptyCategory: 'Não há pratos nesta seção.',
+  adminMenuNav: 'Seções do cardápio',
   adminPullKitchenInventory: 'Trazer estoque da cozinha',
   adminPullKitchenInventoryLead:
     'Copia os pratos e preços da cozinha do Globally Booked para este cardápio.',

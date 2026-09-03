@@ -220,6 +220,7 @@ export const en: Copy = {
   adminPublished: 'Visible on the menu',
   adminAllergens: 'Allergens',
   adminEmptyCategory: 'No dishes in this section.',
+  adminMenuNav: 'Menu sections',
   adminPullKitchenInventory: 'Pull kitchen inventory',
   adminPullKitchenInventoryLead:
     'Copy kitchen dishes and prices from Globally Booked into this menu.',

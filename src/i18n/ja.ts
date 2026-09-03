@@ -220,6 +220,7 @@ export const ja: Copy = {
   adminPublished: 'メニューに表示',
   adminAllergens: 'アレルギー',
   adminEmptyCategory: 'このカテゴリーに料理はありません。',
+  adminMenuNav: 'メニューの分類',
   adminPullKitchenInventory: '厨房の在庫を取り込む',
   adminPullKitchenInventoryLead:
     'Globally Booked の厨房メニューをこのメニューに取り込みます。',

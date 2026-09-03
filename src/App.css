@@ -493,6 +493,7 @@ h3 {
 
 .carta-section {
   margin-top: 2.4rem;
+  scroll-margin-top: calc(var(--header-h) + 0.75rem);
 }
 
 .carta-section h2 {
@@ -971,6 +972,7 @@ h3 {
   margin: 1.2rem 0 2rem;
   padding-bottom: 1.4rem;
   border-bottom: 1px solid var(--line);
+  scroll-margin-top: calc(var(--header-h) + 0.75rem);
 }
 
 .admin-dish-photo img,
@@ -1073,6 +1075,118 @@ h3 {
 
 .admin-menu-inventory .muted {
   margin: 0 0 0.75rem;
+}
+
+.admin-menu-layout {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.admin-menu-nav {
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.75rem 0.7rem;
+  background: var(--white, #fff);
+}
+
+.admin-menu-nav-cat {
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-menu-nav-cat summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+}
+
+.admin-menu-nav-cat summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-menu-nav-cat summary::after {
+  content: '▾';
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0;
+}
+
+.admin-menu-nav-cat[open] summary::after {
+  content: '▴';
+}
+
+.admin-menu-nav-count {
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+
+.admin-menu-nav-cat ul {
+  list-style: none;
+  margin: 0 0 0.55rem;
+  padding: 0 0 0.15rem 0.15rem;
+}
+
+.admin-menu-nav-cat button,
+.admin-menu-nav-new {
+  appearance: none;
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.32rem 0.2rem;
+  border-radius: 0.25rem;
+}
+
+.admin-menu-nav-cat button:hover,
+.admin-menu-nav-new:hover {
+  color: var(--vermillion);
+}
+
+.admin-menu-nav-cat button.is-current,
+.admin-menu-nav-new.is-current {
+  color: var(--vermillion);
+  font-weight: 600;
+}
+
+.admin-menu-nav-new {
+  margin-top: 0.45rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+}
+
+.admin-dish.is-target {
+  outline: 2px solid color-mix(in srgb, var(--vermillion) 55%, transparent);
+  outline-offset: 0.45rem;
+  border-radius: 0.25rem;
+}
+
+@media (min-width: 56rem) {
+  .admin-menu-layout {
+    grid-template-columns: 15.5rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .admin-menu-nav {
+    position: sticky;
+    top: calc(var(--header-h) + 0.75rem);
+    max-height: calc(100vh - var(--header-h) - 1.5rem);
+    overflow: auto;
+  }
 }
 
 .admin-tabs {
