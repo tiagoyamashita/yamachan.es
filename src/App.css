@@ -1182,8 +1182,7 @@ h3 {
   padding: 0 0 0.15rem 0.15rem;
 }
 
-.admin-menu-nav-cat button,
-.admin-menu-nav-new {
+.admin-menu-nav-cat button {
   appearance: none;
   display: block;
   width: 100%;
@@ -1197,23 +1196,13 @@ h3 {
   border-radius: 0.25rem;
 }
 
-.admin-menu-nav-cat button:hover,
-.admin-menu-nav-new:hover {
+.admin-menu-nav-cat button:hover {
   color: var(--vermillion);
 }
 
-.admin-menu-nav-cat button.is-current,
-.admin-menu-nav-new.is-current {
+.admin-menu-nav-cat button.is-current {
   color: var(--vermillion);
   font-weight: 600;
-}
-
-.admin-menu-nav-new {
-  margin-top: 0.45rem;
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--vermillion);
 }
 
 .admin-dish.is-target {

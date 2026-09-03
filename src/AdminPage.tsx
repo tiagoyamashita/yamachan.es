@@ -501,13 +501,11 @@ function AdminMenuNav({
   currentId,
   t,
   onJump,
-  onAddNew,
 }: {
   items: StoredMenuItem[]
   currentId: string | null
   t: Copy
   onJump: (id: string) => void
-  onAddNew: () => void
 }) {
   return (
     <nav className="admin-menu-nav" aria-label={t.adminMenuNav}>
@@ -542,13 +540,6 @@ function AdminMenuNav({
           </details>
         )
       })}
-      <button
-        type="button"
-        className="admin-menu-nav-new"
-        onClick={onAddNew}
-      >
-        {t.adminAddItem}
-      </button>
     </nav>
   )
 }
@@ -3790,7 +3781,6 @@ export function AdminPage({
                       currentId={menuFocusId}
                       t={t}
                       onJump={jumpToMenuItem}
-                      onAddNew={openNewDish}
                     />
                     <div className="admin-menu-body">
                       <section className="carta-section admin-menu-inventory">
