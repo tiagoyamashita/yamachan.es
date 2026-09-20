@@ -1144,9 +1144,192 @@ h3 {
   font-size: 0.92rem;
 }
 
+.admin-menu-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
 .admin-menu-layout {
   display: grid;
   gap: 1.5rem;
+}
+
+.admin-menu-grid-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: var(--white, #fff);
+}
+
+.admin-menu-grid {
+  width: 100%;
+  min-width: 52rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin-menu-grid th,
+.admin-menu-grid td {
+  padding: 0.4rem 0.55rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-menu-grid thead th {
+  position: sticky;
+  top: 0;
+  background: var(--white, #fff);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.admin-menu-grid-group td {
+  background: color-mix(in srgb, var(--vermillion) 8%, transparent);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--vermillion);
+}
+
+.admin-menu-grid input,
+.admin-menu-grid select {
+  width: 100%;
+  min-width: 6rem;
+  font: inherit;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 0.3rem;
+  background: transparent;
+  color: inherit;
+}
+
+.admin-menu-grid input.admin-menu-grid-price,
+.admin-menu-grid input.admin-menu-grid-sort {
+  min-width: 4.5rem;
+}
+
+.admin-menu-grid-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.admin-menu-grid-thumb {
+  appearance: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  background: var(--paper, #faf8f5);
+  overflow: hidden;
+  cursor: pointer;
+  flex: none;
+}
+
+.admin-menu-grid-thumb:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.admin-menu-grid-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-menu-grid-thumb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 0.55rem;
+  line-height: 1.1;
+  color: var(--muted);
+  text-align: center;
+  padding: 0.1rem;
+}
+
+.admin-menu-grid-photo.is-dragover {
+  outline: 2px dashed var(--vermillion);
+  outline-offset: -3px;
+  border-radius: 0.35rem;
+}
+
+.admin-menu-grid-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-menu-grid-upload,
+.admin-menu-grid-remove-photo {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--vermillion);
+  cursor: pointer;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-menu-grid-upload:has(input:disabled),
+.admin-menu-grid-remove-photo:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.admin-menu-grid-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.admin-menu-grid-photo-url {
+  min-width: 9rem;
+}
+
+.admin-menu-photo-modal {
+  width: min(32rem, 100%);
+}
+
+.admin-menu-photo-modal-img {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 0.4rem;
+  background: var(--paper, #faf8f5);
+}
+
+.admin-menu-grid-check {
+  text-align: center;
+}
+
+.admin-menu-grid-actions {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.admin-menu-grid-status {
+  font-size: 0.75rem;
+  color: var(--muted);
 }
 
 .admin-menu-nav {
@@ -1225,10 +1408,17 @@ h3 {
   font-weight: 600;
 }
 
-.admin-dish.is-target {
+.admin-dish.is-target,
+.admin-takeout-item.is-target,
+.carta-item.is-target {
   outline: 2px solid color-mix(in srgb, var(--vermillion) 55%, transparent);
   outline-offset: 0.45rem;
   border-radius: 0.25rem;
+}
+
+.admin-dish,
+.admin-takeout-item {
+  scroll-margin-top: calc(var(--header-h) + 1.25rem);
 }
 
 @media (min-width: 56rem) {
@@ -1243,6 +1433,16 @@ h3 {
     max-height: calc(100vh - var(--header-h) - 1.5rem);
     overflow: auto;
   }
+
+  .takeout-page .admin-menu-nav {
+    top: calc(var(--header-h) + 3.6rem);
+    max-height: calc(100vh - var(--header-h) - 4.5rem);
+  }
+}
+
+.takeout-page .carta-item,
+.takeout-page .carta-section h2 {
+  scroll-margin-top: calc(var(--header-h) + 4.5rem);
 }
 
 .admin-tabs {
@@ -1270,6 +1470,10 @@ h3 {
 
 .admin-subtabs {
   margin-bottom: 1rem;
+}
+
+.admin-company-block .admin-subtabs {
+  margin: 0.15rem 0 0.35rem;
 }
 
 .admin-subtabs .admin-tab {
@@ -1428,6 +1632,80 @@ h3 {
 
 .admin-takeout-qty {
   margin: 0;
+}
+
+.admin-takeout-templates {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.admin-takeout-current-mode {
+  margin: 0;
+  font-weight: 600;
+}
+
+.admin-takeout-templates h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.admin-takeout-modes,
+.admin-takeout-template-create {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.admin-takeout-template-create .takeout-field {
+  flex: 1 1 14rem;
+  margin: 0;
+}
+
+.admin-takeout-template-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.admin-takeout-template {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ink, #1c1917) 12%, transparent);
+  border-radius: 0.45rem;
+}
+
+.admin-takeout-template.is-active {
+  border-color: color-mix(in srgb, var(--vermillion) 55%, transparent);
+}
+
+.admin-takeout-template div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.65rem;
+  min-width: 0;
+}
+
+.admin-takeout-template small {
+  color: var(--muted, #6b6358);
+}
+
+.admin-takeout-template-badge {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+  font-weight: 600;
 }
 
 .admin-orders-toolbar {

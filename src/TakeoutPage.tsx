@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent, type MouseEvent } from 'r
 import { AllergenLegend, AllergenMarks } from './AllergenIcon.tsx'
 import { scheduleFromCompanyInfo } from './companyInfo.ts'
 import { type Copy, formatEuros, type Locale, showJapaneseCaption } from './i18n/index.ts'
+import { MenuJumpNav } from './MenuJumpNav.tsx'
 import {
   categoryHeading,
   displayMenuItem,
@@ -109,6 +110,19 @@ function readDetails(): SavedDetails {
   } catch {
     return empty
   }
+}
+
+function takeoutDishDomId(id: string) {
+  return `takeout-dish-${id}`
+}
+
+function jumpToMenuElement(elementId: string) {
+  window.requestAnimationFrame(() => {
+    document.getElementById(elementId)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  })
 }
 
 function tabFromHash(hash: string): TakeoutTab {
@@ -250,6 +264,7 @@ export function TakeoutPage({
   }, [catalog, menuItems])
   const categories = takeoutItems ? groupMenuByCategory(takeoutItems) : []
   const [cart, setCart] = useState<Cart>(readCart)
+  const [menuFocusId, setMenuFocusId] = useState<string | null>(null)
   const [name, setName] = useState(() => readDetails().name)
   const [email, setEmail] = useState(() => readDetails().email)
   const [phone, setPhone] = useState(() => readDetails().phone)
@@ -378,6 +393,11 @@ export function TakeoutPage({
       cancelled = true
     }
   }, [paidSessionId, t.takeoutPayError, tab])
+
+  const jumpToTakeoutDish = (id: string) => {
+    setMenuFocusId(id)
+    jumpToMenuElement(takeoutDishDomId(id))
+  }
 
   const setQty = (id: string, qty: number) => {
     const maxQty = catalog ? takeoutOfferMaxQty(catalog, id) : 0
@@ -580,7 +600,23 @@ export function TakeoutPage({
                   ) : categories.length === 0 ? (
                     <p className="muted">{t.takeoutNoItems}</p>
                   ) : (
-                    categories.map((category) => (
+                    <div className="admin-menu-layout takeout-menu-layout">
+                      <MenuJumpNav
+                        items={(takeoutItems ?? []).map((item) => ({
+                          id: item.id,
+                          name: displayMenuItem(item, locale).name,
+                          category_id: item.category_id,
+                          sort_order: item.sort_order,
+                        }))}
+                        currentId={menuFocusId}
+                        label={t.adminMenuNav}
+                        categoryLabels={t.cartaCategories}
+                        emptyLabel={t.adminEmptyCategory}
+                        includeEmptyCategories={false}
+                        onJump={jumpToTakeoutDish}
+                      />
+                      <div className="admin-menu-body">
+                    {categories.map((category) => (
                       <section
                         className="carta-section"
                         key={category.id}
@@ -597,14 +633,18 @@ export function TakeoutPage({
                             const shown = displayMenuItem(item, locale)
                             const qty = cart[item.slug] ?? 0
                             const maxQty = takeoutOfferMaxQty(catalog, item.slug)
+                            const itemClass = [
+                              'carta-item',
+                              item.image_url ? 'carta-item-photo' : '',
+                              menuFocusId === item.id ? 'is-target' : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')
                             return (
                               <li
                                 key={item.id}
-                                className={
-                                  item.image_url
-                                    ? 'carta-item carta-item-photo'
-                                    : 'carta-item'
-                                }
+                                id={takeoutDishDomId(item.id)}
+                                className={itemClass}
                               >
                                 {item.image_url ? (
                                   <img
@@ -653,7 +693,9 @@ export function TakeoutPage({
                           })}
                         </ul>
                       </section>
-                    ))
+                    ))}
+                      </div>
+                    </div>
                   )}
                   {catalogError ? (
                     <p className="muted">{t.takeoutCatalogFallback}</p>

@@ -7,6 +7,7 @@ import {
   TakeoutCheckoutError,
 } from './takeoutCheckout.ts'
 import { loadTakeoutCatalog } from './takeoutCatalog.ts'
+import { publicTakeoutCatalog } from '../src/takeoutCatalog.ts'
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -30,7 +31,7 @@ export async function handleTakeoutRequest(request: Request): Promise<Response> 
   try {
     if (path === '/api/takeout/catalog' && request.method === 'GET') {
       try {
-        return json({ catalog: await loadTakeoutCatalog() })
+        return json({ catalog: publicTakeoutCatalog(await loadTakeoutCatalog()) })
       } catch (error) {
         const message = error instanceof Error ? error.message : 'error'
         return json({ error: message }, 500)

@@ -1,6 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import {
-  DEFAULT_TAKEOUT_CATALOG,
   parseTakeoutCatalog,
   serializeTakeoutCatalog,
   type TakeoutCatalog,
@@ -30,22 +29,30 @@ function getSupabase(): SupabaseClient | null {
 export function normalizeTakeoutCatalogInput(value: unknown): TakeoutCatalog {
   const parsed = parseTakeoutCatalog(value)
   if (parsed.items === null) {
-    return { enabled: parsed.enabled, items: [] }
+    return {
+      enabled: parsed.enabled,
+      items: [],
+      templates: parsed.templates,
+      activeTemplateId: parsed.activeTemplateId,
+    }
   }
   const bySlug = new Map<string, TakeoutCatalogItem>()
   for (const item of parsed.items) {
     bySlug.set(item.slug, item)
   }
+  const items = [...bySlug.values()].sort((a, b) => a.slug.localeCompare(b.slug))
   return {
     enabled: parsed.enabled,
-    items: [...bySlug.values()].sort((a, b) => a.slug.localeCompare(b.slug)),
+    items,
+    templates: parsed.templates,
+    activeTemplateId: parsed.activeTemplateId,
   }
 }
 
 export async function loadTakeoutCatalog(): Promise<TakeoutCatalog> {
   const supabase = getSupabase()
   if (!supabase) {
-    return { ...DEFAULT_TAKEOUT_CATALOG }
+    return parseTakeoutCatalog(null)
   }
   const { data, error } = await supabase.rpc('yamachan_get_takeout_catalog')
   if (error) {
