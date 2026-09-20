@@ -8,6 +8,7 @@ import {
 } from 'react'
 import {
   MENU_CATEGORY_IDS,
+  displayMenuItem,
   groupMenuByCategory,
   isMenuCategoryId,
   slugFromName,
@@ -52,6 +53,7 @@ type AdminTab =
   | 'tables'
   | 'takeout'
   | 'instagram'
+  | 'allergens'
 type AvailabilitySubtab = 'defaults' | 'rules' | 'open-dates' | 'booking-status'
 type LoginView = 'sign-in' | 'forgot' | 'reset'
 
@@ -164,6 +166,8 @@ function adminHeading(t: Copy, tab: AdminTab): string {
       return t.adminTakeoutHeading
     case 'instagram':
       return t.adminInstagramHeading
+    case 'allergens':
+      return t.adminAllergensHeading
     default: {
       const _exhaustive: never = tab
       return _exhaustive
@@ -191,6 +195,8 @@ function adminLead(t: Copy, tab: AdminTab): string {
       return t.adminTakeoutLead
     case 'instagram':
       return t.adminInstagramLead
+    case 'allergens':
+      return t.adminAllergensLead
     default: {
       const _exhaustive: never = tab
       return _exhaustive
@@ -2338,6 +2344,95 @@ function emptyInstagramSlots(): string[] {
   return Array.from({ length: INSTAGRAM_SLOTS }, () => '')
 }
 
+function AdminAllergensTab({
+  items,
+  locale,
+  t,
+}: {
+  items: StoredMenuItem[]
+  locale: Locale
+  t: Copy
+}) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const groups = groupMenuByCategory(items.filter((item) => item.published))
+
+  const download = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const { downloadAllergensPdf } = await import('./allergensPdf.ts')
+      downloadAllergensPdf(items, locale, t)
+    } catch {
+      setError(t.adminSaveError)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="carta-section admin-allergens-sheet">
+      <p className="muted">{t.adminAllergensPdfNote}</p>
+      <div className="admin-dish-actions">
+        <button
+          className="btn"
+          type="button"
+          disabled={busy}
+          onClick={() => void download()}
+        >
+          {busy ? t.adminLoading : t.adminAllergensDownload}
+        </button>
+      </div>
+      {error ? <p className="admin-dish-status">{error}</p> : null}
+      <div className="admin-allergens-sheet-preview">
+        <table className="admin-allergens-sheet-table">
+          <thead>
+            <tr>
+              <th>{t.adminAllergensColumnDish}</th>
+              <th>{t.adminAllergensColumnAllergens}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {groups.map((group) => (
+              <Fragment key={group.id}>
+                <tr className="admin-allergens-sheet-group">
+                  <td colSpan={2}>{t.cartaCategories[group.id]}</td>
+                </tr>
+                {group.items.map((item) => {
+                  const { name } = displayMenuItem(item, locale)
+                  return (
+                    <tr key={item.id}>
+                      <td>{name}</td>
+                      <td>
+                        {item.allergens.length > 0 ? (
+                          <span className="admin-allergens-sheet-list">
+                            {item.allergens.map((id) => (
+                              <span
+                                key={id}
+                                className="admin-allergens-sheet-badge"
+                                title={t.cartaAllergens[id]}
+                              >
+                                <AllergenIcon id={id} />
+                                {t.cartaAllergens[id]}
+                              </span>
+                            ))}
+                          </span>
+                        ) : (
+                          <span className="muted">{t.adminAllergensNone}</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
 function InstagramEditor({
   urls,
   busy,
@@ -4299,6 +4394,15 @@ export function AdminPage({
                 >
                   {t.adminTabInstagram}
                 </button>
+                <button
+                  type="button"
+                  role="tab"
+                  className={`admin-tab${tab === 'allergens' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'allergens'}
+                  onClick={() => setTab('allergens')}
+                >
+                  {t.adminTabAllergens}
+                </button>
               </div>
             ) : null}
 
@@ -4629,6 +4733,9 @@ export function AdminPage({
                     onChange={setInstagramUrls}
                     onSave={() => void saveInstagram()}
                   />
+                ) : null}
+                {tab === 'allergens' ? (
+                  <AdminAllergensTab items={items} locale={locale} t={t} />
                 ) : null}
                 {tab === 'account' ? (
                   <AccountInfoEditor

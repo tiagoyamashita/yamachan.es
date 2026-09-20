@@ -1259,6 +1259,68 @@ h3 {
   padding: 0.1rem;
 }
 
+.admin-allergens-sheet-preview {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.admin-allergens-sheet-table {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin-allergens-sheet-table th,
+.admin-allergens-sheet-table td {
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-allergens-sheet-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--white, #fff);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-allergens-sheet-group td {
+  background: color-mix(in srgb, var(--vermillion) 8%, transparent);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--vermillion);
+}
+
+.admin-allergens-sheet-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-allergens-sheet-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem 0.15rem 0.3rem;
+}
+
+.admin-allergens-sheet-badge svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 .admin-menu-grid-photo.is-dragover {
   outline: 2px dashed var(--vermillion);
   outline-offset: -3px;

@@ -211,6 +211,15 @@ export type Copy = {
   adminTabOrders: string
   adminTabTakeout: string
   adminTabInstagram: string
+  adminTabAllergens: string
+  adminAllergensHeading: string
+  adminAllergensLead: string
+  adminAllergensColumnDish: string
+  adminAllergensColumnAllergens: string
+  adminAllergensNone: string
+  adminAllergensDownload: string
+  adminAllergensPdfTitle: string
+  adminAllergensPdfNote: string
   adminRestaurantHeading: string
   adminRestaurantLead: string
   adminCalendarHeading: string

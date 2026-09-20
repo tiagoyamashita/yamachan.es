@@ -263,6 +263,16 @@ export const ptBR: Copy = {
   adminTabTables: 'Mesas',
   adminTabTakeout: 'Para viagem',
   adminTabInstagram: 'Instagram',
+  adminTabAllergens: 'Alérgenos',
+  adminAllergensHeading: 'Folha de alérgenos',
+  adminAllergensLead:
+    'Lista imprimível de todos os pratos publicados e seus alérgenos, pronta para mostrar aos clientes.',
+  adminAllergensColumnDish: 'Prato',
+  adminAllergensColumnAllergens: 'Alérgenos',
+  adminAllergensNone: 'Nenhum',
+  adminAllergensDownload: 'Baixar PDF',
+  adminAllergensPdfTitle: 'Yamachan — Alérgenos',
+  adminAllergensPdfNote: 'Em caso de dúvidas sobre alérgenos, pergunte à nossa equipe.',
   adminRestaurantHeading: 'Dados do restaurante',
   adminRestaurantLead:
     'Telefone, endereço e horário exibidos no site e nas reservas.',
