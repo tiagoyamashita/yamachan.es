@@ -248,6 +248,12 @@ export const es: Copy = {
   adminPullKitchenInventoryError:
     'No se ha podido traer el inventario de cocina. Prueba otra vez.',
   adminPullKitchenInventoryMissing: 'El inventario de cocina no está conectado.',
+  adminPushKitchenInventory: 'Enviar inventario a cocina',
+  adminPushKitchenInventoryConfirm:
+    'Esto elimina todos los platos que hay ahora en Globally Booked y los sustituye por los de esta carta. ¿Continuar?',
+  adminPushKitchenInventoryDone:
+    'Se eliminaron {cleared} platos y se enviaron {pushed} de esta carta.',
+  adminPushKitchenInventoryError: 'No se pudo enviar el inventario a cocina. Inténtalo de nuevo.',
   adminTabMenu: 'Carta',
   adminTabAccount: 'Cuenta',
   adminTabRestaurant: 'Restaurante',

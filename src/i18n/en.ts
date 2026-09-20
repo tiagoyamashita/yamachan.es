@@ -246,6 +246,12 @@ export const en: Copy = {
   adminPullKitchenInventoryError:
     'Could not pull kitchen inventory. Try again.',
   adminPullKitchenInventoryMissing: 'Kitchen inventory is not connected.',
+  adminPushKitchenInventory: 'Push kitchen inventory',
+  adminPushKitchenInventoryConfirm:
+    'This deletes every dish currently in Globally Booked and replaces them with this menu. Continue?',
+  adminPushKitchenInventoryDone:
+    'Cleared {cleared} dishes and pushed {pushed} from this menu.',
+  adminPushKitchenInventoryError: 'Could not push kitchen inventory. Try again.',
   adminTabMenu: 'Menu',
   adminTabAccount: 'Account',
   adminTabRestaurant: 'Restaurant',

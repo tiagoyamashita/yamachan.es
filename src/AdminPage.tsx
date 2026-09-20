@@ -3025,6 +3025,10 @@ export function AdminPage({
   const [categoryStatus, setCategoryStatus] = useState<string | null>(null)
   const [inventoryBusy, setInventoryBusy] = useState(false)
   const [inventoryStatus, setInventoryStatus] = useState<string | null>(null)
+  const [exportInventoryBusy, setExportInventoryBusy] = useState(false)
+  const [exportInventoryStatus, setExportInventoryStatus] = useState<string | null>(
+    null,
+  )
   const [tab, setTab] = useState<AdminTab>('menu')
   const [companyInfo, setCompanyInfo] = useState<StoredCompanyInfo>(
     fallbackCompanyInfo(),
@@ -4017,6 +4021,34 @@ export function AdminPage({
     }
   }
 
+  const pushKitchenInventory = async () => {
+    if (!window.confirm(t.adminPushKitchenInventoryConfirm)) {
+      return
+    }
+    setExportInventoryBusy(true)
+    setExportInventoryStatus(null)
+    try {
+      const data = await api<{ cleared: number; pushed: number }>(
+        '/api/admin/menu/export-inventory',
+        { method: 'POST' },
+      )
+      setExportInventoryStatus(
+        t.adminPushKitchenInventoryDone
+          .replace('{cleared}', String(data.cleared))
+          .replace('{pushed}', String(data.pushed)),
+      )
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      setExportInventoryStatus(
+        code === 'not-configured'
+          ? t.adminPullKitchenInventoryMissing
+          : t.adminPushKitchenInventoryError,
+      )
+    } finally {
+      setExportInventoryBusy(false)
+    }
+  }
+
   const saveItem = async (item: StoredMenuItem) => {
     const key = item.id || 'new'
     setBusyId(key)
@@ -4671,9 +4703,22 @@ export function AdminPage({
                             ? t.adminLoading
                             : t.adminPullKitchenInventory}
                         </button>
+                        <button
+                          className="btn btn-outline"
+                          type="button"
+                          disabled={exportInventoryBusy}
+                          onClick={() => void pushKitchenInventory()}
+                        >
+                          {exportInventoryBusy
+                            ? t.adminLoading
+                            : t.adminPushKitchenInventory}
+                        </button>
                       </div>
                       {inventoryStatus ? (
                         <p className="admin-dish-status">{inventoryStatus}</p>
+                      ) : null}
+                      {exportInventoryStatus ? (
+                        <p className="admin-dish-status">{exportInventoryStatus}</p>
                       ) : null}
                       {categoryStatus ? (
                         <p className="admin-dish-status">{categoryStatus}</p>

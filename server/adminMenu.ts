@@ -16,6 +16,7 @@ import {
 } from './adminEnv.ts'
 import {
   GloballyBookedError,
+  deleteRestaurantMenuItem,
   hideRestaurantMenuItem,
   loadGloballyBookedMenu,
   upsertRestaurantMenuItem,
@@ -373,4 +374,31 @@ export async function importInventoryFromGloballyBooked(): Promise<InventoryImpo
     updated,
     created,
   }
+}
+
+export type InventoryExportResult = {
+  cleared: number
+  pushed: number
+}
+
+export async function exportInventoryToGloballyBooked(): Promise<InventoryExportResult> {
+  const [existing, items] = await Promise.all([
+    loadGloballyBookedMenu(),
+    listAdminMenu(),
+  ])
+
+  for (const row of existing) {
+    await deleteRestaurantMenuItem(row.id)
+  }
+
+  let pushed = 0
+  for (const item of items) {
+    if (!item.published) {
+      continue
+    }
+    await upsertRestaurantMenuItem(toGloballyBookedMenuInput(item))
+    pushed += 1
+  }
+
+  return { cleared: existing.length, pushed }
 }

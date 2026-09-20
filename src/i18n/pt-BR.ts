@@ -248,6 +248,12 @@ export const ptBR: Copy = {
   adminPullKitchenInventoryError:
     'Não foi possível trazer o estoque da cozinha. Tente de novo.',
   adminPullKitchenInventoryMissing: 'O estoque da cozinha não está conectado.',
+  adminPushKitchenInventory: 'Enviar estoque para a cozinha',
+  adminPushKitchenInventoryConfirm:
+    'Isso apaga todos os pratos que estão agora no Globally Booked e os substitui pelos deste cardápio. Continuar?',
+  adminPushKitchenInventoryDone:
+    'Foram removidos {cleared} pratos e enviados {pushed} deste cardápio.',
+  adminPushKitchenInventoryError: 'Não foi possível enviar o estoque para a cozinha. Tente novamente.',
   adminTabMenu: 'Cardápio',
   adminTabAccount: 'Conta',
   adminTabRestaurant: 'Restaurante',

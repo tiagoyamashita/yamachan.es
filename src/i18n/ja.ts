@@ -246,6 +246,12 @@ export const ja: Copy = {
   adminPullKitchenInventoryError:
     '厨房の在庫を取り込めませんでした。もう一度お試しください。',
   adminPullKitchenInventoryMissing: '厨房の在庫が接続されていません。',
+  adminPushKitchenInventory: '厨房の在庫に反映',
+  adminPushKitchenInventoryConfirm:
+    'Globally Bookedにある料理をすべて削除し、このメニューの内容に置き換えます。続けますか？',
+  adminPushKitchenInventoryDone:
+    '{cleared}件を削除し、このメニューから{pushed}件を反映しました。',
+  adminPushKitchenInventoryError: '厨房の在庫への反映に失敗しました。もう一度お試しください。',
   adminTabMenu: 'メニュー',
   adminTabAccount: 'アカウント',
   adminTabRestaurant: '店舗',

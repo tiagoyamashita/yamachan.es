@@ -838,6 +838,10 @@ export async function hideRestaurantMenuItem(input: {
   )
 }
 
+export async function deleteRestaurantMenuItem(id: string): Promise<void> {
+  await gbWrite('DELETE', `${restaurantPath('/menu')}/${encodeURIComponent(id)}`)
+}
+
 type GuestSessionClaim = {
   token?: string
   expires_at?: string

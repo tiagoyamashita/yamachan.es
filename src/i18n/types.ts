@@ -199,6 +199,10 @@ export type Copy = {
   adminPullKitchenInventoryDone: string
   adminPullKitchenInventoryError: string
   adminPullKitchenInventoryMissing: string
+  adminPushKitchenInventory: string
+  adminPushKitchenInventoryConfirm: string
+  adminPushKitchenInventoryDone: string
+  adminPushKitchenInventoryError: string
   adminTabMenu: string
   adminTabAccount: string
   adminTabRestaurant: string
