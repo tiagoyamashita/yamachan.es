@@ -1,10 +1,19 @@
-import { useEffect, useState, type FormEvent, type MouseEvent, type ReactNode } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useState,
+  type FormEvent,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
 import {
   MENU_CATEGORY_IDS,
+  groupMenuByCategory,
   isMenuCategoryId,
   slugFromName,
   type StoredMenuItem,
 } from './menu.ts'
+import { MenuJumpNav } from './MenuJumpNav.tsx'
 import { restaurant } from './content.ts'
 import { AllergenIcon } from './AllergenIcon.tsx'
 import { ALLERGEN_IDS, toggleAllergen } from './allergens.ts'
@@ -15,7 +24,14 @@ import {
 } from './companyInfo.ts'
 import { LanguagePicker } from './LanguagePicker.tsx'
 import { type Copy, formatEuros, type Locale } from './i18n/index.ts'
-import type { TakeoutCatalog, TakeoutCatalogItem } from './takeoutCatalog.ts'
+import {
+  activeTemplateIdForOffers,
+  createTakeoutTemplateId,
+  takeoutOffersMatch,
+  type TakeoutCatalog,
+  type TakeoutCatalogItem,
+  type TakeoutTemplate,
+} from './takeoutCatalog.ts'
 import { RESTAURANT_TIME_ZONE } from './openingHours.ts'
 import {
   AdminTablesEditor,
@@ -126,6 +142,7 @@ type KitchenOrder = {
 }
 
 type OrdersSubtab = 'today' | 'history'
+type MenuSubtab = 'cards' | 'grid'
 
 function adminHeading(t: Copy, tab: AdminTab): string {
   switch (tab) {
@@ -270,6 +287,23 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return data as T
 }
 
+function dishDomId(id: string) {
+  return `admin-dish-${id || 'new'}`
+}
+
+function takeoutDishDomId(id: string) {
+  return `admin-takeout-dish-${id}`
+}
+
+function jumpToMenuElement(elementId: string) {
+  window.requestAnimationFrame(() => {
+    document.getElementById(elementId)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  })
+}
+
 function DishEditor({
   item,
   t,
@@ -279,6 +313,7 @@ function DishEditor({
   onPhoto,
   busy,
   status,
+  highlighted,
 }: {
   item: StoredMenuItem
   t: Copy
@@ -288,7 +323,9 @@ function DishEditor({
   onPhoto: (file: File) => void
   busy: boolean
   status: string | null
+  highlighted: boolean
 }) {
+  const anchorId = dishDomId(item.id || 'new')
   const [priceInput, setPriceInput] = useState(
     item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '',
   )
@@ -304,7 +341,10 @@ function DishEditor({
   }
 
   return (
-    <article className="admin-dish">
+    <article
+      className={`admin-dish${highlighted ? ' is-target' : ''}`}
+      id={anchorId}
+    >
       <div className="admin-dish-photo">
         {item.image_url ? (
           <img src={item.image_url} alt="" />
@@ -483,6 +523,367 @@ function DishEditor({
         {status ? <p className="admin-dish-status">{status}</p> : null}
       </div>
     </article>
+  )
+}
+
+function AdminMenuNav({
+  items,
+  currentId,
+  t,
+  onJump,
+}: {
+  items: StoredMenuItem[]
+  currentId: string | null
+  t: Copy
+  onJump: (id: string) => void
+}) {
+  return (
+    <MenuJumpNav
+      items={items.map((item) => ({
+        id: item.id,
+        name: item.name_es.trim() || item.name_en.trim() || item.slug,
+        category_id: item.category_id,
+        sort_order: item.sort_order,
+      }))}
+      currentId={currentId}
+      label={t.adminMenuNav}
+      categoryLabels={t.cartaCategories}
+      emptyLabel={t.adminEmptyCategory}
+      onJump={onJump}
+    />
+  )
+}
+
+function MenuGridRow({
+  item,
+  t,
+  busy,
+  status,
+  onChange,
+  onSave,
+  onDelete,
+  onPreviewPhoto,
+  onPhoto,
+}: {
+  item: StoredMenuItem
+  t: Copy
+  busy: boolean
+  status: string | null
+  onChange: (item: StoredMenuItem) => void
+  onSave: () => void
+  onDelete: () => void
+  onPreviewPhoto: (url: string, name: string) => void
+  onPhoto: (file: File) => void
+}) {
+  const [priceInput, setPriceInput] = useState(
+    item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '',
+  )
+  const [dragOver, setDragOver] = useState(false)
+
+  useEffect(() => {
+    setPriceInput(item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '')
+  }, [item.id, item.price_cents])
+
+  const set = (patch: Partial<StoredMenuItem>) => {
+    onChange({ ...item, ...patch })
+  }
+
+  return (
+    <tr className="admin-menu-grid-row">
+      <td>
+        <select
+          value={item.category_id}
+          disabled={busy}
+          onChange={(event) => {
+            const value = event.target.value
+            if (isMenuCategoryId(value)) {
+              set({ category_id: value })
+            }
+          }}
+        >
+          {MENU_CATEGORY_IDS.map((id) => (
+            <option key={id} value={id}>
+              {t.cartaCategories[id]}
+            </option>
+          ))}
+        </select>
+      </td>
+      <td
+        className={`admin-menu-grid-photo${dragOver ? ' is-dragover' : ''}`}
+        onDragOver={(event) => {
+          event.preventDefault()
+          setDragOver(true)
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(event) => {
+          event.preventDefault()
+          setDragOver(false)
+          const file = event.dataTransfer.files?.[0]
+          if (file) {
+            onPhoto(file)
+          }
+        }}
+      >
+        <button
+          type="button"
+          className="admin-menu-grid-thumb"
+          disabled={!item.image_url}
+          title={t.adminMenuGridOpenPhoto}
+          aria-label={t.adminMenuGridOpenPhoto}
+          onClick={() =>
+            onPreviewPhoto(
+              item.image_url,
+              item.name_es.trim() || item.name_en.trim() || item.slug,
+            )
+          }
+        >
+          {item.image_url ? (
+            <img src={item.image_url} alt="" />
+          ) : (
+            <span className="admin-menu-grid-thumb-empty">{t.adminNoPhoto}</span>
+          )}
+        </button>
+        <div className="admin-menu-grid-photo-actions">
+          <label className="admin-menu-grid-upload">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              disabled={busy}
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (file) {
+                  onPhoto(file)
+                }
+                event.target.value = ''
+              }}
+            />
+            {t.adminUploadPhoto}
+          </label>
+          {item.image_url ? (
+            <button
+              type="button"
+              className="admin-menu-grid-remove-photo"
+              disabled={busy}
+              onClick={() => set({ image_url: '' })}
+            >
+              {t.adminMenuGridRemovePhoto}
+            </button>
+          ) : null}
+        </div>
+        <input
+          className="admin-menu-grid-photo-url"
+          value={item.image_url}
+          disabled={busy}
+          placeholder={t.adminMenuGridPhotoUrl}
+          onChange={(event) => set({ image_url: event.target.value })}
+        />
+      </td>
+      <td>
+        <input
+          value={item.name_es}
+          disabled={busy}
+          onChange={(event) => {
+            const name_es = event.target.value
+            set({
+              name_es,
+              slug: item.id ? item.slug : slugFromName(name_es),
+            })
+          }}
+        />
+      </td>
+      <td>
+        <input
+          value={item.name_en}
+          disabled={busy}
+          onChange={(event) => set({ name_en: event.target.value })}
+        />
+      </td>
+      <td>
+        <input
+          value={item.name_ja}
+          disabled={busy}
+          onChange={(event) => set({ name_ja: event.target.value })}
+        />
+      </td>
+      <td>
+        <input
+          className="admin-menu-grid-price"
+          type="number"
+          min="0"
+          step="0.01"
+          value={priceInput}
+          disabled={busy}
+          onChange={(event) => {
+            const raw = event.target.value
+            setPriceInput(raw)
+            const euros = Number(raw.replace(',', '.'))
+            set({
+              price_cents:
+                Number.isFinite(euros) && euros >= 0
+                  ? Math.round(euros * 100)
+                  : 0,
+            })
+          }}
+        />
+      </td>
+      <td>
+        <input
+          className="admin-menu-grid-sort"
+          type="number"
+          value={item.sort_order}
+          disabled={busy}
+          onChange={(event) =>
+            set({ sort_order: Number(event.target.value) || 0 })
+          }
+        />
+      </td>
+      <td className="admin-menu-grid-check">
+        <input
+          type="checkbox"
+          checked={item.vegetarian}
+          disabled={busy}
+          onChange={(event) => set({ vegetarian: event.target.checked })}
+        />
+      </td>
+      <td className="admin-menu-grid-check">
+        <input
+          type="checkbox"
+          checked={item.published}
+          disabled={busy}
+          onChange={(event) => set({ published: event.target.checked })}
+        />
+      </td>
+      <td className="admin-menu-grid-actions">
+        <button
+          className="btn btn-small"
+          type="button"
+          disabled={busy}
+          onClick={onSave}
+        >
+          {t.adminSave}
+        </button>
+        {item.id ? (
+          <button
+            className="btn btn-outline btn-small"
+            type="button"
+            disabled={busy}
+            onClick={onDelete}
+          >
+            {t.adminDelete}
+          </button>
+        ) : null}
+        {status ? <span className="admin-menu-grid-status">{status}</span> : null}
+      </td>
+    </tr>
+  )
+}
+
+function AdminMenuGrid({
+  items,
+  t,
+  busyId,
+  dishStatus,
+  onChange,
+  onSave,
+  onDelete,
+  onPhoto,
+}: {
+  items: StoredMenuItem[]
+  t: Copy
+  busyId: string | null
+  dishStatus: Record<string, string>
+  onChange: (item: StoredMenuItem) => void
+  onSave: (item: StoredMenuItem) => void
+  onDelete: (item: StoredMenuItem) => void
+  onPhoto: (item: StoredMenuItem, file: File) => void
+}) {
+  const groups = groupMenuByCategory(items)
+  const [preview, setPreview] = useState<{ url: string; name: string } | null>(
+    null,
+  )
+  const columnCount = 10
+  return (
+    <div className="admin-menu-grid-wrap">
+      <table className="admin-menu-grid">
+        <thead>
+          <tr>
+            <th>{t.adminCategory}</th>
+            <th>{t.adminMenuGridPhoto}</th>
+            <th>{t.adminNameEs}</th>
+            <th>{t.adminNameEn}</th>
+            <th>{t.adminNameJa}</th>
+            <th>{t.adminPrice}</th>
+            <th>{t.adminSort}</th>
+            <th>{t.cartaVegLabel}</th>
+            <th>{t.adminPublished}</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {groups.length === 0 ? (
+            <tr>
+              <td colSpan={columnCount} className="muted">
+                {t.adminEmptyCategory}
+              </td>
+            </tr>
+          ) : null}
+          {groups.map((group) => (
+            <Fragment key={group.id}>
+              <tr className="admin-menu-grid-group">
+                <td colSpan={columnCount}>{t.cartaCategories[group.id]}</td>
+              </tr>
+              {group.items.map((item) => (
+                <MenuGridRow
+                  key={item.id}
+                  item={item}
+                  t={t}
+                  busy={busyId === item.id}
+                  status={dishStatus[item.id] ?? null}
+                  onChange={onChange}
+                  onSave={() => onSave(item)}
+                  onDelete={() => onDelete(item)}
+                  onPreviewPhoto={(url, name) => setPreview({ url, name })}
+                  onPhoto={(file) => onPhoto(item, file)}
+                />
+              ))}
+            </Fragment>
+          ))}
+        </tbody>
+      </table>
+      {preview ? (
+        <div
+          className="admin-modal-overlay"
+          role="presentation"
+          onClick={() => setPreview(null)}
+        >
+          <div
+            className="admin-modal admin-menu-photo-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={preview.name}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="admin-modal-head">
+              <div>
+                <h2>{preview.name}</h2>
+              </div>
+              <button
+                type="button"
+                className="btn btn-outline btn-small"
+                onClick={() => setPreview(null)}
+              >
+                {t.adminClose}
+              </button>
+            </div>
+            <img
+              className="admin-menu-photo-modal-img"
+              src={preview.url}
+              alt={preview.name}
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -1991,38 +2392,432 @@ function InstagramEditor({
   )
 }
 
+function sortTakeoutTemplates(templates: TakeoutTemplate[]): TakeoutTemplate[] {
+  return templates.slice().sort((left, right) => left.name.localeCompare(right.name))
+}
+
+function offersFromMenuItems(
+  items: StoredMenuItem[],
+  offerMap: Map<string, number>,
+): TakeoutCatalogItem[] {
+  return items
+    .map((item) => ({
+      slug: item.slug,
+      maxQty: offerMap.get(item.slug) ?? 10,
+    }))
+    .sort((left, right) => left.slug.localeCompare(right.slug))
+}
+
+type TakeoutPersistInput = {
+  enabled: boolean
+  items: TakeoutCatalogItem[]
+  templates: TakeoutTemplate[]
+  activeTemplateId: string | null
+}
+
+function toggleTakeoutOffer(
+  offers: TakeoutCatalogItem[],
+  slug: string,
+  selected: boolean,
+  maxQty: number,
+): TakeoutCatalogItem[] {
+  const next = offers.filter((offer) => offer.slug !== slug)
+  if (selected) {
+    next.push({ slug, maxQty: Math.max(1, Math.floor(maxQty) || 1) })
+    next.sort((a, b) => a.slug.localeCompare(b.slug))
+  }
+  return next
+}
+
+type TakeoutSubtab = 'modes' | 'new'
+
 function TakeoutCatalogEditor({
   items,
   enabled,
   offers,
+  templates,
+  activeTemplateId,
   busy,
   t,
   onEnabledChange,
-  onOffersChange,
   onSave,
+  onPersist,
 }: {
   items: StoredMenuItem[]
   enabled: boolean
   offers: TakeoutCatalogItem[]
+  templates: TakeoutTemplate[]
+  activeTemplateId: string | null
   busy: boolean
   t: Copy
   onEnabledChange: (enabled: boolean) => void
-  onOffersChange: (offers: TakeoutCatalogItem[]) => void
   onSave: () => void
+  onPersist: (catalog: TakeoutPersistInput) => void
 }) {
+  const [subtab, setSubtab] = useState<TakeoutSubtab>('modes')
+  const [focusId, setFocusId] = useState<string | null>(null)
+  const [templateName, setTemplateName] = useState('')
+  const [templateError, setTemplateError] = useState<string | null>(null)
+  const [draftOffers, setDraftOffers] = useState<TakeoutCatalogItem[]>(offers)
   const offerMap = new Map(offers.map((offer) => [offer.slug, offer.maxQty]))
+  const draftMap = new Map(draftOffers.map((offer) => [offer.slug, offer.maxQty]))
   const published = items
     .filter((item) => item.published)
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order || a.name_es.localeCompare(b.name_es))
+  const activeTemplate = templates.find((template) => template.id === activeTemplateId)
+  const currentModeLabel = activeTemplate
+    ? t.adminTakeoutCurrentMode.replace('{name}', activeTemplate.name)
+    : t.adminTakeoutCurrentMode.replace('{name}', t.adminTakeoutCurrentCustom)
 
-  const setOffer = (slug: string, selected: boolean, maxQty: number) => {
-    const next = offers.filter((offer) => offer.slug !== slug)
-    if (selected) {
-      next.push({ slug, maxQty: Math.max(1, Math.floor(maxQty) || 1) })
-      next.sort((a, b) => a.slug.localeCompare(b.slug))
+  const persistMode = (name: string, nextItems: TakeoutCatalogItem[]) => {
+    if (nextItems.length === 0) {
+      setTemplateError(t.adminTakeoutTemplateNeedItems)
+      return
     }
-    onOffersChange(next)
+    setTemplateError(null)
+    let nextTemplates = templates
+    let match = nextTemplates.find((template) =>
+      takeoutOffersMatch(template.items, nextItems),
+    )
+    if (!match) {
+      match = {
+        id: createTakeoutTemplateId(),
+        name,
+        items: nextItems,
+      }
+      nextTemplates = sortTakeoutTemplates([...nextTemplates, match])
+    }
+    onPersist({
+      enabled,
+      items: nextItems,
+      templates: nextTemplates,
+      activeTemplateId: match.id,
+    })
+  }
+
+  const saveDraftAsTemplate = (activate: boolean) => {
+    const name = templateName.trim()
+    if (!name) {
+      setTemplateError(t.adminTakeoutTemplateNeedName)
+      return
+    }
+    if (draftOffers.length === 0) {
+      setTemplateError(t.adminTakeoutTemplateNeedItems)
+      return
+    }
+    setTemplateError(null)
+    const existing = templates.find((template) =>
+      takeoutOffersMatch(template.items, draftOffers),
+    )
+    const created = existing
+      ? { ...existing, name }
+      : { id: createTakeoutTemplateId(), name, items: draftOffers }
+    const nextTemplates = existing
+      ? sortTakeoutTemplates(
+          templates.map((template) =>
+            template.id === existing.id ? created : template,
+          ),
+        )
+      : sortTakeoutTemplates([...templates, created])
+    onPersist({
+      enabled,
+      items: activate ? draftOffers : offers,
+      templates: nextTemplates,
+      activeTemplateId: activate
+        ? created.id
+        : activeTemplateIdForOffers(nextTemplates, offers),
+    })
+    setTemplateName('')
+    setSubtab('modes')
+  }
+
+  const openNewTab = () => {
+    setDraftOffers(offers)
+    setTemplateError(null)
+    setSubtab('new')
+  }
+
+  const jumpToItem = (id: string) => {
+    setFocusId(id)
+    jumpToMenuElement(takeoutDishDomId(id))
+  }
+
+  const renderTakeoutItem = (
+    item: StoredMenuItem,
+    map: Map<string, number>,
+    onToggle: (slug: string, selected: boolean, maxQty: number) => void,
+  ) => {
+    const selected = map.has(item.slug)
+    const maxQty = map.get(item.slug) ?? 10
+    return (
+      <li
+        key={item.id}
+        id={takeoutDishDomId(item.id)}
+        className={
+          focusId === item.id
+            ? 'admin-takeout-item is-target'
+            : 'admin-takeout-item'
+        }
+      >
+        <label className="admin-takeout-item-check">
+          <input
+            type="checkbox"
+            checked={selected}
+            disabled={busy}
+            onChange={(event) =>
+              onToggle(item.slug, event.target.checked, maxQty)
+            }
+          />
+          <span>
+            <strong>{item.name_es || item.slug}</strong>
+            {item.name_ja ? <small>{item.name_ja}</small> : null}
+          </span>
+        </label>
+        <label className="takeout-field admin-takeout-qty">
+          <span>{t.adminTakeoutMaxQty}</span>
+          <input
+            type="number"
+            min={1}
+            max={999}
+            value={maxQty}
+            disabled={busy || !selected}
+            onChange={(event) =>
+              onToggle(item.slug, selected, Number(event.target.value) || 1)
+            }
+          />
+        </label>
+      </li>
+    )
+  }
+
+  const sectionModeButtons = (
+    onPick: (name: string, nextItems: TakeoutCatalogItem[]) => void,
+    map: Map<string, number>,
+  ) => (
+    <div className="admin-takeout-modes">
+      <button
+        className="btn btn-outline"
+        type="button"
+        disabled={busy}
+        onClick={() =>
+          onPick(t.adminTakeoutFromAll, offersFromMenuItems(published, map))
+        }
+      >
+        {t.adminTakeoutFromAll}
+      </button>
+      {MENU_CATEGORY_IDS.map((categoryId) => {
+        const rows = published.filter((item) => item.category_id === categoryId)
+        if (rows.length === 0) {
+          return null
+        }
+        const section = t.cartaCategories[categoryId]
+        return (
+          <button
+            className="btn btn-outline"
+            type="button"
+            disabled={busy}
+            key={categoryId}
+            onClick={() =>
+              onPick(
+                t.adminTakeoutFromSection.replace('{section}', section),
+                offersFromMenuItems(rows, map),
+              )
+            }
+          >
+            {t.adminTakeoutFromSection.replace('{section}', section)}
+          </button>
+        )
+      })}
+    </div>
+  )
+
+  const dishPicker = (
+    map: Map<string, number>,
+    onToggle: (slug: string, selected: boolean, maxQty: number) => void,
+  ) => (
+    <div className="admin-menu-layout">
+      <MenuJumpNav
+        items={published.map((item) => ({
+          id: item.id,
+          name: item.name_es.trim() || item.name_en.trim() || item.slug,
+          category_id: item.category_id,
+          sort_order: item.sort_order,
+        }))}
+        currentId={focusId}
+        label={t.adminMenuNav}
+        categoryLabels={t.cartaCategories}
+        emptyLabel={t.adminEmptyCategory}
+        includeEmptyCategories={false}
+        onJump={jumpToItem}
+      />
+      <div className="admin-menu-body">
+        {MENU_CATEGORY_IDS.map((categoryId) => {
+          const rows = published.filter((item) => item.category_id === categoryId)
+          if (rows.length === 0) {
+            return null
+          }
+          return (
+            <section className="carta-section" key={categoryId}>
+              <h2>{t.cartaCategories[categoryId]}</h2>
+              <ul className="admin-takeout-items">
+                {rows.map((item) => renderTakeoutItem(item, map, onToggle))}
+              </ul>
+            </section>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  let panel: ReactNode
+  switch (subtab) {
+    case 'modes':
+      panel = (
+        <section className="admin-takeout-templates">
+          <p className="muted">{t.adminTakeoutTemplatesLead}</p>
+          <p className="admin-takeout-current-mode">{currentModeLabel}</p>
+          {sectionModeButtons(persistMode, offerMap)}
+          {templates.length === 0 ? (
+            <p className="muted">{t.adminTakeoutTemplateEmpty}</p>
+          ) : (
+            <ul className="admin-takeout-template-list">
+              {templates.map((template) => {
+                const active = template.id === activeTemplateId
+                return (
+                  <li
+                    key={template.id}
+                    className={
+                      active
+                        ? 'admin-takeout-template is-active'
+                        : 'admin-takeout-template'
+                    }
+                  >
+                    <div>
+                      <strong>{template.name}</strong>
+                      {active ? (
+                        <span className="admin-takeout-template-badge">
+                          {t.adminTakeoutTemplateActive}
+                        </span>
+                      ) : null}
+                      <small>
+                        {t.adminTakeoutTemplateCount.replace(
+                          '{count}',
+                          String(template.items.length),
+                        )}
+                      </small>
+                    </div>
+                    <div className="admin-dish-actions">
+                      <button
+                        className="btn btn-small"
+                        type="button"
+                        disabled={busy || active}
+                        onClick={() =>
+                          onPersist({
+                            enabled,
+                            items: template.items,
+                            templates,
+                            activeTemplateId: template.id,
+                          })
+                        }
+                      >
+                        {t.adminTakeoutTemplateActivate}
+                      </button>
+                      <button
+                        className="btn btn-outline btn-small"
+                        type="button"
+                        disabled={busy}
+                        onClick={() => {
+                          const ok = window.confirm(
+                            t.adminTakeoutTemplateDeleteConfirm.replace(
+                              '{name}',
+                              template.name,
+                            ),
+                          )
+                          if (!ok) {
+                            return
+                          }
+                          const nextTemplates = templates.filter(
+                            (row) => row.id !== template.id,
+                          )
+                          onPersist({
+                            enabled,
+                            items: offers,
+                            templates: nextTemplates,
+                            activeTemplateId: activeTemplateIdForOffers(
+                              nextTemplates,
+                              offers,
+                            ),
+                          })
+                        }}
+                      >
+                        {t.adminTakeoutTemplateDelete}
+                      </button>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
+      )
+      break
+    case 'new':
+      panel = (
+        <section className="admin-takeout-templates">
+          <p className="muted">{t.adminTakeoutNewLead}</p>
+          {sectionModeButtons((name, nextItems) => {
+            setDraftOffers(nextItems)
+            if (!templateName.trim()) {
+              setTemplateName(name)
+            }
+            setTemplateError(null)
+          }, draftMap)}
+          <div className="admin-takeout-template-create">
+            <label className="takeout-field">
+              <span>{t.adminTakeoutTemplateName}</span>
+              <input
+                value={templateName}
+                disabled={busy}
+                placeholder={t.adminTakeoutTemplateNamePlaceholder}
+                onChange={(event) => {
+                  setTemplateName(event.target.value)
+                  setTemplateError(null)
+                }}
+              />
+            </label>
+            <button
+              className="btn btn-outline"
+              type="button"
+              disabled={busy}
+              onClick={() => saveDraftAsTemplate(false)}
+            >
+              {t.adminTakeoutTemplateSaveCurrent}
+            </button>
+            <button
+              className="btn"
+              type="button"
+              disabled={busy}
+              onClick={() => saveDraftAsTemplate(true)}
+            >
+              {t.adminTakeoutTemplateSaveAndUse}
+            </button>
+          </div>
+          {templateError ? (
+            <p className="takeout-error">{templateError}</p>
+          ) : null}
+          {dishPicker(draftMap, (slug, selected, maxQty) =>
+            setDraftOffers((prev) =>
+              toggleTakeoutOffer(prev, slug, selected, maxQty),
+            ),
+          )}
+        </section>
+      )
+      break
+    default: {
+      const _exhaustive: never = subtab
+      panel = _exhaustive
+    }
   }
 
   return (
@@ -2042,47 +2837,36 @@ function TakeoutCatalogEditor({
         {published.length === 0 ? (
           <p className="muted">{t.adminTakeoutNoMenu}</p>
         ) : (
-          <ul className="admin-takeout-items">
-            {published.map((item) => {
-              const selected = offerMap.has(item.slug)
-              const maxQty = offerMap.get(item.slug) ?? 10
-              return (
-                <li key={item.id} className="admin-takeout-item">
-                  <label className="admin-takeout-item-check">
-                    <input
-                      type="checkbox"
-                      checked={selected}
-                      disabled={busy}
-                      onChange={(event) =>
-                        setOffer(item.slug, event.target.checked, maxQty)
-                      }
-                    />
-                    <span>
-                      <strong>{item.name_es || item.slug}</strong>
-                      {item.name_ja ? <small>{item.name_ja}</small> : null}
-                    </span>
-                  </label>
-                  <label className="takeout-field admin-takeout-qty">
-                    <span>{t.adminTakeoutMaxQty}</span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={999}
-                      value={maxQty}
-                      disabled={busy || !selected}
-                      onChange={(event) =>
-                        setOffer(
-                          item.slug,
-                          selected,
-                          Number(event.target.value) || 1,
-                        )
-                      }
-                    />
-                  </label>
-                </li>
-              )
-            })}
-          </ul>
+          <>
+            <div
+              className="admin-tabs admin-subtabs"
+              role="tablist"
+              aria-label={t.adminTakeoutTemplatesHeading}
+            >
+              <button
+                type="button"
+                role="tab"
+                className={`admin-tab${subtab === 'modes' ? ' is-active' : ''}`}
+                aria-selected={subtab === 'modes'}
+                onClick={() => {
+                  setTemplateError(null)
+                  setSubtab('modes')
+                }}
+              >
+                {t.adminTakeoutSubtabModes}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                className={`admin-tab${subtab === 'new' ? ' is-active' : ''}`}
+                aria-selected={subtab === 'new'}
+                onClick={openNewTab}
+              >
+                {t.adminTakeoutSubtabNew}
+              </button>
+            </div>
+            {panel}
+          </>
         )}
         <div className="admin-dish-actions">
           <button className="btn" type="button" disabled={busy} onClick={onSave}>
@@ -2228,8 +3012,23 @@ export function AdminPage({
   const [message, setMessage] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [dishStatus, setDishStatus] = useState<Record<string, string>>({})
+  const [menuFocusId, setMenuFocusId] = useState<string | null>(null)
+  const [menuSubtab, setMenuSubtab] = useState<MenuSubtab>('cards')
+  const [newDishOpen, setNewDishOpen] = useState(false)
+  const [newCategoryOpen, setNewCategoryOpen] = useState(false)
+  const [kitchenCategories, setKitchenCategories] = useState<
+    Array<{ id: string; name: string; sort_order: number }>
+  >([])
+  const [categoryName, setCategoryName] = useState('')
+  const [categorySort, setCategorySort] = useState('0')
+  const [categoryBusy, setCategoryBusy] = useState(false)
+  const [categoryStatus, setCategoryStatus] = useState<string | null>(null)
   const [inventoryBusy, setInventoryBusy] = useState(false)
   const [inventoryStatus, setInventoryStatus] = useState<string | null>(null)
+  const [exportInventoryBusy, setExportInventoryBusy] = useState(false)
+  const [exportInventoryStatus, setExportInventoryStatus] = useState<string | null>(
+    null,
+  )
   const [tab, setTab] = useState<AdminTab>('menu')
   const [companyInfo, setCompanyInfo] = useState<StoredCompanyInfo>(
     fallbackCompanyInfo(),
@@ -2300,6 +3099,10 @@ export function AdminPage({
   const [instagramBusy, setInstagramBusy] = useState(false)
   const [takeoutEnabled, setTakeoutEnabled] = useState(true)
   const [takeoutOffers, setTakeoutOffers] = useState<TakeoutCatalogItem[]>([])
+  const [takeoutTemplates, setTakeoutTemplates] = useState<TakeoutTemplate[]>([])
+  const [takeoutActiveTemplateId, setTakeoutActiveTemplateId] = useState<
+    string | null
+  >(null)
   const [takeoutBusy, setTakeoutBusy] = useState(false)
 
   type AdminAccountResponse = {
@@ -2592,17 +3395,27 @@ export function AdminPage({
     }
   }
 
+  const applyTakeoutCatalog = (catalog: TakeoutCatalog) => {
+    const items = Array.isArray(catalog.items) ? catalog.items : []
+    const templates = Array.isArray(catalog.templates) ? catalog.templates : []
+    setTakeoutEnabled(Boolean(catalog.enabled))
+    setTakeoutOffers(items)
+    setTakeoutTemplates(templates)
+    setTakeoutActiveTemplateId(
+      catalog.activeTemplateId ?? activeTemplateIdForOffers(templates, items),
+    )
+  }
+
   const loadTakeout = async () => {
     setTakeoutBusy(true)
     try {
       const data = await api<{ catalog: TakeoutCatalog }>('/api/admin/takeout')
-      setTakeoutEnabled(Boolean(data.catalog?.enabled))
-      setTakeoutOffers(
-        Array.isArray(data.catalog?.items) ? data.catalog.items : [],
-      )
+      applyTakeoutCatalog(data.catalog ?? { enabled: true, items: [], templates: [], activeTemplateId: null })
     } catch {
       setTakeoutEnabled(true)
       setTakeoutOffers([])
+      setTakeoutTemplates([])
+      setTakeoutActiveTemplateId(null)
     } finally {
       setTakeoutBusy(false)
     }
@@ -3009,25 +3822,49 @@ export function AdminPage({
     }
   }
 
-  const saveTakeout = async () => {
+  const saveTakeout = async (snapshot?: TakeoutPersistInput) => {
+    const catalog: TakeoutPersistInput = snapshot ?? {
+      enabled: takeoutEnabled,
+      items: takeoutOffers,
+      templates: takeoutTemplates,
+      activeTemplateId: takeoutActiveTemplateId,
+    }
+    const switchedMode =
+      Boolean(snapshot) && !takeoutOffersMatch(catalog.items, takeoutOffers)
     setTakeoutBusy(true)
     setMessage(null)
+    applyTakeoutCatalog({
+      enabled: catalog.enabled,
+      items: catalog.items,
+      templates: catalog.templates,
+      activeTemplateId: catalog.activeTemplateId,
+    })
     try {
       const data = await api<{ catalog: TakeoutCatalog }>('/api/admin/takeout', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          catalog: {
-            enabled: takeoutEnabled,
-            items: takeoutOffers,
-          },
+          catalog,
         }),
       })
-      setTakeoutEnabled(Boolean(data.catalog?.enabled))
-      setTakeoutOffers(
-        Array.isArray(data.catalog?.items) ? data.catalog.items : [],
+      applyTakeoutCatalog(
+        data.catalog ?? {
+          enabled: catalog.enabled,
+          items: catalog.items,
+          templates: catalog.templates,
+          activeTemplateId: catalog.activeTemplateId,
+        },
       )
-      setMessage(t.adminTakeoutSaved)
+      const active = (data.catalog?.templates ?? catalog.templates).find(
+        (template) =>
+          template.id ===
+          (data.catalog?.activeTemplateId ?? catalog.activeTemplateId),
+      )
+      setMessage(
+        switchedMode && active
+          ? t.adminTakeoutActivated.replace('{name}', active.name)
+          : t.adminTakeoutSaved,
+      )
     } catch {
       setMessage(t.adminTakeoutError)
     } finally {
@@ -3036,6 +3873,124 @@ export function AdminPage({
   }
 
   const current = (item: StoredMenuItem) => drafts[item.id || 'new'] ?? item
+
+  const newDishDraft = () =>
+    current(emptyItem((items.at(-1)?.sort_order ?? 0) + 10))
+
+  const openNewDish = () => {
+    setDrafts((prev) => ({
+      ...prev,
+      new: emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
+    }))
+    setDishStatus((prev) => {
+      const next = { ...prev }
+      delete next.new
+      return next
+    })
+    setNewDishOpen(true)
+  }
+
+  const closeNewDish = () => {
+    if (busyId === 'new') {
+      return
+    }
+    setNewDishOpen(false)
+    setDrafts((prev) => {
+      const next = { ...prev }
+      delete next.new
+      return next
+    })
+  }
+
+  const closeNewCategory = () => {
+    if (categoryBusy) {
+      return
+    }
+    setNewCategoryOpen(false)
+    setCategoryName('')
+  }
+
+  const openNewCategory = async () => {
+    setCategoryStatus(null)
+    setNewCategoryOpen(true)
+    setCategoryBusy(true)
+    try {
+      const data = await api<{
+        categories?: Array<{ id: string; name: string; sort_order: number }>
+      }>('/api/admin/menu/categories')
+      const rows = Array.isArray(data.categories) ? data.categories : []
+      setKitchenCategories(rows)
+      const nextSort =
+        rows.reduce((max, row) => Math.max(max, row.sort_order ?? 0), 0) + 10
+      setCategorySort(String(nextSort))
+      setCategoryName('')
+    } catch {
+      setKitchenCategories([])
+      setCategorySort('0')
+    } finally {
+      setCategoryBusy(false)
+    }
+  }
+
+  const saveNewCategory = async () => {
+    const name = categoryName.trim()
+    if (!name) {
+      setCategoryStatus(t.adminAddCategoryError)
+      return
+    }
+    setCategoryBusy(true)
+    setCategoryStatus(null)
+    try {
+      const data = await api<{
+        category: { id: string; name: string; sort_order: number }
+      }>('/api/admin/menu/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          sort_order: Number.parseInt(categorySort, 10) || 0,
+        }),
+      })
+      setNewCategoryOpen(false)
+      setCategoryName('')
+      setCategoryStatus(
+        t.adminAddCategoryDone.replace('{name}', data.category.name),
+      )
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      setCategoryStatus(
+        code === 'not-configured'
+          ? t.adminPullKitchenInventoryMissing
+          : t.adminAddCategoryError,
+      )
+    } finally {
+      setCategoryBusy(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!newDishOpen && !newCategoryOpen) {
+      return
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') {
+        return
+      }
+      if (newDishOpen) {
+        closeNewDish()
+      }
+      if (newCategoryOpen) {
+        closeNewCategory()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [newDishOpen, newCategoryOpen, busyId, categoryBusy])
+
+  const jumpToMenuItem = (id: string) => {
+    setMenuFocusId(id)
+    jumpToMenuElement(dishDomId(id))
+  }
 
   const pullKitchenInventory = async () => {
     setInventoryBusy(true)
@@ -3063,6 +4018,34 @@ export function AdminPage({
       )
     } finally {
       setInventoryBusy(false)
+    }
+  }
+
+  const pushKitchenInventory = async () => {
+    if (!window.confirm(t.adminPushKitchenInventoryConfirm)) {
+      return
+    }
+    setExportInventoryBusy(true)
+    setExportInventoryStatus(null)
+    try {
+      const data = await api<{ cleared: number; pushed: number }>(
+        '/api/admin/menu/export-inventory',
+        { method: 'POST' },
+      )
+      setExportInventoryStatus(
+        t.adminPushKitchenInventoryDone
+          .replace('{cleared}', String(data.cleared))
+          .replace('{pushed}', String(data.pushed)),
+      )
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      setExportInventoryStatus(
+        code === 'not-configured'
+          ? t.adminPullKitchenInventoryMissing
+          : t.adminPushKitchenInventoryError,
+      )
+    } finally {
+      setExportInventoryBusy(false)
     }
   }
 
@@ -3108,6 +4091,16 @@ export function AdminPage({
             ? t.adminSavedKitchen.replace('{price}', kitchenPrice)
             : t.adminSaved,
       }))
+      if (!item.id) {
+        setNewDishOpen(false)
+        setMenuFocusId(data.item.id)
+        window.requestAnimationFrame(() => {
+          document.getElementById(dishDomId(data.item.id))?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          })
+        })
+      }
     } catch {
       setDishStatus((prev) => ({ ...prev, [key]: t.adminSaveError }))
     } finally {
@@ -3619,11 +4612,13 @@ export function AdminPage({
                     items={items}
                     enabled={takeoutEnabled}
                     offers={takeoutOffers}
+                    templates={takeoutTemplates}
+                    activeTemplateId={takeoutActiveTemplateId}
                     busy={takeoutBusy}
                     t={t}
                     onEnabledChange={setTakeoutEnabled}
-                    onOffersChange={setTakeoutOffers}
                     onSave={() => void saveTakeout()}
+                    onPersist={(catalog) => void saveTakeout(catalog)}
                   />
                 ) : null}
                 {tab === 'instagram' ? (
@@ -3654,12 +4649,52 @@ export function AdminPage({
                   />
                 ) : null}
                 {tab === 'menu' ? (
-                  <>
+                  <div className="admin-menu-page">
+                    <div
+                      className="admin-tabs admin-subtabs"
+                      role="tablist"
+                      aria-label={t.adminMenuNav}
+                    >
+                      <button
+                        type="button"
+                        role="tab"
+                        className={`admin-tab${menuSubtab === 'cards' ? ' is-active' : ''}`}
+                        aria-selected={menuSubtab === 'cards'}
+                        onClick={() => setMenuSubtab('cards')}
+                      >
+                        {t.adminMenuSubtabCards}
+                      </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        className={`admin-tab${menuSubtab === 'grid' ? ' is-active' : ''}`}
+                        aria-selected={menuSubtab === 'grid'}
+                        onClick={() => setMenuSubtab('grid')}
+                      >
+                        {t.adminMenuSubtabGrid}
+                      </button>
+                    </div>
                     <section className="carta-section admin-menu-inventory">
                       <p className="muted">{t.adminPullKitchenInventoryLead}</p>
                       <div className="admin-dish-actions">
                         <button
                           className="btn"
+                          type="button"
+                          disabled={inventoryBusy || busyId === 'new'}
+                          onClick={openNewDish}
+                        >
+                          {t.adminAddItem}
+                        </button>
+                        <button
+                          className="btn btn-outline"
+                          type="button"
+                          disabled={inventoryBusy || categoryBusy}
+                          onClick={() => void openNewCategory()}
+                        >
+                          {t.adminAddCategory}
+                        </button>
+                        <button
+                          className="btn btn-outline"
                           type="button"
                           disabled={inventoryBusy}
                           onClick={() => void pullKitchenInventory()}
@@ -3668,73 +4703,224 @@ export function AdminPage({
                             ? t.adminLoading
                             : t.adminPullKitchenInventory}
                         </button>
+                        <button
+                          className="btn btn-outline"
+                          type="button"
+                          disabled={exportInventoryBusy}
+                          onClick={() => void pushKitchenInventory()}
+                        >
+                          {exportInventoryBusy
+                            ? t.adminLoading
+                            : t.adminPushKitchenInventory}
+                        </button>
                       </div>
                       {inventoryStatus ? (
                         <p className="admin-dish-status">{inventoryStatus}</p>
                       ) : null}
+                      {exportInventoryStatus ? (
+                        <p className="admin-dish-status">{exportInventoryStatus}</p>
+                      ) : null}
+                      {categoryStatus ? (
+                        <p className="admin-dish-status">{categoryStatus}</p>
+                      ) : null}
                     </section>
-                    {MENU_CATEGORY_IDS.map((categoryId) => {
-                      const rows = items.filter(
-                        (item) => item.category_id === categoryId,
-                      )
-                      return (
-                        <section className="carta-section" key={categoryId}>
-                          <h2>{t.cartaCategories[categoryId]}</h2>
-                          {rows.length === 0 ? (
-                            <p className="muted">{t.adminEmptyCategory}</p>
-                          ) : null}
-                          {rows.map((item) => (
-                            <DishEditor
-                              key={item.id}
-                              item={current(item)}
-                              t={t}
-                              busy={busyId === item.id}
-                              status={dishStatus[item.id] ?? null}
-                              onChange={(next) =>
-                                setDrafts((prev) => ({ ...prev, [item.id]: next }))
-                              }
-                              onSave={() => void saveItem(current(item))}
-                              onDelete={() => void deleteItem(item)}
-                              onPhoto={(file) =>
-                                void uploadPhoto(current(item), file)
-                              }
-                            />
-                          ))}
-                        </section>
-                      )
-                    })}
-
-                    <section className="carta-section">
-                      <h2>{t.adminNewDish}</h2>
-                      <DishEditor
-                        item={current(
-                          emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
-                        )}
+                    {menuSubtab === 'grid' ? (
+                      <AdminMenuGrid
+                        items={items.map((item) => current(item))}
                         t={t}
-                        busy={busyId === 'new'}
-                        status={dishStatus.new ?? null}
+                        busyId={busyId}
+                        dishStatus={dishStatus}
                         onChange={(next) =>
-                          setDrafts((prev) => ({ ...prev, new: next }))
+                          setDrafts((prev) => ({
+                            ...prev,
+                            [next.id || 'new']: next,
+                          }))
                         }
-                        onSave={() =>
-                          void saveItem(
-                            current(
-                              emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
-                            ),
-                          )
-                        }
-                        onDelete={() => undefined}
-                        onPhoto={(file) =>
-                          void uploadPhoto(
-                            current(
-                              emptyItem((items.at(-1)?.sort_order ?? 0) + 10),
-                            ),
-                            file,
-                          )
-                        }
+                        onSave={(item) => void saveItem(item)}
+                        onDelete={(item) => void deleteItem(item)}
+                        onPhoto={(item, file) => void uploadPhoto(item, file)}
                       />
-                    </section>
-                  </>
+                    ) : (
+                      <div className="admin-menu-layout">
+                        <AdminMenuNav
+                          items={items.map((item) => current(item))}
+                          currentId={menuFocusId}
+                          t={t}
+                          onJump={jumpToMenuItem}
+                        />
+                        <div className="admin-menu-body">
+                          {MENU_CATEGORY_IDS.map((categoryId) => {
+                            const rows = items.filter(
+                              (item) => item.category_id === categoryId,
+                            )
+                            return (
+                              <section
+                                className="carta-section"
+                                id={`admin-menu-cat-${categoryId}`}
+                                key={categoryId}
+                              >
+                                <h2>{t.cartaCategories[categoryId]}</h2>
+                                {rows.length === 0 ? (
+                                  <p className="muted">{t.adminEmptyCategory}</p>
+                                ) : null}
+                                {rows.map((item) => (
+                                  <DishEditor
+                                    key={item.id}
+                                    item={current(item)}
+                                    t={t}
+                                    busy={busyId === item.id}
+                                    status={dishStatus[item.id] ?? null}
+                                    highlighted={menuFocusId === item.id}
+                                    onChange={(next) =>
+                                      setDrafts((prev) => ({
+                                        ...prev,
+                                        [item.id]: next,
+                                      }))
+                                    }
+                                    onSave={() => void saveItem(current(item))}
+                                    onDelete={() => void deleteItem(item)}
+                                    onPhoto={(file) =>
+                                      void uploadPhoto(current(item), file)
+                                    }
+                                  />
+                                ))}
+                              </section>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {newDishOpen ? (
+                      <div
+                        className="admin-modal-overlay"
+                        role="presentation"
+                        onClick={() => closeNewDish()}
+                      >
+                        <div
+                          className="admin-modal"
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="admin-new-dish-title"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <div className="admin-modal-head">
+                            <div>
+                              <h2 id="admin-new-dish-title">{t.adminNewDish}</h2>
+                              <p className="muted">{t.adminAddItemLead}</p>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-small"
+                              disabled={busyId === 'new'}
+                              onClick={closeNewDish}
+                            >
+                              {t.adminClose}
+                            </button>
+                          </div>
+                          <DishEditor
+                            item={newDishDraft()}
+                            t={t}
+                            busy={busyId === 'new'}
+                            status={dishStatus.new ?? null}
+                            highlighted={false}
+                            onChange={(next) =>
+                              setDrafts((prev) => ({ ...prev, new: next }))
+                            }
+                            onSave={() => void saveItem(newDishDraft())}
+                            onDelete={() => undefined}
+                            onPhoto={(file) =>
+                              void uploadPhoto(newDishDraft(), file)
+                            }
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+                    {newCategoryOpen ? (
+                      <div
+                        className="admin-modal-overlay"
+                        role="presentation"
+                        onClick={() => closeNewCategory()}
+                      >
+                        <div
+                          className="admin-modal"
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="admin-new-category-title"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <div className="admin-modal-head">
+                            <div>
+                              <h2 id="admin-new-category-title">
+                                {t.adminAddCategory}
+                              </h2>
+                              <p className="muted">{t.adminAddCategoryLead}</p>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-small"
+                              disabled={categoryBusy}
+                              onClick={closeNewCategory}
+                            >
+                              {t.adminClose}
+                            </button>
+                          </div>
+                          <div className="admin-dish-fields">
+                            <label className="takeout-field">
+                              <span>{t.adminKitchenCategoryName}</span>
+                              <input
+                                value={categoryName}
+                                disabled={categoryBusy}
+                                onChange={(event) =>
+                                  setCategoryName(event.target.value)
+                                }
+                              />
+                            </label>
+                            <label className="takeout-field">
+                              <span>{t.adminSort}</span>
+                              <input
+                                type="number"
+                                value={categorySort}
+                                disabled={categoryBusy}
+                                onChange={(event) =>
+                                  setCategorySort(event.target.value)
+                                }
+                              />
+                            </label>
+                            <div className="admin-dish-actions">
+                              <button
+                                className="btn"
+                                type="button"
+                                disabled={categoryBusy || !categoryName.trim()}
+                                onClick={() => void saveNewCategory()}
+                              >
+                                {categoryBusy ? t.adminLoading : t.adminSave}
+                              </button>
+                            </div>
+                            {categoryStatus && newCategoryOpen ? (
+                              <p className="admin-dish-status">{categoryStatus}</p>
+                            ) : null}
+                            {kitchenCategories.length > 0 ? (
+                              <div className="admin-kitchen-cats">
+                                <p className="muted">{t.adminKitchenCategories}</p>
+                                <ul>
+                                  {kitchenCategories
+                                    .slice()
+                                    .sort(
+                                      (left, right) =>
+                                        left.sort_order - right.sort_order ||
+                                        left.name.localeCompare(right.name),
+                                    )
+                                    .map((row) => (
+                                      <li key={row.id}>{row.name}</li>
+                                    ))}
+                                </ul>
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 ) : null}
               </>
             ) : null}

@@ -164,6 +164,15 @@ export type Copy = {
   adminDeleted: string
   adminDeleteConfirm: string
   adminNewDish: string
+  adminAddItem: string
+  adminAddItemLead: string
+  adminAddCategory: string
+  adminAddCategoryLead: string
+  adminKitchenCategoryName: string
+  adminKitchenCategories: string
+  adminAddCategoryDone: string
+  adminAddCategoryError: string
+  adminClose: string
   adminUploadPhoto: string
   adminNoPhoto: string
   adminPhotoError: string
@@ -178,11 +187,22 @@ export type Copy = {
   adminPublished: string
   adminAllergens: string
   adminEmptyCategory: string
+  adminMenuNav: string
+  adminMenuSubtabCards: string
+  adminMenuSubtabGrid: string
+  adminMenuGridPhoto: string
+  adminMenuGridPhotoUrl: string
+  adminMenuGridOpenPhoto: string
+  adminMenuGridRemovePhoto: string
   adminPullKitchenInventory: string
   adminPullKitchenInventoryLead: string
   adminPullKitchenInventoryDone: string
   adminPullKitchenInventoryError: string
   adminPullKitchenInventoryMissing: string
+  adminPushKitchenInventory: string
+  adminPushKitchenInventoryConfirm: string
+  adminPushKitchenInventoryDone: string
+  adminPushKitchenInventoryError: string
   adminTabMenu: string
   adminTabAccount: string
   adminTabRestaurant: string
@@ -329,6 +349,29 @@ export type Copy = {
   adminTakeoutSave: string
   adminTakeoutSaved: string
   adminTakeoutError: string
+  adminTakeoutTemplatesHeading: string
+  adminTakeoutTemplatesLead: string
+  adminTakeoutSubtabModes: string
+  adminTakeoutSubtabNew: string
+  adminTakeoutNewLead: string
+  adminTakeoutTemplateSaveAndUse: string
+  adminTakeoutCurrentMode: string
+  adminTakeoutCurrentCustom: string
+  adminTakeoutFromAll: string
+  adminTakeoutFromSection: string
+  adminTakeoutTemplateName: string
+  adminTakeoutTemplateNamePlaceholder: string
+  adminTakeoutTemplateSaveCurrent: string
+  adminTakeoutTemplateNeedName: string
+  adminTakeoutTemplateNeedItems: string
+  adminTakeoutTemplateActivate: string
+  adminTakeoutTemplateActive: string
+  adminTakeoutTemplateUpdate: string
+  adminTakeoutTemplateDelete: string
+  adminTakeoutTemplateDeleteConfirm: string
+  adminTakeoutTemplateEmpty: string
+  adminTakeoutTemplateCount: string
+  adminTakeoutActivated: string
   adminInstagramHeading: string
   adminInstagramLead: string
   adminInstagramPostLabel: string
