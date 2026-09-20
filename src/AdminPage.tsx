@@ -1,6 +1,7 @@
 import {
   Fragment,
   useEffect,
+  useRef,
   useState,
   type FormEvent,
   type MouseEvent,
@@ -297,6 +298,21 @@ function dishDomId(id: string) {
   return `admin-dish-${id || 'new'}`
 }
 
+const PRICE_INPUT_RE = /^\d*[.,]?\d*$/
+
+function isPriceInputText(value: string): boolean {
+  return PRICE_INPUT_RE.test(value)
+}
+
+function priceCentsFromInput(value: string): number {
+  const euros = Number(value.replace(',', '.'))
+  return Number.isFinite(euros) && euros >= 0 ? Math.round(euros * 100) : 0
+}
+
+function formatPriceInput(priceCents: number): string {
+  return priceCents > 0 ? (priceCents / 100).toFixed(2) : ''
+}
+
 function takeoutDishDomId(id: string) {
   return `admin-takeout-dish-${id}`
 }
@@ -332,14 +348,14 @@ function DishEditor({
   highlighted: boolean
 }) {
   const anchorId = dishDomId(item.id || 'new')
-  const [priceInput, setPriceInput] = useState(
-    item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '',
-  )
+  const [priceInput, setPriceInput] = useState(formatPriceInput(item.price_cents))
+  const priceFocused = useRef(false)
 
   useEffect(() => {
-    setPriceInput(
-      item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '',
-    )
+    if (priceFocused.current) {
+      return
+    }
+    setPriceInput(formatPriceInput(item.price_cents))
   }, [item.id, item.price_cents])
 
   const set = (patch: Partial<StoredMenuItem>) => {
@@ -450,20 +466,23 @@ function DishEditor({
           <label className="takeout-field">
             <span>{t.adminPrice}</span>
             <input
-              type="number"
-              min="0"
-              step="0.01"
+              type="text"
+              inputMode="decimal"
               value={priceInput}
+              onFocus={() => {
+                priceFocused.current = true
+              }}
+              onBlur={() => {
+                priceFocused.current = false
+                setPriceInput(formatPriceInput(item.price_cents))
+              }}
               onChange={(event) => {
                 const raw = event.target.value
+                if (!isPriceInputText(raw)) {
+                  return
+                }
                 setPriceInput(raw)
-                const euros = Number(raw.replace(',', '.'))
-                set({
-                  price_cents:
-                    Number.isFinite(euros) && euros >= 0
-                      ? Math.round(euros * 100)
-                      : 0,
-                })
+                set({ price_cents: priceCentsFromInput(raw) })
               }}
             />
           </label>
@@ -581,13 +600,15 @@ function MenuGridRow({
   onPreviewPhoto: (url: string, name: string) => void
   onPhoto: (file: File) => void
 }) {
-  const [priceInput, setPriceInput] = useState(
-    item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '',
-  )
+  const [priceInput, setPriceInput] = useState(formatPriceInput(item.price_cents))
+  const priceFocused = useRef(false)
   const [dragOver, setDragOver] = useState(false)
 
   useEffect(() => {
-    setPriceInput(item.price_cents > 0 ? (item.price_cents / 100).toFixed(2) : '')
+    if (priceFocused.current) {
+      return
+    }
+    setPriceInput(formatPriceInput(item.price_cents))
   }, [item.id, item.price_cents])
 
   const set = (patch: Partial<StoredMenuItem>) => {
@@ -714,21 +735,24 @@ function MenuGridRow({
       <td>
         <input
           className="admin-menu-grid-price"
-          type="number"
-          min="0"
-          step="0.01"
+          type="text"
+          inputMode="decimal"
           value={priceInput}
           disabled={busy}
+          onFocus={() => {
+            priceFocused.current = true
+          }}
+          onBlur={() => {
+            priceFocused.current = false
+            setPriceInput(formatPriceInput(item.price_cents))
+          }}
           onChange={(event) => {
             const raw = event.target.value
+            if (!isPriceInputText(raw)) {
+              return
+            }
             setPriceInput(raw)
-            const euros = Number(raw.replace(',', '.'))
-            set({
-              price_cents:
-                Number.isFinite(euros) && euros >= 0
-                  ? Math.round(euros * 100)
-                  : 0,
-            })
+            set({ price_cents: priceCentsFromInput(raw) })
           }}
         />
       </td>
