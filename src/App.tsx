@@ -231,6 +231,46 @@ export default function App() {
     if (description) {
       description.setAttribute('content', meta.description)
     }
+    const ogTitle = document.querySelector('meta[property="og:title"]')
+    if (ogTitle) {
+      ogTitle.setAttribute('content', meta.title)
+    }
+    const ogDescription = document.querySelector(
+      'meta[property="og:description"]',
+    )
+    if (ogDescription) {
+      ogDescription.setAttribute('content', meta.description)
+    }
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]')
+    if (twitterTitle) {
+      twitterTitle.setAttribute('content', meta.title)
+    }
+    const twitterDescription = document.querySelector(
+      'meta[name="twitter:description"]',
+    )
+    if (twitterDescription) {
+      twitterDescription.setAttribute('content', meta.description)
+    }
+    const canonicalUrl = `https://yamachan.es${route === '/' ? '' : route}`
+    const canonical = document.querySelector('link[rel="canonical"]')
+    if (canonical) {
+      canonical.setAttribute('href', canonicalUrl)
+    }
+    const ogUrl = document.querySelector('meta[property="og:url"]')
+    if (ogUrl) {
+      ogUrl.setAttribute('content', canonicalUrl)
+    }
+    let robotsMeta = document.querySelector('meta[name="robots"]')
+    if (route === '/admin') {
+      if (!robotsMeta) {
+        robotsMeta = document.createElement('meta')
+        robotsMeta.setAttribute('name', 'robots')
+        document.head.appendChild(robotsMeta)
+      }
+      robotsMeta.setAttribute('content', 'noindex, nofollow')
+    } else if (robotsMeta) {
+      robotsMeta.remove()
+    }
   }, [
     locale,
     route,
