@@ -271,6 +271,18 @@ export const en: Copy = {
   adminAllergensDownload: 'Download PDF',
   adminAllergensPdfTitle: 'Yamachan — Allergens',
   adminAllergensPdfNote: 'Ask our staff if you have questions about allergens.',
+  adminTabReviews: 'Reviews',
+  adminReviewsHeading: 'Google reviews',
+  adminReviewsLead:
+    'Pick up to 5 reviews to feature on the site. Each one links out to Google.',
+  adminReviewsSlotLabel: 'Review',
+  adminReviewsAuthor: 'Author name',
+  adminReviewsStars: 'Stars (1-5)',
+  adminReviewsQuote: 'Review text',
+  adminReviewsUrl: 'Google review link',
+  adminReviewsSave: 'Save reviews',
+  adminReviewsSaved: 'Reviews saved.',
+  adminReviewsError: 'Could not save the reviews. Try again.',
   adminRestaurantHeading: 'Restaurant info',
   adminRestaurantLead:
     'Phone, address and hours shown on the site and on the booking page.',

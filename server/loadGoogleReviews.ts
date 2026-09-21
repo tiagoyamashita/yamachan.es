@@ -1,3 +1,5 @@
+import { getStoredGoogleReviews, publishedGoogleReviews } from './adminReviews.ts'
+
 export type GoogleReview = {
   id: string
   author: string
@@ -133,6 +135,17 @@ export async function loadGoogleReviews(
   apiKey: string | undefined,
   placeIdOverride?: string,
 ): Promise<GoogleReview[]> {
+  const curated = publishedGoogleReviews(await getStoredGoogleReviews())
+  if (curated.length > 0) {
+    return curated.map((review, index) => ({
+      id: `curated-${String(index)}`,
+      author: review.author,
+      quote: review.quote,
+      stars: review.stars,
+      mapsUrl: review.mapsUrl || undefined,
+    }))
+  }
+
   if (!apiKey) {
     return []
   }

@@ -6,7 +6,7 @@ export type GoogleReview = {
   author: string
   quote: string
   stars: number
-  photoUrl: string
+  photoUrl?: string
   mapsUrl?: string
 }
 
@@ -29,10 +29,6 @@ function StarRating({ value, max }: { value: number; max: number }) {
   )
 }
 
-function withPhotos(reviews: GoogleReview[]): GoogleReview[] {
-  return reviews.filter((review) => Boolean(review.photoUrl))
-}
-
 export function GoogleReviews({
   outOf,
   openLabel,
@@ -53,7 +49,7 @@ export function GoogleReviews({
           return
         }
         const data = (await response.json()) as FeedResponse
-        if (!cancelled) setReviews(withPhotos(data.reviews))
+        if (!cancelled) setReviews(data.reviews)
       } catch {
         if (!cancelled) setReviews([])
       }
@@ -92,13 +88,15 @@ export function GoogleReviews({
               rel="noreferrer"
               aria-label={`${review.author}: ${review.stars} ${outOf}. ${openLabel}`}
             >
-              <img
-                className="review-photo"
-                src={review.photoUrl}
-                alt=""
-                loading="lazy"
-                referrerPolicy="no-referrer"
-              />
+              {review.photoUrl ? (
+                <img
+                  className="review-photo"
+                  src={review.photoUrl}
+                  alt=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                />
+              ) : null}
               <blockquote>
                 <p className="review-stars-row">
                   <StarRating

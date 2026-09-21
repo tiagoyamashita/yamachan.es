@@ -220,6 +220,17 @@ export type Copy = {
   adminAllergensDownload: string
   adminAllergensPdfTitle: string
   adminAllergensPdfNote: string
+  adminTabReviews: string
+  adminReviewsHeading: string
+  adminReviewsLead: string
+  adminReviewsSlotLabel: string
+  adminReviewsAuthor: string
+  adminReviewsStars: string
+  adminReviewsQuote: string
+  adminReviewsUrl: string
+  adminReviewsSave: string
+  adminReviewsSaved: string
+  adminReviewsError: string
   adminRestaurantHeading: string
   adminRestaurantLead: string
   adminCalendarHeading: string

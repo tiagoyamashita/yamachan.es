@@ -55,6 +55,7 @@ type AdminTab =
   | 'takeout'
   | 'instagram'
   | 'allergens'
+  | 'reviews'
 type AvailabilitySubtab = 'defaults' | 'rules' | 'open-dates' | 'booking-status'
 type LoginView = 'sign-in' | 'forgot' | 'reset'
 
@@ -169,6 +170,8 @@ function adminHeading(t: Copy, tab: AdminTab): string {
       return t.adminInstagramHeading
     case 'allergens':
       return t.adminAllergensHeading
+    case 'reviews':
+      return t.adminReviewsHeading
     default: {
       const _exhaustive: never = tab
       return _exhaustive
@@ -198,6 +201,8 @@ function adminLead(t: Copy, tab: AdminTab): string {
       return t.adminInstagramLead
     case 'allergens':
       return t.adminAllergensLead
+    case 'reviews':
+      return t.adminReviewsLead
     default: {
       const _exhaustive: never = tab
       return _exhaustive
@@ -2368,6 +2373,24 @@ function emptyInstagramSlots(): string[] {
   return Array.from({ length: INSTAGRAM_SLOTS }, () => '')
 }
 
+type StoredGoogleReview = {
+  author: string
+  quote: string
+  stars: number
+  mapsUrl: string
+}
+
+const REVIEW_SLOTS = 5
+
+function emptyReviewSlots(): StoredGoogleReview[] {
+  return Array.from({ length: REVIEW_SLOTS }, () => ({
+    author: '',
+    quote: '',
+    stars: 5,
+    mapsUrl: '',
+  }))
+}
+
 function AdminAllergensTab({
   items,
   locale,
@@ -2505,6 +2528,105 @@ function InstagramEditor({
           onClick={onSave}
         >
           {t.adminInstagramSave}
+        </button>
+      </fieldset>
+    </section>
+  )
+}
+
+function ReviewsEditor({
+  reviews,
+  busy,
+  t,
+  onChange,
+  onSave,
+}: {
+  reviews: StoredGoogleReview[]
+  busy: boolean
+  t: Copy
+  onChange: (next: StoredGoogleReview[]) => void
+  onSave: () => void
+}) {
+  const slots = [...reviews]
+  while (slots.length < REVIEW_SLOTS) {
+    slots.push({ author: '', quote: '', stars: 5, mapsUrl: '' })
+  }
+
+  const setSlot = (index: number, patch: Partial<StoredGoogleReview>) => {
+    const next = [...slots]
+    next[index] = { ...next[index], ...patch }
+    onChange(next.slice(0, REVIEW_SLOTS))
+  }
+
+  return (
+    <section className="admin-company takeout-form">
+      <fieldset className="admin-company-block">
+        <legend>{t.adminReviewsHeading}</legend>
+        <p className="muted">{t.adminReviewsLead}</p>
+        {slots.slice(0, REVIEW_SLOTS).map((review, index) => (
+          <fieldset
+            className="admin-review-slot"
+            key={`review-slot-${String(index + 1)}`}
+          >
+            <legend>
+              {t.adminReviewsSlotLabel} #{index + 1}
+            </legend>
+            <div className="admin-dish-row">
+              <label className="takeout-field">
+                <span>{t.adminReviewsAuthor}</span>
+                <input
+                  value={review.author}
+                  disabled={busy}
+                  onChange={(event) =>
+                    setSlot(index, { author: event.target.value })
+                  }
+                />
+              </label>
+              <label className="takeout-field">
+                <span>{t.adminReviewsStars}</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={review.stars}
+                  disabled={busy}
+                  onChange={(event) =>
+                    setSlot(index, {
+                      stars: Math.min(
+                        5,
+                        Math.max(1, Number(event.target.value) || 5),
+                      ),
+                    })
+                  }
+                />
+              </label>
+            </div>
+            <label className="takeout-field">
+              <span>{t.adminReviewsQuote}</span>
+              <textarea
+                rows={3}
+                value={review.quote}
+                disabled={busy}
+                onChange={(event) =>
+                  setSlot(index, { quote: event.target.value })
+                }
+              />
+            </label>
+            <label className="takeout-field">
+              <span>{t.adminReviewsUrl}</span>
+              <input
+                value={review.mapsUrl}
+                disabled={busy}
+                placeholder="https://g.page/r/..."
+                onChange={(event) =>
+                  setSlot(index, { mapsUrl: event.target.value })
+                }
+              />
+            </label>
+          </fieldset>
+        ))}
+        <button className="btn" type="button" disabled={busy} onClick={onSave}>
+          {t.adminReviewsSave}
         </button>
       </fieldset>
     </section>
@@ -3216,6 +3338,8 @@ export function AdminPage({
   const [tablesError, setTablesError] = useState<string | null>(null)
   const [instagramUrls, setInstagramUrls] = useState<string[]>(emptyInstagramSlots)
   const [instagramBusy, setInstagramBusy] = useState(false)
+  const [reviewSlots, setReviewSlots] = useState<StoredGoogleReview[]>(emptyReviewSlots)
+  const [reviewsBusy, setReviewsBusy] = useState(false)
   const [takeoutEnabled, setTakeoutEnabled] = useState(true)
   const [takeoutOffers, setTakeoutOffers] = useState<TakeoutCatalogItem[]>([])
   const [takeoutTemplates, setTakeoutTemplates] = useState<TakeoutTemplate[]>([])
@@ -3511,6 +3635,30 @@ export function AdminPage({
       setInstagramUrls(slots)
     } catch {
       setInstagramUrls(emptyInstagramSlots())
+    }
+  }
+
+  const loadReviews = async () => {
+    try {
+      const data = await api<{ reviews: StoredGoogleReview[] }>(
+        '/api/admin/reviews',
+      )
+      const rows = Array.isArray(data.reviews) ? data.reviews : []
+      const slots = emptyReviewSlots()
+      for (let index = 0; index < REVIEW_SLOTS; index += 1) {
+        const row = rows[index]
+        if (row) {
+          slots[index] = {
+            author: row.author ?? '',
+            quote: row.quote ?? '',
+            mapsUrl: row.mapsUrl ?? '',
+            stars: row.stars ?? 5,
+          }
+        }
+      }
+      setReviewSlots(slots)
+    } catch {
+      setReviewSlots(emptyReviewSlots())
     }
   }
 
@@ -3938,6 +4086,40 @@ export function AdminPage({
       }
     } finally {
       setInstagramBusy(false)
+    }
+  }
+
+  const saveReviews = async () => {
+    setReviewsBusy(true)
+    setMessage(null)
+    try {
+      const data = await api<{ reviews: StoredGoogleReview[] }>(
+        '/api/admin/reviews',
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reviews: reviewSlots }),
+        },
+      )
+      const rows = Array.isArray(data.reviews) ? data.reviews : []
+      const slots = emptyReviewSlots()
+      for (let index = 0; index < REVIEW_SLOTS; index += 1) {
+        const row = rows[index]
+        if (row) {
+          slots[index] = {
+            author: row.author ?? '',
+            quote: row.quote ?? '',
+            mapsUrl: row.mapsUrl ?? '',
+            stars: row.stars ?? 5,
+          }
+        }
+      }
+      setReviewSlots(slots)
+      setMessage(t.adminReviewsSaved)
+    } catch {
+      setMessage(t.adminReviewsError)
+    } finally {
+      setReviewsBusy(false)
     }
   }
 
@@ -4427,6 +4609,18 @@ export function AdminPage({
                 >
                   {t.adminTabAllergens}
                 </button>
+                <button
+                  type="button"
+                  role="tab"
+                  className={`admin-tab${tab === 'reviews' ? ' is-active' : ''}`}
+                  aria-selected={tab === 'reviews'}
+                  onClick={() => {
+                    setTab('reviews')
+                    void loadReviews()
+                  }}
+                >
+                  {t.adminTabReviews}
+                </button>
               </div>
             ) : null}
 
@@ -4760,6 +4954,15 @@ export function AdminPage({
                 ) : null}
                 {tab === 'allergens' ? (
                   <AdminAllergensTab items={items} locale={locale} t={t} />
+                ) : null}
+                {tab === 'reviews' ? (
+                  <ReviewsEditor
+                    reviews={reviewSlots}
+                    busy={reviewsBusy}
+                    t={t}
+                    onChange={setReviewSlots}
+                    onSave={() => void saveReviews()}
+                  />
                 ) : null}
                 {tab === 'account' ? (
                   <AccountInfoEditor

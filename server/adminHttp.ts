@@ -80,6 +80,11 @@ import {
   setStoredInstagramPostUrls,
 } from './adminInstagram.ts'
 import {
+  getStoredGoogleReviews,
+  setStoredGoogleReviews,
+  type StoredGoogleReview,
+} from './adminReviews.ts'
+import {
   loadTakeoutCatalog,
   normalizeTakeoutCatalogInput,
   saveTakeoutCatalog,
@@ -880,6 +885,40 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
         const message = error instanceof Error ? error.message : 'error'
         if (message.startsWith('invalid-url-')) {
           return json({ error: message }, 400)
+        }
+        throw error
+      }
+    }
+
+    if (path === '/api/admin/reviews' && request.method === 'GET') {
+      return json({ reviews: await getStoredGoogleReviews() })
+    }
+
+    if (path === '/api/admin/reviews' && request.method === 'PUT') {
+      const body: unknown = await request.json().catch(() => null)
+      const rawReviews =
+        body && typeof body === 'object'
+          ? (body as { reviews?: unknown }).reviews
+          : null
+      if (!Array.isArray(rawReviews)) {
+        return json({ error: 'invalid-reviews' }, 400)
+      }
+      const inputs: StoredGoogleReview[] = rawReviews.map((entry) => {
+        const row = entry && typeof entry === 'object' ? (entry as Record<string, unknown>) : {}
+        return {
+          author: typeof row.author === 'string' ? row.author : '',
+          quote: typeof row.quote === 'string' ? row.quote : '',
+          mapsUrl: typeof row.mapsUrl === 'string' ? row.mapsUrl : '',
+          stars: typeof row.stars === 'number' ? row.stars : Number(row.stars) || 5,
+        }
+      })
+      try {
+        const saved = await setStoredGoogleReviews(inputs)
+        return json({ reviews: saved })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'error'
+        if (message === 'missing-admin-config') {
+          return json({ error: message }, 503)
         }
         throw error
       }
