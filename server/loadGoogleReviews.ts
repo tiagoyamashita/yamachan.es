@@ -143,6 +143,7 @@ export async function loadGoogleReviews(
       quote: review.quote,
       stars: review.stars,
       mapsUrl: review.mapsUrl || undefined,
+      photoUrl: review.photoUrl || undefined,
     }))
   }
 

@@ -159,10 +159,7 @@ export default defineConfig(({ mode }) => {
                 return
               }
 
-              void loadInstagramPosts(
-                env.INSTAGRAM_ACCESS_TOKEN,
-                env.INSTAGRAM_POST_URLS,
-              )
+              void loadInstagramPosts()
                 .then((posts) => {
                   res.setHeader('Content-Type', 'application/json')
                   res.end(JSON.stringify({ posts }))

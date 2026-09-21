@@ -2378,6 +2378,7 @@ type StoredGoogleReview = {
   quote: string
   stars: number
   mapsUrl: string
+  photoUrl: string
 }
 
 const REVIEW_SLOTS = 5
@@ -2388,6 +2389,7 @@ function emptyReviewSlots(): StoredGoogleReview[] {
     quote: '',
     stars: 5,
     mapsUrl: '',
+    photoUrl: '',
   }))
 }
 
@@ -2486,12 +2488,14 @@ function InstagramEditor({
   t,
   onChange,
   onSave,
+  onPhoto,
 }: {
   urls: string[]
   busy: boolean
   t: Copy
   onChange: (next: string[]) => void
   onSave: () => void
+  onPhoto: (index: number, file: File) => void
 }) {
   const slots = [...urls]
   while (slots.length < INSTAGRAM_SLOTS) {
@@ -2503,24 +2507,58 @@ function InstagramEditor({
       <fieldset className="admin-company-block">
         <legend>{t.adminInstagramHeading}</legend>
         <p className="muted">{t.adminInstagramLead}</p>
-        {slots.slice(0, INSTAGRAM_SLOTS).map((value, index) => (
-          <label className="takeout-field" key={`ig-slot-${String(index + 1)}`}>
-            <span>
-              {t.adminInstagramPostLabel} #{index + 1}
-            </span>
-            <textarea
-              rows={3}
-              value={value}
-              disabled={busy}
-              placeholder={t.adminInstagramPlaceholder}
-              onChange={(event) => {
-                const next = [...slots]
-                next[index] = event.target.value
-                onChange(next.slice(0, INSTAGRAM_SLOTS))
-              }}
-            />
-          </label>
-        ))}
+        <div className="admin-instagram-photos">
+          {slots.slice(0, INSTAGRAM_SLOTS).map((value, index) => (
+            <div
+              className="admin-instagram-photo-slot"
+              key={`ig-slot-${String(index + 1)}`}
+            >
+              <span className="admin-instagram-photo-label">
+                {t.adminInstagramPostLabel} #{index + 1}
+              </span>
+              <div className="admin-instagram-photo-preview">
+                {value ? (
+                  <img src={value} alt="" />
+                ) : (
+                  <span className="admin-instagram-photo-empty">
+                    {t.adminNoPhoto}
+                  </span>
+                )}
+              </div>
+              <div className="admin-instagram-photo-actions">
+                <label className="admin-upload">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    disabled={busy}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+                      if (file) {
+                        onPhoto(index, file)
+                      }
+                      event.target.value = ''
+                    }}
+                  />
+                  {t.adminUploadPhoto}
+                </label>
+                {value ? (
+                  <button
+                    type="button"
+                    className="admin-instagram-remove"
+                    disabled={busy}
+                    onClick={() => {
+                      const next = [...slots]
+                      next[index] = ''
+                      onChange(next.slice(0, INSTAGRAM_SLOTS))
+                    }}
+                  >
+                    {t.adminMenuGridRemovePhoto}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
         <button
           className="btn"
           type="button"
@@ -2549,7 +2587,7 @@ function ReviewsEditor({
 }) {
   const slots = [...reviews]
   while (slots.length < REVIEW_SLOTS) {
-    slots.push({ author: '', quote: '', stars: 5, mapsUrl: '' })
+    slots.push({ author: '', quote: '', stars: 5, mapsUrl: '', photoUrl: '' })
   }
 
   const setSlot = (index: number, patch: Partial<StoredGoogleReview>) => {
@@ -2620,6 +2658,17 @@ function ReviewsEditor({
                 placeholder="https://g.page/r/..."
                 onChange={(event) =>
                   setSlot(index, { mapsUrl: event.target.value })
+                }
+              />
+            </label>
+            <label className="takeout-field">
+              <span>{t.adminReviewsPhotoUrl}</span>
+              <input
+                value={review.photoUrl}
+                disabled={busy}
+                placeholder="https://..."
+                onChange={(event) =>
+                  setSlot(index, { photoUrl: event.target.value })
                 }
               />
             </label>
@@ -3652,6 +3701,7 @@ export function AdminPage({
             author: row.author ?? '',
             quote: row.quote ?? '',
             mapsUrl: row.mapsUrl ?? '',
+            photoUrl: row.photoUrl ?? '',
             stars: row.stars ?? 5,
           }
         }
@@ -4077,13 +4127,30 @@ export function AdminPage({
       }
       setInstagramUrls(slots)
       setMessage(t.adminInstagramSaved)
-    } catch (error) {
-      const err = error instanceof Error ? error.message : ''
-      if (err.startsWith('invalid-url-')) {
-        setMessage(t.adminInstagramInvalid)
-      } else {
-        setMessage(t.adminInstagramError)
-      }
+    } catch {
+      setMessage(t.adminInstagramError)
+    } finally {
+      setInstagramBusy(false)
+    }
+  }
+
+  const uploadInstagramPhoto = async (index: number, file: File) => {
+    setInstagramBusy(true)
+    setMessage(null)
+    try {
+      const form = new FormData()
+      form.set('file', file)
+      const data = await api<{ url: string }>('/api/admin/photo', {
+        method: 'POST',
+        body: form,
+      })
+      setInstagramUrls((prev) => {
+        const next = [...prev]
+        next[index] = data.url
+        return next
+      })
+    } catch {
+      setMessage(t.adminPhotoError)
     } finally {
       setInstagramBusy(false)
     }
@@ -4110,6 +4177,7 @@ export function AdminPage({
             author: row.author ?? '',
             quote: row.quote ?? '',
             mapsUrl: row.mapsUrl ?? '',
+            photoUrl: row.photoUrl ?? '',
             stars: row.stars ?? 5,
           }
         }
@@ -4950,6 +5018,7 @@ export function AdminPage({
                     t={t}
                     onChange={setInstagramUrls}
                     onSave={() => void saveInstagram()}
+                    onPhoto={(index, file) => void uploadInstagramPhoto(index, file)}
                   />
                 ) : null}
                 {tab === 'allergens' ? (

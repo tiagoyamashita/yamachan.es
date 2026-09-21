@@ -8,6 +8,7 @@ export type StoredGoogleReview = {
   quote: string
   stars: number
   mapsUrl: string
+  photoUrl: string
 }
 
 function getSupabase(): SupabaseClient | null {
@@ -26,7 +27,7 @@ function getSupabase(): SupabaseClient | null {
 }
 
 function emptyReview(): StoredGoogleReview {
-  return { author: '', quote: '', stars: 5, mapsUrl: '' }
+  return { author: '', quote: '', stars: 5, mapsUrl: '', photoUrl: '' }
 }
 
 function clampStars(value: unknown): number {
@@ -59,6 +60,7 @@ export function parseStoredReviews(
         author: typeof row.author === 'string' ? row.author.trim() : '',
         quote: typeof row.quote === 'string' ? row.quote.trim() : '',
         mapsUrl: typeof row.mapsUrl === 'string' ? row.mapsUrl.trim() : '',
+        photoUrl: typeof row.photoUrl === 'string' ? row.photoUrl.trim() : '',
         stars: clampStars(row.stars),
       }
     }
@@ -78,6 +80,7 @@ export function serializeReviews(inputs: StoredGoogleReview[]): string {
       author: entry.author.trim(),
       quote: entry.quote.trim(),
       mapsUrl: entry.mapsUrl.trim(),
+      photoUrl: entry.photoUrl.trim(),
       stars: clampStars(entry.stars),
     }
   })

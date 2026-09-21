@@ -228,6 +228,7 @@ export type Copy = {
   adminReviewsStars: string
   adminReviewsQuote: string
   adminReviewsUrl: string
+  adminReviewsPhotoUrl: string
   adminReviewsSave: string
   adminReviewsSaved: string
   adminReviewsError: string
@@ -395,11 +396,9 @@ export type Copy = {
   adminInstagramHeading: string
   adminInstagramLead: string
   adminInstagramPostLabel: string
-  adminInstagramPlaceholder: string
   adminInstagramSave: string
   adminInstagramSaved: string
   adminInstagramError: string
-  adminInstagramInvalid: string
   adminCompanyPhone: string
   adminCompanyPhoneDisplay: string
   adminCompanyAddress: string

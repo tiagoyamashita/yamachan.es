@@ -75,9 +75,9 @@ import {
   setBookingDayOpen,
 } from './closedBookingDates.ts'
 import {
-  getStoredInstagramPostUrls,
-  padInstagramSlots,
-  setStoredInstagramPostUrls,
+  getStoredCarouselPhotos,
+  padCarouselPhotoSlots,
+  setStoredCarouselPhotos,
 } from './adminInstagram.ts'
 import {
   getStoredGoogleReviews,
@@ -862,7 +862,7 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
     }
 
     if (path === '/api/admin/instagram' && request.method === 'GET') {
-      const urls = padInstagramSlots(await getStoredInstagramPostUrls())
+      const urls = padCarouselPhotoSlots(await getStoredCarouselPhotos())
       return json({ urls })
     }
 
@@ -879,12 +879,12 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
         typeof entry === 'string' ? entry : '',
       )
       try {
-        const saved = await setStoredInstagramPostUrls(inputs)
-        return json({ urls: padInstagramSlots(saved) })
+        const saved = await setStoredCarouselPhotos(inputs)
+        return json({ urls: padCarouselPhotoSlots(saved) })
       } catch (error) {
         const message = error instanceof Error ? error.message : 'error'
-        if (message.startsWith('invalid-url-')) {
-          return json({ error: message }, 400)
+        if (message === 'missing-admin-config') {
+          return json({ error: message }, 503)
         }
         throw error
       }
@@ -909,6 +909,7 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
           author: typeof row.author === 'string' ? row.author : '',
           quote: typeof row.quote === 'string' ? row.quote : '',
           mapsUrl: typeof row.mapsUrl === 'string' ? row.mapsUrl : '',
+          photoUrl: typeof row.photoUrl === 'string' ? row.photoUrl : '',
           stars: typeof row.stars === 'number' ? row.stars : Number(row.stars) || 5,
         }
       })

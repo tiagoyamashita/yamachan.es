@@ -5,10 +5,7 @@ import {
   adminWriteSecret,
 } from './adminEnv.ts'
 
-export const INSTAGRAM_POST_SLOTS = 5
-
-const PERMALINK_RE =
-  /(?:https?:\/\/)?(?:www\.)?instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/i
+export const CAROUSEL_PHOTO_SLOTS = 5
 
 function getSupabase(): SupabaseClient | null {
   const url = adminSupabaseUrl()
@@ -25,92 +22,43 @@ function getSupabase(): SupabaseClient | null {
   })
 }
 
-/** Normalize a URL or pasted Instagram embed HTML into a clean permalink. */
-export function extractInstagramPermalink(input: string): string | null {
-  const trimmed = input.trim()
-  if (!trimmed) {
-    return null
-  }
-
-  const fromAttr = trimmed.match(
-    /data-instgrm-permalink=(["'])(.*?)\1/i,
-  )
-  const candidate = fromAttr?.[2]
-    ? fromAttr[2].replaceAll('&amp;', '&')
-    : trimmed
-
-  const match = candidate.match(PERMALINK_RE)
-  if (!match) {
-    return null
-  }
-
-  return `https://www.instagram.com/${match[1].toLowerCase()}/${match[2]}/`
-}
-
-/** Parse stored JSON/text into up to 5 slot strings (empties preserved for admin). */
-export function parseInstagramUrlSlots(
+/** Parse stored JSON into up to 5 slot strings (empties preserved for admin). */
+export function parseCarouselPhotoSlots(
   raw: string | undefined | null,
 ): string[] {
-  const slots = Array.from({ length: INSTAGRAM_POST_SLOTS }, () => '')
+  const slots = Array.from({ length: CAROUSEL_PHOTO_SLOTS }, () => '')
   if (!raw?.trim()) {
     return slots
   }
-
-  if (raw.trim().startsWith('[')) {
-    try {
-      const parsed: unknown = JSON.parse(raw)
-      if (Array.isArray(parsed)) {
-        for (let index = 0; index < INSTAGRAM_POST_SLOTS; index += 1) {
-          const entry = parsed[index]
-          if (typeof entry !== 'string' || !entry.trim()) {
-            slots[index] = ''
-            continue
-          }
-          slots[index] = extractInstagramPermalink(entry) ?? ''
-        }
-        return slots
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    if (Array.isArray(parsed)) {
+      for (let index = 0; index < CAROUSEL_PHOTO_SLOTS; index += 1) {
+        const entry = parsed[index]
+        slots[index] = typeof entry === 'string' ? entry.trim() : ''
       }
-    } catch {
-      // fall through
     }
-  }
-
-  const filled = raw
-    .split(/[\n,]+/)
-    .map((entry) => extractInstagramPermalink(entry))
-    .filter((entry): entry is string => Boolean(entry))
-    .slice(0, INSTAGRAM_POST_SLOTS)
-
-  for (let index = 0; index < filled.length; index += 1) {
-    slots[index] = filled[index]
+  } catch {
+    // fall through with empty slots
   }
   return slots
 }
 
-export function parseInstagramUrlList(raw: string | undefined | null): string[] {
-  return parseInstagramUrlSlots(raw).filter(Boolean)
-}
-
-export function serializeInstagramUrls(inputs: string[]): string {
-  const slots = Array.from({ length: INSTAGRAM_POST_SLOTS }, (_, index) => {
-    const raw = inputs[index] ?? ''
-    if (!raw.trim()) {
-      return ''
-    }
-    return extractInstagramPermalink(raw) ?? ''
-  })
+export function serializeCarouselPhotos(inputs: string[]): string {
+  const slots = Array.from({ length: CAROUSEL_PHOTO_SLOTS }, (_, index) =>
+    (inputs[index] ?? '').trim(),
+  )
   return JSON.stringify(slots)
 }
 
-export function padInstagramSlots(urls: string[]): string[] {
-  const slots = Array.from({ length: INSTAGRAM_POST_SLOTS }, (_, index) => {
+export function padCarouselPhotoSlots(urls: string[]): string[] {
+  return Array.from({ length: CAROUSEL_PHOTO_SLOTS }, (_, index) => {
     const value = urls[index]
     return typeof value === 'string' ? value : ''
   })
-  return slots
 }
 
-export async function getStoredInstagramPostUrls(): Promise<string[]> {
+export async function getStoredCarouselPhotos(): Promise<string[]> {
   const supabase = getSupabase()
   if (!supabase) {
     return []
@@ -119,10 +67,10 @@ export async function getStoredInstagramPostUrls(): Promise<string[]> {
   if (error || typeof data !== 'string') {
     return []
   }
-  return parseInstagramUrlSlots(data)
+  return parseCarouselPhotoSlots(data)
 }
 
-export async function setStoredInstagramPostUrls(
+export async function setStoredCarouselPhotos(
   inputs: string[],
 ): Promise<string[]> {
   const secret = adminWriteSecret()
@@ -131,22 +79,7 @@ export async function setStoredInstagramPostUrls(
     throw new Error('missing-admin-config')
   }
 
-  const normalized = Array.from({ length: INSTAGRAM_POST_SLOTS }, (_, index) => {
-    const raw = inputs[index] ?? ''
-    if (!raw.trim()) {
-      return ''
-    }
-    return extractInstagramPermalink(raw) ?? ''
-  })
-
-  for (let index = 0; index < INSTAGRAM_POST_SLOTS; index += 1) {
-    const raw = inputs[index] ?? ''
-    if (raw.trim() && !normalized[index]) {
-      throw new Error(`invalid-url-${String(index + 1)}`)
-    }
-  }
-
-  const payload = serializeInstagramUrls(normalized)
+  const payload = serializeCarouselPhotos(inputs)
   const { data, error } = await supabase.rpc(
     'yamachan_admin_set_instagram_post_urls',
     {
@@ -157,5 +90,5 @@ export async function setStoredInstagramPostUrls(
   if (error) {
     throw new Error(error.message)
   }
-  return parseInstagramUrlSlots(typeof data === 'string' ? data : payload)
+  return parseCarouselPhotoSlots(typeof data === 'string' ? data : payload)
 }

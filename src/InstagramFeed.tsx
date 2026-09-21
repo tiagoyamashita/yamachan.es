@@ -9,12 +9,7 @@ import {
 type InstagramPost = {
   id: string
   number: number
-  permalink: string
-  mediaUrl?: string
-  thumbnailUrl?: string
-  videoUrl?: string
-  mediaType: string
-  caption?: string
+  photoUrl: string
 }
 
 type FeedResponse = {
@@ -23,41 +18,10 @@ type FeedResponse = {
 
 const SWIPE_THRESHOLD_PX = 40
 
-function isVideoPost(post: InstagramPost): boolean {
-  return (
-    Boolean(post.videoUrl) ||
-    post.mediaType === 'VIDEO' ||
-    post.mediaType === 'REELS' ||
-    post.mediaType === 'REEL'
-  )
-}
-
-function posterUrl(post: InstagramPost): string {
-  return post.thumbnailUrl ?? post.mediaUrl ?? ''
-}
-
-function InstagramGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="ig-fallback-glyph">
-      <rect
-        x="3.5"
-        y="3.5"
-        width="17"
-        height="17"
-        rx="5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      />
-      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="17.2" cy="6.8" r="1" fill="currentColor" />
-    </svg>
-  )
-}
-
 function PostCard({
   post,
   title,
+  followHref,
   showNav,
   onPrev,
   onNext,
@@ -69,6 +33,7 @@ function PostCard({
 }: {
   post: InstagramPost
   title: string
+  followHref: string
   showNav: boolean
   onPrev: () => void
   onNext: () => void
@@ -78,11 +43,6 @@ function PostCard({
   onMediaPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void
   onMediaPointerCancel: (event: ReactPointerEvent<HTMLDivElement>) => void
 }) {
-  const video = post.videoUrl
-  const poster = posterUrl(post)
-  const image = isVideoPost(post)
-    ? poster
-    : (post.mediaUrl ?? post.thumbnailUrl ?? '')
   const label = `${title} #${String(post.number)}`
 
   return (
@@ -95,46 +55,21 @@ function PostCard({
         onPointerUp={onMediaPointerUp}
         onPointerCancel={onMediaPointerCancel}
       >
-        {video ? (
-          <video
-            key={video}
-            className="ig-card-video"
-            src={video}
-            poster={poster || undefined}
-            controls
-            playsInline
-            preload="metadata"
-            aria-label={label}
+        <a
+          href={followHref}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={label}
+          draggable={false}
+        >
+          <img
+            src={post.photoUrl}
+            alt=""
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            draggable={false}
           />
-        ) : image ? (
-          <a
-            href={post.permalink}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={label}
-            draggable={false}
-          >
-            <img
-              src={image}
-              alt=""
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              draggable={false}
-            />
-          </a>
-        ) : (
-          <a
-            href={post.permalink}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={label}
-            draggable={false}
-          >
-            <span className="ig-post-fallback">
-              <InstagramGlyph />
-            </span>
-          </a>
-        )}
+        </a>
 
         {showNav ? (
           <>
@@ -222,7 +157,7 @@ export function InstagramFeed({
       return
     }
     const target = event.target as HTMLElement | null
-    if (target?.closest('button, video')) {
+    if (target?.closest('button')) {
       return
     }
     dragRef.current = {
@@ -321,6 +256,7 @@ export function InstagramFeed({
         key={active.id}
         post={active}
         title={title}
+        followHref={followHref}
         showNav={showNav}
         onPrev={goPrev}
         onNext={goNext}
