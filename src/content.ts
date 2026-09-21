@@ -20,7 +20,7 @@ export const restaurant = {
   mapsEmbed:
     'https://maps.google.com/maps?cid=635843760135648053&z=16&hl=es&output=embed',
   googleRating: 4.9,
-  googleReviewCount: 118,
+  googleReviewCount: 130,
   googleMaxStars: 5,
 } as const
 
