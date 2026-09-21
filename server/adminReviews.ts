@@ -3,6 +3,15 @@ import { adminSupabaseKey, adminSupabaseUrl, adminWriteSecret } from './adminEnv
 
 export const REVIEW_SLOTS = 5
 
+const REVIEW_PHOTO_BUCKET = 'yamachan-reviews'
+
+const PHOTO_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+}
+
 export type StoredGoogleReview = {
   author: string
   quote: string
@@ -123,4 +132,30 @@ export async function setStoredGoogleReviews(
     throw new Error(error.message)
   }
   return parseStoredReviews(typeof data === 'string' ? data : payload)
+}
+
+export async function uploadReviewPhoto(file: File): Promise<{ url: string }> {
+  const supabase = getSupabase()
+  if (!supabase) {
+    throw new Error('missing-admin-config')
+  }
+  const ext = PHOTO_TYPES[file.type]
+  if (!ext) {
+    throw new Error('unsupported-type')
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('too-large')
+  }
+  const path = `${crypto.randomUUID()}.${ext}`
+  const { error } = await supabase.storage
+    .from(REVIEW_PHOTO_BUCKET)
+    .upload(path, await file.arrayBuffer(), {
+      contentType: file.type,
+      upsert: false,
+    })
+  if (error) {
+    throw new Error(error.message)
+  }
+  const { data } = supabase.storage.from(REVIEW_PHOTO_BUCKET).getPublicUrl(path)
+  return { url: data.publicUrl }
 }

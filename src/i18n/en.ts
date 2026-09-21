@@ -280,7 +280,7 @@ export const en: Copy = {
   adminReviewsStars: 'Stars (1-5)',
   adminReviewsQuote: 'Review text',
   adminReviewsUrl: 'Google review link',
-  adminReviewsPhotoUrl: 'Photo URL (optional)',
+  adminReviewsPhotoUrl: 'Photo (optional)',
   adminReviewsSave: 'Save reviews',
   adminReviewsSaved: 'Reviews saved.',
   adminReviewsError: 'Could not save the reviews. Try again.',

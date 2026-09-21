@@ -282,7 +282,7 @@ export const es: Copy = {
   adminReviewsStars: 'Estrellas (1-5)',
   adminReviewsQuote: 'Texto de la reseña',
   adminReviewsUrl: 'Enlace a la reseña de Google',
-  adminReviewsPhotoUrl: 'URL de la foto (opcional)',
+  adminReviewsPhotoUrl: 'Foto (opcional)',
   adminReviewsSave: 'Guardar reseñas',
   adminReviewsSaved: 'Reseñas guardadas.',
   adminReviewsError: 'No se pudieron guardar las reseñas. Inténtalo de nuevo.',

@@ -282,7 +282,7 @@ export const ptBR: Copy = {
   adminReviewsStars: 'Estrelas (1-5)',
   adminReviewsQuote: 'Texto da avaliação',
   adminReviewsUrl: 'Link da avaliação no Google',
-  adminReviewsPhotoUrl: 'URL da foto (opcional)',
+  adminReviewsPhotoUrl: 'Foto (opcional)',
   adminReviewsSave: 'Salvar avaliações',
   adminReviewsSaved: 'Avaliações salvas.',
   adminReviewsError: 'Não foi possível salvar as avaliações. Tente novamente.',

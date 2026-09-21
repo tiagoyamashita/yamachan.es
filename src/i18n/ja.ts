@@ -278,7 +278,7 @@ export const ja: Copy = {
   adminReviewsStars: '星評価（1〜5）',
   adminReviewsQuote: '口コミの本文',
   adminReviewsUrl: 'Googleの口コミリンク',
-  adminReviewsPhotoUrl: '写真URL（任意）',
+  adminReviewsPhotoUrl: '写真（任意）',
   adminReviewsSave: '口コミを保存',
   adminReviewsSaved: '口コミを保存しました。',
   adminReviewsError: '口コミを保存できませんでした。もう一度お試しください。',

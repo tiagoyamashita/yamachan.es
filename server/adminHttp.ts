@@ -82,6 +82,7 @@ import {
 import {
   getStoredGoogleReviews,
   setStoredGoogleReviews,
+  uploadReviewPhoto,
   type StoredGoogleReview,
 } from './adminReviews.ts'
 import {
@@ -923,6 +924,15 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
         }
         throw error
       }
+    }
+
+    if (path === '/api/admin/reviews/photo' && request.method === 'POST') {
+      const form = await request.formData()
+      const file = form.get('file')
+      if (!(file instanceof File)) {
+        return json({ error: 'missing-file' }, 400)
+      }
+      return json(await uploadReviewPhoto(file))
     }
 
     if (path === '/api/admin/account' && request.method === 'GET') {

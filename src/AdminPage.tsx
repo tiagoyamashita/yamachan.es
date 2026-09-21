@@ -2578,12 +2578,14 @@ function ReviewsEditor({
   t,
   onChange,
   onSave,
+  onPhoto,
 }: {
   reviews: StoredGoogleReview[]
   busy: boolean
   t: Copy
   onChange: (next: StoredGoogleReview[]) => void
   onSave: () => void
+  onPhoto: (index: number, file: File) => void
 }) {
   const slots = [...reviews]
   while (slots.length < REVIEW_SLOTS) {
@@ -2661,17 +2663,49 @@ function ReviewsEditor({
                 }
               />
             </label>
-            <label className="takeout-field">
-              <span>{t.adminReviewsPhotoUrl}</span>
-              <input
-                value={review.photoUrl}
-                disabled={busy}
-                placeholder="https://..."
-                onChange={(event) =>
-                  setSlot(index, { photoUrl: event.target.value })
-                }
-              />
-            </label>
+            <div className="admin-review-photo">
+              <span className="admin-review-photo-label">
+                {t.adminReviewsPhotoUrl}
+              </span>
+              <div className="admin-review-photo-row">
+                <div className="admin-review-photo-preview">
+                  {review.photoUrl ? (
+                    <img src={review.photoUrl} alt="" />
+                  ) : (
+                    <span className="admin-review-photo-empty">
+                      {t.adminNoPhoto}
+                    </span>
+                  )}
+                </div>
+                <div className="admin-review-photo-actions">
+                  <label className="admin-upload">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      disabled={busy}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0]
+                        if (file) {
+                          onPhoto(index, file)
+                        }
+                        event.target.value = ''
+                      }}
+                    />
+                    {t.adminUploadPhoto}
+                  </label>
+                  {review.photoUrl ? (
+                    <button
+                      type="button"
+                      className="admin-instagram-remove"
+                      disabled={busy}
+                      onClick={() => setSlot(index, { photoUrl: '' })}
+                    >
+                      {t.adminMenuGridRemovePhoto}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
           </fieldset>
         ))}
         <button className="btn" type="button" disabled={busy} onClick={onSave}>
@@ -4191,6 +4225,28 @@ export function AdminPage({
     }
   }
 
+  const uploadReviewPhoto = async (index: number, file: File) => {
+    setReviewsBusy(true)
+    setMessage(null)
+    try {
+      const form = new FormData()
+      form.set('file', file)
+      const data = await api<{ url: string }>('/api/admin/reviews/photo', {
+        method: 'POST',
+        body: form,
+      })
+      setReviewSlots((prev) => {
+        const next = [...prev]
+        next[index] = { ...next[index], photoUrl: data.url }
+        return next
+      })
+    } catch {
+      setMessage(t.adminPhotoError)
+    } finally {
+      setReviewsBusy(false)
+    }
+  }
+
   const saveTakeout = async (snapshot?: TakeoutPersistInput) => {
     const catalog: TakeoutPersistInput = snapshot ?? {
       enabled: takeoutEnabled,
@@ -5031,6 +5087,7 @@ export function AdminPage({
                     t={t}
                     onChange={setReviewSlots}
                     onSave={() => void saveReviews()}
+                    onPhoto={(index, file) => void uploadReviewPhoto(index, file)}
                   />
                 ) : null}
                 {tab === 'account' ? (
