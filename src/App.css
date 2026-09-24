@@ -1408,10 +1408,10 @@ h3 {
 .admin-menu-nav-cat summary {
   cursor: pointer;
   list-style: none;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.25rem auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  column-gap: 0.5rem;
   padding: 0.6rem 0;
   font-size: 0.78rem;
   letter-spacing: 0.14em;
@@ -1439,6 +1439,8 @@ h3 {
   letter-spacing: 0;
   text-transform: none;
   color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .admin-menu-nav-cat ul {
