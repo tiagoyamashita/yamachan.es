@@ -234,11 +234,12 @@ export const en: Copy = {
   adminMenuNav: 'Menu sections',
   adminMenuSubtabCards: 'Cards',
   adminMenuSubtabGrid: 'Grid',
+  adminMenuSubtabSettings: 'Settings',
   adminMenuGridPhoto: 'Photo',
   adminMenuGridPhotoUrl: 'Image URL',
   adminMenuGridOpenPhoto: 'View photo',
   adminMenuGridRemovePhoto: 'Remove photo',
-  adminPullKitchenInventory: 'Pull kitchen inventory',
+  adminPullKitchenInventory: 'Sync from GB',
   adminPullKitchenInventoryLead:
     'Copy kitchen dishes and prices from Globally Booked into this menu.',
   adminPullKitchenInventoryDone:
@@ -246,7 +247,7 @@ export const en: Copy = {
   adminPullKitchenInventoryError:
     'Could not pull kitchen inventory. Try again.',
   adminPullKitchenInventoryMissing: 'Kitchen inventory is not connected.',
-  adminPushKitchenInventory: 'Push kitchen inventory',
+  adminPushKitchenInventory: 'Sync to GB',
   adminPushKitchenInventoryConfirm:
     'This deletes every dish currently in Globally Booked and replaces them with this menu. Continue?',
   adminPushKitchenInventoryDone:

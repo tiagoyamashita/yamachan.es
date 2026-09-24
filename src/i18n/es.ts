@@ -236,11 +236,12 @@ export const es: Copy = {
   adminMenuNav: 'Secciones de la carta',
   adminMenuSubtabCards: 'Tarjetas',
   adminMenuSubtabGrid: 'Tabla',
+  adminMenuSubtabSettings: 'Settings',
   adminMenuGridPhoto: 'Foto',
   adminMenuGridPhotoUrl: 'URL de la imagen',
   adminMenuGridOpenPhoto: 'Ver foto',
   adminMenuGridRemovePhoto: 'Quitar foto',
-  adminPullKitchenInventory: 'Traer inventario de cocina',
+  adminPullKitchenInventory: 'Sync from GB',
   adminPullKitchenInventoryLead:
     'Copia los platos y precios de cocina de Globally Booked a esta carta.',
   adminPullKitchenInventoryDone:
@@ -248,7 +249,7 @@ export const es: Copy = {
   adminPullKitchenInventoryError:
     'No se ha podido traer el inventario de cocina. Prueba otra vez.',
   adminPullKitchenInventoryMissing: 'El inventario de cocina no está conectado.',
-  adminPushKitchenInventory: 'Enviar inventario a cocina',
+  adminPushKitchenInventory: 'Sync to GB',
   adminPushKitchenInventoryConfirm:
     'Esto elimina todos los platos que hay ahora en Globally Booked y los sustituye por los de esta carta. ¿Continuar?',
   adminPushKitchenInventoryDone:

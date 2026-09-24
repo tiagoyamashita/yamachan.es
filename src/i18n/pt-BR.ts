@@ -236,11 +236,12 @@ export const ptBR: Copy = {
   adminMenuNav: 'Seções do cardápio',
   adminMenuSubtabCards: 'Cartões',
   adminMenuSubtabGrid: 'Tabela',
+  adminMenuSubtabSettings: 'Settings',
   adminMenuGridPhoto: 'Foto',
   adminMenuGridPhotoUrl: 'URL da imagem',
   adminMenuGridOpenPhoto: 'Ver foto',
   adminMenuGridRemovePhoto: 'Remover foto',
-  adminPullKitchenInventory: 'Trazer estoque da cozinha',
+  adminPullKitchenInventory: 'Sync from GB',
   adminPullKitchenInventoryLead:
     'Copia os pratos e preços da cozinha do Globally Booked para este cardápio.',
   adminPullKitchenInventoryDone:
@@ -248,7 +249,7 @@ export const ptBR: Copy = {
   adminPullKitchenInventoryError:
     'Não foi possível trazer o estoque da cozinha. Tente de novo.',
   adminPullKitchenInventoryMissing: 'O estoque da cozinha não está conectado.',
-  adminPushKitchenInventory: 'Enviar estoque para a cozinha',
+  adminPushKitchenInventory: 'Sync to GB',
   adminPushKitchenInventoryConfirm:
     'Isso apaga todos os pratos que estão agora no Globally Booked e os substitui pelos deste cardápio. Continuar?',
   adminPushKitchenInventoryDone:

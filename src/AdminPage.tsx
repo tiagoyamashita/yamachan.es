@@ -161,7 +161,7 @@ type KitchenOrder = {
 }
 
 type OrdersSubtab = 'today' | 'history'
-type MenuSubtab = 'cards' | 'grid'
+type MenuSubtab = 'cards' | 'grid' | 'settings'
 
 function adminHeading(t: Copy, tab: AdminTab): string {
   switch (tab) {
@@ -5036,9 +5036,11 @@ export function AdminPage({
                       options={[
                         { id: 'cards', label: t.adminMenuSubtabCards },
                         { id: 'grid', label: t.adminMenuSubtabGrid },
+                        { id: 'settings', label: t.adminMenuSubtabSettings },
                       ]}
                       onChange={setMenuSubtab}
                     />
+                    {menuSubtab === 'settings' ? (
                     <section className="carta-section admin-menu-inventory">
                       <p className="muted">{t.adminPullKitchenInventoryLead}</p>
                       <div className="admin-dish-actions">
@@ -5089,7 +5091,7 @@ export function AdminPage({
                         <p className="admin-dish-status">{categoryStatus}</p>
                       ) : null}
                     </section>
-                    {menuSubtab === 'grid' ? (
+                    ) : menuSubtab === 'grid' ? (
                       <AdminMenuGrid
                         items={items.map((item) => current(item))}
                         t={t}

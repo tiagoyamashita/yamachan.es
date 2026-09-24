@@ -234,11 +234,12 @@ export const ja: Copy = {
   adminMenuNav: 'メニューの分類',
   adminMenuSubtabCards: 'カード表示',
   adminMenuSubtabGrid: '表形式',
+  adminMenuSubtabSettings: 'Settings',
   adminMenuGridPhoto: '写真',
   adminMenuGridPhotoUrl: '画像URL',
   adminMenuGridOpenPhoto: '写真を見る',
   adminMenuGridRemovePhoto: '写真を削除',
-  adminPullKitchenInventory: '厨房の在庫を取り込む',
+  adminPullKitchenInventory: 'Sync from GB',
   adminPullKitchenInventoryLead:
     'Globally Booked の厨房メニューをこのメニューに取り込みます。',
   adminPullKitchenInventoryDone:
@@ -246,7 +247,7 @@ export const ja: Copy = {
   adminPullKitchenInventoryError:
     '厨房の在庫を取り込めませんでした。もう一度お試しください。',
   adminPullKitchenInventoryMissing: '厨房の在庫が接続されていません。',
-  adminPushKitchenInventory: '厨房の在庫に反映',
+  adminPushKitchenInventory: 'Sync to GB',
   adminPushKitchenInventoryConfirm:
     'Globally Bookedにある料理をすべて削除し、このメニューの内容に置き換えます。続けますか？',
   adminPushKitchenInventoryDone:

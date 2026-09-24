@@ -190,6 +190,7 @@ export type Copy = {
   adminMenuNav: string
   adminMenuSubtabCards: string
   adminMenuSubtabGrid: string
+  adminMenuSubtabSettings: string
   adminMenuGridPhoto: string
   adminMenuGridPhotoUrl: string
   adminMenuGridOpenPhoto: string
