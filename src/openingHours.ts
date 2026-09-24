@@ -8,6 +8,9 @@ export const RESTAURANT_TIME_ZONE = 'Europe/Madrid'
 
 const SLOT_MINUTES = 15
 const LEAD_MINUTES = 30
+export const MAX_PICKUP_DAYS_AHEAD = 14
+
+const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/
 
 function defaultSchedule(): OpeningSchedule {
   return fallbackCompanyInfo().schedule
@@ -37,6 +40,20 @@ export function dateKey(year: number, month: number, day: number): string {
   const m = String(month + 1).padStart(2, '0')
   const d = String(day).padStart(2, '0')
   return `${year}-${m}-${d}`
+}
+
+export function addDaysKey(key: string, days: number): string {
+  const [year, month, day] = key.split('-').map(Number)
+  const next = new Date(Date.UTC(year, month - 1, day + days))
+  return next.toISOString().slice(0, 10)
+}
+
+export function isPickupDateKey(value: string): boolean {
+  return DATE_KEY.test(value)
+}
+
+export function lastPickupKey(now = new Date()): string {
+  return addDaysKey(todayKey(now), MAX_PICKUP_DAYS_AHEAD)
 }
 
 export function weekdayInRestaurantTz(key: string): number {
@@ -109,7 +126,13 @@ export function pickupSlotsForDate(
   now = new Date(),
   schedule: OpeningSchedule = defaultSchedule(),
 ): string[] {
-  if (!isOpenDate(key, schedule) || key !== todayKey(now)) {
+  const today = todayKey(now)
+  if (
+    !isPickupDateKey(key) ||
+    !isOpenDate(key, schedule) ||
+    key < today ||
+    key > lastPickupKey(now)
+  ) {
     return []
   }
   const openMinutes = timeToMinutes(schedule.lunchOpen)
@@ -122,11 +145,26 @@ export function pickupSlotsForDate(
     minutes += SLOT_MINUTES
   ) {
     const time = formatHm(minutes)
-    if (localMadridToUtc(key, time) >= earliest) {
-      slots.push(time)
+    if (key === today && localMadridToUtc(key, time) < earliest) {
+      continue
     }
+    slots.push(time)
   }
   return slots
+}
+
+export function firstPickupDate(
+  now = new Date(),
+  schedule: OpeningSchedule = defaultSchedule(),
+): string {
+  const today = todayKey(now)
+  for (let offset = 0; offset <= MAX_PICKUP_DAYS_AHEAD; offset += 1) {
+    const key = addDaysKey(today, offset)
+    if (pickupSlotsForDate(key, now, schedule).length > 0) {
+      return key
+    }
+  }
+  return today
 }
 
 export function hasPickupSlots(

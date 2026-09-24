@@ -11,7 +11,9 @@ import {
 } from './menu.ts'
 import { PickupCalendar } from './PickupCalendar.tsx'
 import {
+  firstPickupDate,
   formatPickupLabel,
+  isPickupDateKey,
   pickupSlotsForDate,
   todayKey,
 } from './openingHours.ts'
@@ -103,7 +105,10 @@ function readDetails(): SavedDetails {
       name: typeof row.name === 'string' ? row.name : '',
       email: typeof row.email === 'string' ? row.email : '',
       phone: typeof row.phone === 'string' ? row.phone : '',
-      pickupDate: todayKey(),
+      pickupDate:
+        typeof row.pickupDate === 'string' && isPickupDateKey(row.pickupDate)
+          ? row.pickupDate
+          : todayKey(),
       pickupSlot: typeof row.pickupSlot === 'string' ? row.pickupSlot : '',
       notes: typeof row.notes === 'string' ? row.notes : '',
     }
@@ -269,6 +274,10 @@ export function TakeoutPage({
   const [email, setEmail] = useState(() => readDetails().email)
   const [phone, setPhone] = useState(() => readDetails().phone)
   const [pickupSlot, setPickupSlot] = useState(() => readDetails().pickupSlot)
+  const [pickupDate, setPickupDate] = useState(() => {
+    const saved = readDetails().pickupDate
+    return saved && isPickupDateKey(saved) ? saved : todayKey()
+  })
   const [notes, setNotes] = useState(() => readDetails().notes)
   const [error, setError] = useState<string | null>(null)
   const [paying, setPaying] = useState(false)
@@ -276,9 +285,8 @@ export function TakeoutPage({
   const [canceledNotice] = useState(() => checkoutWasCanceled())
   const paidSessionId = tab === 'paid' ? sessionIdFromSearch() : ''
   const [paidLoading, setPaidLoading] = useState(() => Boolean(paidSessionId))
-  const pickupDate = todayKey()
-  const todaySlots = pickupSlotsForDate(pickupDate, new Date(), schedule)
-  const selectedSlot = todaySlots.includes(pickupSlot) ? pickupSlot : ''
+  const dateSlots = pickupSlotsForDate(pickupDate, new Date(), schedule)
+  const selectedSlot = dateSlots.includes(pickupSlot) ? pickupSlot : ''
 
   useEffect(() => {
     sessionStorage.setItem(CART_KEY, JSON.stringify(cart))
@@ -333,6 +341,17 @@ export function TakeoutPage({
       return changed ? next : prev
     })
   }, [catalog])
+
+  useEffect(() => {
+    if (pickupSlotsForDate(pickupDate, new Date(), schedule).length > 0) {
+      return
+    }
+    const next = firstPickupDate(new Date(), schedule)
+    if (next !== pickupDate) {
+      setPickupDate(next)
+      setPickupSlot('')
+    }
+  }, [pickupDate, schedule])
 
   useEffect(() => {
     sessionStorage.setItem(
@@ -854,7 +873,8 @@ export function TakeoutPage({
                         selectedDate={pickupDate}
                         selectedTime={selectedSlot}
                         schedule={schedule}
-                        onSelect={(_date, time) => {
+                        onSelect={(date, time) => {
+                          setPickupDate(date)
                           setPickupSlot(time)
                           setError(null)
                         }}

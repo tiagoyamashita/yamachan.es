@@ -118,10 +118,10 @@ export const es: Copy = {
   takeoutNeedDetails:
     'Pon tu nombre, teléfono y correo para pagar el pedido.',
   takeoutNeedEmail: 'Pon un correo válido.',
-  takeoutNeedTime: 'Elige una hora de recogida para hoy.',
+  takeoutNeedTime: 'Elige un día y una hora de recogida.',
   takeoutNeedItems: 'Añade al menos un plato antes de pagar.',
   takeoutNoPickupTimes:
-    'Hoy no hay horas de recogida. Abrimos de miércoles a sábado, de 13:00 a 16:30.',
+    'No hay horas de recogida en este día. Elige otro día abierto, de miércoles a sábado, de 13:00 a 16:30.',
   takeoutPickupNote:
     'Recogida en C/ Pardo Gimeno, 10. El pedido queda confirmado al pagar con tarjeta.',
   takeoutDisabled: 'Los pedidos para llevar están pausados ahora.',

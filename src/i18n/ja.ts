@@ -117,10 +117,10 @@ export const ja: Copy = {
   takeoutNeedDetails:
     'お支払いには、お名前、電話番号、メールアドレスを入力してください。',
   takeoutNeedEmail: '有効なメールアドレスを入力してください。',
-  takeoutNeedTime: '本日の受け取り時間を選んでください。',
+  takeoutNeedTime: '受け取りの日と時間を選んでください。',
   takeoutNeedItems: '支払う前に、料理を1品以上追加してください。',
   takeoutNoPickupTimes:
-    '本日は受け取り時間がありません。営業は水曜〜土曜の13:00〜16:30です。',
+    'この日は受け取り時間がありません。水曜〜土曜の13:00〜16:30で別の日を選んでください。',
   takeoutPickupNote:
     '受け取りは C/ Pardo Gimeno, 10。カードでのお支払い完了でご注文が確定します。',
   takeoutDisabled: '現在テイクアウト注文は一時停止中です。',

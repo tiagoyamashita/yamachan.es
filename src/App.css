@@ -3005,6 +3005,10 @@ h3 {
   margin: 0 0 1.4rem;
 }
 
+.takeout-pickup .reserve-grid {
+  margin-bottom: 1.15rem;
+}
+
 .takeout-pickup .reserve-cal-head h2 {
   font-family: var(--font-body);
   font-size: 0.74rem;

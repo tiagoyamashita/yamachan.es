@@ -117,10 +117,10 @@ export const en: Copy = {
   takeoutNeedDetails:
     'Add your name, phone number, and email to pay for the order.',
   takeoutNeedEmail: 'Enter a valid email address.',
-  takeoutNeedTime: 'Choose a pickup time for today.',
+  takeoutNeedTime: 'Choose a pickup day and time.',
   takeoutNeedItems: 'Add at least one dish before paying.',
   takeoutNoPickupTimes:
-    'No pickup times left today. We are open Wednesday to Saturday, 13:00 to 16:30.',
+    'No pickup times left on this day. Pick another open day, Wednesday to Saturday, 13:00 to 16:30.',
   takeoutPickupNote:
     'Pickup at C/ Pardo Gimeno, 10. The order is confirmed when you pay by card.',
   takeoutDisabled: 'Takeaway orders are paused right now.',

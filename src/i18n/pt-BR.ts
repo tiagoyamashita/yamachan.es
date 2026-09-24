@@ -117,10 +117,10 @@ export const ptBR: Copy = {
   takeoutNeedDetails:
     'Coloque seu nome, telefone e e-mail para pagar o pedido.',
   takeoutNeedEmail: 'Informe um e-mail válido.',
-  takeoutNeedTime: 'Escolha um horário de retirada para hoje.',
+  takeoutNeedTime: 'Escolha um dia e um horário de retirada.',
   takeoutNeedItems: 'Adicione pelo menos um prato antes de pagar.',
   takeoutNoPickupTimes:
-    'Não há horários de retirada hoje. Abrimos de quarta a sábado, das 13:00 às 16:30.',
+    'Não há horários de retirada neste dia. Escolha outro dia aberto, de quarta a sábado, das 13:00 às 16:30.',
   takeoutPickupNote:
     'Retirada na C/ Pardo Gimeno, 10. O pedido fica confirmado ao pagar com cartão.',
   takeoutDisabled: 'Os pedidos para viagem estão pausados no momento.',
