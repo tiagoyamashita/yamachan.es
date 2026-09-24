@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { WEEKDAY_LABELS_ES } from './companyInfo.ts'
+import { AdminTabBar } from './AdminTabBar.tsx'
 import type { Copy } from './i18n/index.ts'
 import {
   categoryHeading,
@@ -503,32 +504,19 @@ export function AdminTablesEditor({
         <legend>{t.adminTablesHeading}</legend>
         <p className="muted">{t.adminTablesLead}</p>
         <div className="admin-orders-toolbar">
-          <div className="admin-subtabs" role="tablist" aria-label={t.adminTablesHeading}>
-            <button
-              type="button"
-              role="tab"
-              className={`admin-tab${subtab === 'today' ? ' is-active' : ''}`}
-              aria-selected={subtab === 'today'}
-              onClick={() => {
-                onSubtabChange('today')
-                resetOrdering()
-              }}
-            >
-              {t.adminTablesTabToday}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              className={`admin-tab${subtab === 'history' ? ' is-active' : ''}`}
-              aria-selected={subtab === 'history'}
-              onClick={() => {
-                onSubtabChange('history')
-                resetOrdering()
-              }}
-            >
-              {t.adminTablesTabHistory}
-            </button>
-          </div>
+          <AdminTabBar
+            variant="subtabs"
+            value={subtab}
+            ariaLabel={t.adminTablesHeading}
+            options={[
+              { id: 'today', label: t.adminTablesTabToday },
+              { id: 'history', label: t.adminTablesTabHistory },
+            ]}
+            onChange={(next) => {
+              onSubtabChange(next)
+              resetOrdering()
+            }}
+          />
           <button
             type="button"
             className="btn btn-outline btn-small"

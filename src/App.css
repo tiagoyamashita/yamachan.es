@@ -1509,11 +1509,51 @@ h3 {
   scroll-margin-top: calc(var(--header-h) + 4.5rem);
 }
 
+.admin-tab-nav {
+  margin-bottom: 1.5rem;
+}
+
+.admin-tab-nav-subtabs {
+  margin-bottom: 1rem;
+}
+
+.admin-tabs-select-wrap {
+  display: none;
+}
+
+.admin-tabs-select {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background-color: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  padding: 0.65rem 2.1rem 0.65rem 0.85rem;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.15rem) 50%,
+    calc(100% - 0.9rem) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 799px) {
+  .admin-tab-nav .admin-tabs {
+    display: none;
+  }
+
+  .admin-tabs-select-wrap {
+    display: block;
+  }
+}
+
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .admin-tab {
@@ -1536,7 +1576,8 @@ h3 {
   margin-bottom: 1rem;
 }
 
-.admin-company-block .admin-subtabs {
+.admin-company-block .admin-subtabs,
+.admin-company-block .admin-tab-nav-subtabs {
   margin: 0.15rem 0 0.35rem;
 }
 
@@ -1926,6 +1967,11 @@ h3 {
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+.admin-orders-toolbar .admin-tab-nav {
+  flex: 1 1 12rem;
+  margin-bottom: 0;
 }
 
 .admin-orders-list {

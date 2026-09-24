@@ -16,6 +16,7 @@ import {
   type StoredMenuItem,
 } from './menu.ts'
 import { MenuJumpNav } from './MenuJumpNav.tsx'
+import { AdminTabBar } from './AdminTabBar.tsx'
 import { restaurant } from './content.ts'
 import { AllergenIcon } from './AllergenIcon.tsx'
 import { ALLERGEN_IDS, toggleAllergen } from './allergens.ts'
@@ -56,6 +57,20 @@ type AdminTab =
   | 'instagram'
   | 'allergens'
   | 'reviews'
+
+const ADMIN_TABS: readonly AdminTab[] = [
+  'menu',
+  'account',
+  'restaurant',
+  'availability',
+  'calendar',
+  'orders',
+  'tables',
+  'takeout',
+  'instagram',
+  'allergens',
+  'reviews',
+]
 type AvailabilitySubtab = 'defaults' | 'rules' | 'open-dates' | 'booking-status'
 type LoginView = 'sign-in' | 'forgot' | 'reset'
 
@@ -203,6 +218,37 @@ function adminLead(t: Copy, tab: AdminTab): string {
       return t.adminAllergensLead
     case 'reviews':
       return t.adminReviewsLead
+    default: {
+      const _exhaustive: never = tab
+      return _exhaustive
+    }
+  }
+}
+
+function adminTabLabel(t: Copy, tab: AdminTab): string {
+  switch (tab) {
+    case 'menu':
+      return t.adminTabMenu
+    case 'account':
+      return t.adminTabAccount
+    case 'restaurant':
+      return t.adminTabRestaurant
+    case 'availability':
+      return t.adminTabAvailability
+    case 'calendar':
+      return t.adminTabCalendar
+    case 'orders':
+      return t.adminTabOrders
+    case 'tables':
+      return t.adminTabTables
+    case 'takeout':
+      return t.adminTabTakeout
+    case 'instagram':
+      return t.adminTabInstagram
+    case 'allergens':
+      return t.adminTabAllergens
+    case 'reviews':
+      return t.adminTabReviews
     default: {
       const _exhaustive: never = tab
       return _exhaustive
@@ -1640,26 +1686,16 @@ function OrdersKitchenEditor({
         <legend>{t.adminOrdersHeading}</legend>
         <p className="muted">{t.adminOrdersLead}</p>
         <div className="admin-orders-toolbar">
-          <div className="admin-subtabs" role="tablist" aria-label={t.adminOrdersHeading}>
-            <button
-              type="button"
-              role="tab"
-              className={`admin-tab${subtab === 'today' ? ' is-active' : ''}`}
-              aria-selected={subtab === 'today'}
-              onClick={() => onSubtabChange('today')}
-            >
-              {t.adminOrdersTabToday}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              className={`admin-tab${subtab === 'history' ? ' is-active' : ''}`}
-              aria-selected={subtab === 'history'}
-              onClick={() => onSubtabChange('history')}
-            >
-              {t.adminOrdersTabHistory}
-            </button>
-          </div>
+          <AdminTabBar
+            variant="subtabs"
+            value={subtab}
+            ariaLabel={t.adminOrdersHeading}
+            options={[
+              { id: 'today', label: t.adminOrdersTabToday },
+              { id: 'history', label: t.adminOrdersTabHistory },
+            ]}
+            onChange={onSubtabChange}
+          />
           <button
             type="button"
             className="btn btn-outline btn-small"
@@ -2322,48 +2358,18 @@ function AvailabilityEditor({
 
   return (
     <section className="admin-company takeout-form">
-      <div
-        className="admin-tabs admin-subtabs"
-        role="tablist"
-        aria-label={t.adminAvailabilityHeading}
-      >
-        <button
-          type="button"
-          role="tab"
-          className={`admin-tab${subtab === 'defaults' ? ' is-active' : ''}`}
-          aria-selected={subtab === 'defaults'}
-          onClick={() => setSubtab('defaults')}
-        >
-          {t.adminAvailabilitySubtabDefaults}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          className={`admin-tab${subtab === 'rules' ? ' is-active' : ''}`}
-          aria-selected={subtab === 'rules'}
-          onClick={() => setSubtab('rules')}
-        >
-          {t.adminAvailabilitySubtabRules}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          className={`admin-tab${subtab === 'open-dates' ? ' is-active' : ''}`}
-          aria-selected={subtab === 'open-dates'}
-          onClick={() => setSubtab('open-dates')}
-        >
-          {t.adminAvailabilitySubtabOpenDates}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          className={`admin-tab${subtab === 'booking-status' ? ' is-active' : ''}`}
-          aria-selected={subtab === 'booking-status'}
-          onClick={() => setSubtab('booking-status')}
-        >
-          {t.adminAvailabilitySubtabBookingStatus}
-        </button>
-      </div>
+      <AdminTabBar
+        variant="subtabs"
+        value={subtab}
+        ariaLabel={t.adminAvailabilityHeading}
+        options={[
+          { id: 'defaults', label: t.adminAvailabilitySubtabDefaults },
+          { id: 'rules', label: t.adminAvailabilitySubtabRules },
+          { id: 'open-dates', label: t.adminAvailabilitySubtabOpenDates },
+          { id: 'booking-status', label: t.adminAvailabilitySubtabBookingStatus },
+        ]}
+        onChange={setSubtab}
+      />
       {panel}
     </section>
   )
@@ -3162,33 +3168,23 @@ function TakeoutCatalogEditor({
           <p className="muted">{t.adminTakeoutNoMenu}</p>
         ) : (
           <>
-            <div
-              className="admin-tabs admin-subtabs"
-              role="tablist"
-              aria-label={t.adminTakeoutTemplatesHeading}
-            >
-              <button
-                type="button"
-                role="tab"
-                className={`admin-tab${subtab === 'modes' ? ' is-active' : ''}`}
-                aria-selected={subtab === 'modes'}
-                onClick={() => {
-                  setTemplateError(null)
-                  setSubtab('modes')
-                }}
-              >
-                {t.adminTakeoutSubtabModes}
-              </button>
-              <button
-                type="button"
-                role="tab"
-                className={`admin-tab${subtab === 'new' ? ' is-active' : ''}`}
-                aria-selected={subtab === 'new'}
-                onClick={openNewTab}
-              >
-                {t.adminTakeoutSubtabNew}
-              </button>
-            </div>
+            <AdminTabBar
+              variant="subtabs"
+              value={subtab}
+              ariaLabel={t.adminTakeoutTemplatesHeading}
+              options={[
+                { id: 'modes', label: t.adminTakeoutSubtabModes },
+                { id: 'new', label: t.adminTakeoutSubtabNew },
+              ]}
+              onChange={(next) => {
+                if (next === 'new') {
+                  openNewTab()
+                  return
+                }
+                setTemplateError(null)
+                setSubtab(next)
+              }}
+            />
             {panel}
           </>
         )}
@@ -3944,6 +3940,42 @@ export function AdminPage({
     setStatus('login')
   }
 
+  const openAdminTab = (next: AdminTab) => {
+    setTab(next)
+    switch (next) {
+      case 'menu':
+      case 'account':
+      case 'restaurant':
+      case 'allergens':
+        return
+      case 'availability':
+        void loadAvailability(availabilityYear, availabilityMonth)
+        return
+      case 'calendar':
+        void loadBookings(bookingsYear, bookingsMonth)
+        return
+      case 'orders':
+        void loadOrders()
+        return
+      case 'tables':
+        void loadTables()
+        return
+      case 'takeout':
+        void loadTakeout()
+        return
+      case 'instagram':
+        void loadInstagram()
+        return
+      case 'reviews':
+        void loadReviews()
+        return
+      default: {
+        const _exhaustive: never = next
+        return _exhaustive
+      }
+    }
+  }
+
   const saveAccountEmail = async () => {
     setAccountEmailBusy(true)
     setMessage(null)
@@ -4624,128 +4656,15 @@ export function AdminPage({
             </header>
 
             {status === 'ready' ? (
-              <div className="admin-tabs" role="tablist" aria-label={t.adminTitle}>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'menu' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'menu'}
-                  onClick={() => setTab('menu')}
-                >
-                  {t.adminTabMenu}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'account' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'account'}
-                  onClick={() => setTab('account')}
-                >
-                  {t.adminTabAccount}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'restaurant' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'restaurant'}
-                  onClick={() => setTab('restaurant')}
-                >
-                  {t.adminTabRestaurant}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'availability' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'availability'}
-                  onClick={() => {
-                    setTab('availability')
-                    void loadAvailability(availabilityYear, availabilityMonth)
-                  }}
-                >
-                  {t.adminTabAvailability}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'calendar' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'calendar'}
-                  onClick={() => {
-                    setTab('calendar')
-                    void loadBookings(bookingsYear, bookingsMonth)
-                  }}
-                >
-                  {t.adminTabCalendar}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'orders' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'orders'}
-                  onClick={() => {
-                    setTab('orders')
-                    void loadOrders()
-                  }}
-                >
-                  {t.adminTabOrders}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'tables' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'tables'}
-                  onClick={() => {
-                    setTab('tables')
-                    void loadTables()
-                  }}
-                >
-                  {t.adminTabTables}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'takeout' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'takeout'}
-                  onClick={() => {
-                    setTab('takeout')
-                    void loadTakeout()
-                  }}
-                >
-                  {t.adminTabTakeout}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'instagram' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'instagram'}
-                  onClick={() => {
-                    setTab('instagram')
-                    void loadInstagram()
-                  }}
-                >
-                  {t.adminTabInstagram}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'allergens' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'allergens'}
-                  onClick={() => setTab('allergens')}
-                >
-                  {t.adminTabAllergens}
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  className={`admin-tab${tab === 'reviews' ? ' is-active' : ''}`}
-                  aria-selected={tab === 'reviews'}
-                  onClick={() => {
-                    setTab('reviews')
-                    void loadReviews()
-                  }}
-                >
-                  {t.adminTabReviews}
-                </button>
-              </div>
+              <AdminTabBar
+                value={tab}
+                ariaLabel={t.adminTitle}
+                options={ADMIN_TABS.map((id) => ({
+                  id,
+                  label: adminTabLabel(t, id),
+                }))}
+                onChange={openAdminTab}
+              />
             ) : null}
 
             {status === 'loading' ? <p className="muted">{t.adminLoading}</p> : null}
@@ -5110,30 +5029,16 @@ export function AdminPage({
                 ) : null}
                 {tab === 'menu' ? (
                   <div className="admin-menu-page">
-                    <div
-                      className="admin-tabs admin-subtabs"
-                      role="tablist"
-                      aria-label={t.adminMenuNav}
-                    >
-                      <button
-                        type="button"
-                        role="tab"
-                        className={`admin-tab${menuSubtab === 'cards' ? ' is-active' : ''}`}
-                        aria-selected={menuSubtab === 'cards'}
-                        onClick={() => setMenuSubtab('cards')}
-                      >
-                        {t.adminMenuSubtabCards}
-                      </button>
-                      <button
-                        type="button"
-                        role="tab"
-                        className={`admin-tab${menuSubtab === 'grid' ? ' is-active' : ''}`}
-                        aria-selected={menuSubtab === 'grid'}
-                        onClick={() => setMenuSubtab('grid')}
-                      >
-                        {t.adminMenuSubtabGrid}
-                      </button>
-                    </div>
+                    <AdminTabBar
+                      variant="subtabs"
+                      value={menuSubtab}
+                      ariaLabel={t.adminMenuNav}
+                      options={[
+                        { id: 'cards', label: t.adminMenuSubtabCards },
+                        { id: 'grid', label: t.adminMenuSubtabGrid },
+                      ]}
+                      onChange={setMenuSubtab}
+                    />
                     <section className="carta-section admin-menu-inventory">
                       <p className="muted">{t.adminPullKitchenInventoryLead}</p>
                       <div className="admin-dish-actions">
