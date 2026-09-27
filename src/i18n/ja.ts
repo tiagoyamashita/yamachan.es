@@ -15,6 +15,8 @@ export const ja: Copy = {
   },
   skipToContent: '本文へスキップ',
   navAria: 'メイン',
+  navMenu: 'メニュー',
+  navMenuClose: 'メニューを閉じる',
   heroBannerAlt: 'ヤマチャン、アリカンテの本格日本料理店',
   chefPhotoAlt: '山ちゃんのシェフ、マサシ。店の入り口で手を振っている',
   whatsappReserveText: 'こんにちは。山ちゃんで席の予約をお願いします。',

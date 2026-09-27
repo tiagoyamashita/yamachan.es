@@ -15,6 +15,8 @@ export const es: Copy = {
   },
   skipToContent: 'Saltar al contenido',
   navAria: 'Principal',
+  navMenu: 'Menú',
+  navMenuClose: 'Cerrar menú',
   heroBannerAlt: 'Yamachan, auténtico restaurante japonés en Alicante',
   chefPhotoAlt:
     'Masashi, chef del restaurante Yama-Chan, saludando en la puerta del local',

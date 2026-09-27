@@ -15,6 +15,8 @@ export type Copy = {
   }
   skipToContent: string
   navAria: string
+  navMenu: string
+  navMenuClose: string
   heroBannerAlt: string
   chefPhotoAlt: string
   whatsappReserveText: string

@@ -153,6 +153,7 @@ export default function App() {
   const [locale, setLocale] = useState<Locale>(detectLocale)
   const [route, setRoute] = useState<Route>(routeFromLocation)
   const [hash, setHash] = useState(() => window.location.hash)
+  const [navOpen, setNavOpen] = useState(false)
   const companyInfo = useCompanyInfo()
   const t = copy[locale]
   const visit = mergeVisitCopy(t, companyInfo)
@@ -286,11 +287,41 @@ export default function App() {
     t.adminLead,
   ])
 
+  useEffect(() => {
+    if (!navOpen) {
+      return
+    }
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setNavOpen(false)
+      }
+    }
+    const onPointer = (event: PointerEvent) => {
+      const header = document.querySelector('.site-header')
+      if (
+        header &&
+        event.target instanceof Node &&
+        !header.contains(event.target)
+      ) {
+        setNavOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onPointer)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointerdown', onPointer)
+    }
+  }, [navOpen])
+
   const go = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
     if (isModifiedClick(event)) {
       return
     }
     event.preventDefault()
+    setNavOpen(false)
     navigateTo(href)
   }
 
@@ -311,13 +342,24 @@ export default function App() {
         {t.skipToContent}
       </a>
 
-      <header className="site-header">
+      <header className={navOpen ? 'site-header nav-open' : 'site-header'}>
         <div className="header-inner">
           <a className="brand" href="/" onClick={(event) => go(event, '/')}>
             <NavLogo />
           </a>
 
-          <nav className="desktop-nav" aria-label={t.navAria}>
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-expanded={navOpen}
+            aria-controls="site-nav"
+            aria-label={navOpen ? t.navMenuClose : t.navMenu}
+            onClick={() => setNavOpen((open) => !open)}
+          >
+            <span className="nav-toggle-bars" aria-hidden="true" />
+          </button>
+
+          <nav id="site-nav" className="desktop-nav" aria-label={t.navAria}>
             <a href="/#casa" onClick={(event) => go(event, '/#casa')}>
               {t.nav.historia}
             </a>
@@ -354,34 +396,6 @@ export default function App() {
               {t.nav.reservar}
             </a>
           </nav>
-
-          <div className="header-actions">
-            <a
-              className="header-carta"
-              href="/carta"
-              aria-current={onCarta ? 'page' : undefined}
-              onClick={(event) => go(event, '/carta')}
-            >
-              {t.nav.carta}
-            </a>
-            <a
-              className="header-carta"
-              href="/para-llevar"
-              aria-current={onTakeout ? 'page' : undefined}
-              onClick={(event) => go(event, '/para-llevar')}
-            >
-              {t.nav.takeout}
-            </a>
-            <LanguagePicker locale={locale} onChange={setLocale} />
-            <a
-              className="btn btn-small"
-              href="/reservas"
-              aria-current={onReserve ? 'page' : undefined}
-              onClick={(event) => go(event, '/reservas')}
-            >
-              {t.nav.reservar}
-            </a>
-          </div>
         </div>
       </header>
 
