@@ -41,6 +41,8 @@ export const en: Copy = {
   cartaLead:
     'The plates that come up most in the Google reviews. The full menu is on its own page.',
   cartaCta: 'See the menu',
+  featuredPrev: 'Previous dish',
+  featuredNext: 'Next dish',
   cartaPageTitle: 'Menu — Yama-Chan',
   cartaPageHeading: 'The menu',
   cartaPageDescription:

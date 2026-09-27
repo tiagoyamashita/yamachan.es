@@ -42,6 +42,8 @@ export const es: Copy = {
   cartaLead:
     'Los platos que más salen en las opiniones de Google. Toda la carta está en su página.',
   cartaCta: 'Ver la carta',
+  featuredPrev: 'Plato anterior',
+  featuredNext: 'Plato siguiente',
   cartaPageTitle: 'La carta — Yama-Chan',
   cartaPageHeading: 'La carta',
   cartaPageDescription:

@@ -1,6 +1,11 @@
-import { useEffect, useState } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { getSupabase } from './supabase.ts'
-import { showJapaneseCaption, type Locale } from './i18n/index.ts'
+import { copy, showJapaneseCaption, type Locale } from './i18n/index.ts'
 import { catalogCopy } from './menu.ts'
 
 export type FeaturedDish = {
@@ -19,6 +24,8 @@ export type FeaturedDish = {
 }
 
 const SKELETON_KEYS = ['d1', 'd2', 'd3', 'd4', 'd5', 'd6'] as const
+const MOBILE_QUERY = '(max-width: 799px)'
+const SWIPE_THRESHOLD_PX = 40
 
 function firstNonEmpty(...values: Array<string | undefined>): string {
   for (const value of values) {
@@ -63,8 +70,189 @@ function dishCopy(dish: FeaturedDish, locale: Locale) {
   }
 }
 
+function useMobileLayout() {
+  const [mobile, setMobile] = useState(() =>
+    window.matchMedia(MOBILE_QUERY).matches,
+  )
+
+  useEffect(() => {
+    const media = window.matchMedia(MOBILE_QUERY)
+    const sync = () => setMobile(media.matches)
+    sync()
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', sync)
+      return () => media.removeEventListener('change', sync)
+    }
+    media.addListener(sync)
+    return () => media.removeListener(sync)
+  }, [])
+
+  return mobile
+}
+
+function DishBody({ dish, locale }: { dish: FeaturedDish; locale: Locale }) {
+  const text = dishCopy(dish, locale)
+  return (
+    <>
+      {dish.image_url ? (
+        <img src={dish.image_url} alt="" loading="lazy" draggable={false} />
+      ) : null}
+      <div className="dish-meta">
+        {showJapaneseCaption(locale) && dish.name_ja ? (
+          <p className="dish-ja">{dish.name_ja}</p>
+        ) : null}
+        <h3>{text.name}</h3>
+        {text.blurb ? <p>{text.blurb}</p> : null}
+        {text.quote ? (
+          <blockquote className="dish-quote">
+            <p>{text.quote}</p>
+            {dish.review_author ? (
+              <footer>
+                <cite>{dish.review_author}</cite>
+              </footer>
+            ) : null}
+          </blockquote>
+        ) : null}
+      </div>
+    </>
+  )
+}
+
+function DishCarousel({
+  dishes,
+  locale,
+}: {
+  dishes: FeaturedDish[]
+  locale: Locale
+}) {
+  const [index, setIndex] = useState(0)
+  const dragRef = useRef<{
+    pointerId: number
+    startX: number
+    startY: number
+  } | null>(null)
+  const labels = copy[locale]
+  const count = dishes.length
+  const activeIndex = count === 0 ? 0 : index % count
+  const active = dishes[activeIndex]
+  const showNav = count > 1
+
+  const goPrev = () => {
+    setIndex((current) => (current - 1 + count) % count)
+  }
+  const goNext = () => {
+    setIndex((current) => (current + 1) % count)
+  }
+
+  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return
+    }
+    if (event.target instanceof Element && event.target.closest('button')) {
+      return
+    }
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+    }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  const finishDrag = (
+    event: ReactPointerEvent<HTMLDivElement>,
+    clientX: number,
+    clientY: number,
+  ) => {
+    const drag = dragRef.current
+    if (!drag || drag.pointerId !== event.pointerId) {
+      return
+    }
+    dragRef.current = null
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    } catch {
+      // already released
+    }
+    const dx = clientX - drag.startX
+    const dy = clientY - drag.startY
+    if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) <= Math.abs(dy)) {
+      return
+    }
+    if (dx < 0) {
+      goNext()
+    } else {
+      goPrev()
+    }
+  }
+
+  if (!active) {
+    return null
+  }
+
+  const name = dishCopy(active, locale).name
+
+  return (
+    <div className="dish-carousel" aria-roledescription="carousel" aria-label={labels.cartaTitle}>
+      <div
+        className="dish-card"
+        onPointerDown={showNav ? onPointerDown : undefined}
+        onPointerUp={
+          showNav
+            ? (event) => finishDrag(event, event.clientX, event.clientY)
+            : undefined
+        }
+        onPointerCancel={() => {
+          dragRef.current = null
+        }}
+      >
+        <DishBody dish={active} locale={locale} />
+        {showNav ? (
+          <>
+            <button
+              type="button"
+              className="ig-carousel-nav is-prev"
+              onClick={goPrev}
+              aria-label={labels.featuredPrev}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="ig-carousel-nav is-next"
+              onClick={goNext}
+              aria-label={labels.featuredNext}
+            >
+              ›
+            </button>
+          </>
+        ) : null}
+      </div>
+      {showNav ? (
+        <div className="ig-carousel-dots" role="tablist" aria-label={labels.cartaTitle}>
+          {dishes.map((dish, dishIndex) => (
+            <button
+              key={dish.id}
+              type="button"
+              role="tab"
+              className={`ig-carousel-dot${dishIndex === activeIndex ? ' is-active' : ''}`}
+              aria-selected={dishIndex === activeIndex}
+              aria-label={dishCopy(dish, locale).name}
+              onClick={() => setIndex(dishIndex)}
+            />
+          ))}
+        </div>
+      ) : null}
+      <p className="visually-hidden" aria-live="polite">
+        {name}
+      </p>
+    </div>
+  )
+}
+
 export function FeaturedDishes({ locale }: { locale: Locale }) {
   const client = getSupabase()
+  const mobile = useMobileLayout()
   const [dishes, setDishes] = useState<FeaturedDish[] | null>(() =>
     client ? null : [],
   )
@@ -102,6 +290,13 @@ export function FeaturedDishes({ locale }: { locale: Locale }) {
   }, [client])
 
   if (dishes === null) {
+    if (mobile) {
+      return (
+        <div className="dish-carousel" aria-busy="true">
+          <div className="dish-card dish-card-skeleton" />
+        </div>
+      )
+    }
     return (
       <ul className="dish-grid" aria-busy="true">
         {SKELETON_KEYS.map((key) => (
@@ -115,35 +310,17 @@ export function FeaturedDishes({ locale }: { locale: Locale }) {
     return null
   }
 
+  if (mobile) {
+    return <DishCarousel dishes={dishes} locale={locale} />
+  }
+
   return (
     <ul className="dish-grid">
-      {dishes.map((dish) => {
-        const copy = dishCopy(dish, locale)
-        return (
-          <li key={dish.id} className="dish-card">
-            {dish.image_url ? (
-              <img src={dish.image_url} alt="" loading="lazy" />
-            ) : null}
-            <div className="dish-meta">
-              {showJapaneseCaption(locale) && dish.name_ja ? (
-                <p className="dish-ja">{dish.name_ja}</p>
-              ) : null}
-              <h3>{copy.name}</h3>
-              {copy.blurb ? <p>{copy.blurb}</p> : null}
-              {copy.quote ? (
-                <blockquote className="dish-quote">
-                  <p>{copy.quote}</p>
-                  {dish.review_author ? (
-                    <footer>
-                      <cite>{dish.review_author}</cite>
-                    </footer>
-                  ) : null}
-                </blockquote>
-              ) : null}
-            </div>
-          </li>
-        )
-      })}
+      {dishes.map((dish) => (
+        <li key={dish.id} className="dish-card">
+          <DishBody dish={dish} locale={locale} />
+        </li>
+      ))}
     </ul>
   )
 }

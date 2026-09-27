@@ -41,6 +41,8 @@ export const ptBR: Copy = {
   cartaLead:
     'Os pratos que mais aparecem nas avaliações do Google. O cardápio completo está na página dele.',
   cartaCta: 'Ver o cardápio',
+  featuredPrev: 'Prato anterior',
+  featuredNext: 'Próximo prato',
   cartaPageTitle: 'Cardápio — Yama-Chan',
   cartaPageHeading: 'O cardápio',
   cartaPageDescription:

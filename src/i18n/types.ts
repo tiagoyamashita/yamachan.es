@@ -36,6 +36,8 @@ export type Copy = {
   cartaTitle: string
   cartaLead: string
   cartaCta: string
+  featuredPrev: string
+  featuredNext: string
   cartaPageTitle: string
   cartaPageHeading: string
   cartaPageDescription: string

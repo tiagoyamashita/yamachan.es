@@ -376,17 +376,18 @@ export default function App() {
               <a href="/#visita" onClick={(event) => go(event, '/#visita')}>
                 {t.nav.visitas}
               </a>
-              <a
-                className="btn btn-small"
-                href="/reservas"
-                aria-current={onReserve ? 'page' : undefined}
-                onClick={(event) => go(event, '/reservas')}
-              >
-                {t.nav.reservar}
-              </a>
             </nav>
 
             <LanguagePicker locale={locale} onChange={setLocale} />
+
+            <a
+              className="btn btn-small header-reserve"
+              href="/reservas"
+              aria-current={onReserve ? 'page' : undefined}
+              onClick={(event) => go(event, '/reservas')}
+            >
+              {t.nav.reservar}
+            </a>
 
             <button
               type="button"

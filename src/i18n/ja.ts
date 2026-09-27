@@ -41,6 +41,8 @@ export const ja: Copy = {
   cartaLead:
     'Googleの口コミでよく名前が上がる料理です。全メニューは専用ページにあります。',
   cartaCta: 'メニューを見る',
+  featuredPrev: '前の料理',
+  featuredNext: '次の料理',
   cartaPageTitle: 'メニュー — 山ちゃん',
   cartaPageHeading: 'メニュー',
   cartaPageDescription:
