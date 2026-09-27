@@ -348,54 +348,57 @@ export default function App() {
             <NavLogo />
           </a>
 
-          <button
-            type="button"
-            className="nav-toggle"
-            aria-expanded={navOpen}
-            aria-controls="site-nav"
-            aria-label={navOpen ? t.navMenuClose : t.navMenu}
-            onClick={() => setNavOpen((open) => !open)}
-          >
-            <span className="nav-toggle-bars" aria-hidden="true" />
-          </button>
+          <div className="header-end">
+            <nav id="site-nav" className="desktop-nav" aria-label={t.navAria}>
+              <a href="/#casa" onClick={(event) => go(event, '/#casa')}>
+                {t.nav.historia}
+              </a>
+              <a href="/#fotos" onClick={(event) => go(event, '/#fotos')}>
+                {t.nav.fotos}
+              </a>
+              <a
+                href="/carta"
+                aria-current={onCarta ? 'page' : undefined}
+                onClick={(event) => go(event, '/carta')}
+              >
+                {t.nav.carta}
+              </a>
+              <a
+                href="/para-llevar"
+                aria-current={onTakeout ? 'page' : undefined}
+                onClick={(event) => go(event, '/para-llevar')}
+              >
+                {t.nav.takeout}
+              </a>
+              <a href="/#opiniones" onClick={(event) => go(event, '/#opiniones')}>
+                {t.nav.opiniones}
+              </a>
+              <a href="/#visita" onClick={(event) => go(event, '/#visita')}>
+                {t.nav.visitas}
+              </a>
+              <a
+                className="btn btn-small"
+                href="/reservas"
+                aria-current={onReserve ? 'page' : undefined}
+                onClick={(event) => go(event, '/reservas')}
+              >
+                {t.nav.reservar}
+              </a>
+            </nav>
 
-          <nav id="site-nav" className="desktop-nav" aria-label={t.navAria}>
-            <a href="/#casa" onClick={(event) => go(event, '/#casa')}>
-              {t.nav.historia}
-            </a>
-            <a href="/#fotos" onClick={(event) => go(event, '/#fotos')}>
-              {t.nav.fotos}
-            </a>
-            <a
-              href="/carta"
-              aria-current={onCarta ? 'page' : undefined}
-              onClick={(event) => go(event, '/carta')}
-            >
-              {t.nav.carta}
-            </a>
-            <a
-              href="/para-llevar"
-              aria-current={onTakeout ? 'page' : undefined}
-              onClick={(event) => go(event, '/para-llevar')}
-            >
-              {t.nav.takeout}
-            </a>
-            <a href="/#opiniones" onClick={(event) => go(event, '/#opiniones')}>
-              {t.nav.opiniones}
-            </a>
-            <a href="/#visita" onClick={(event) => go(event, '/#visita')}>
-              {t.nav.visitas}
-            </a>
             <LanguagePicker locale={locale} onChange={setLocale} />
-            <a
-              className="btn btn-small"
-              href="/reservas"
-              aria-current={onReserve ? 'page' : undefined}
-              onClick={(event) => go(event, '/reservas')}
+
+            <button
+              type="button"
+              className="nav-toggle"
+              aria-expanded={navOpen}
+              aria-controls="site-nav"
+              aria-label={navOpen ? t.navMenuClose : t.navMenu}
+              onClick={() => setNavOpen((open) => !open)}
             >
-              {t.nav.reservar}
-            </a>
-          </nav>
+              <span className="nav-toggle-bars" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </header>
 
