@@ -18,7 +18,7 @@
   --header-h: 4.75rem;
 }
 
-@media (max-width: 799px) {
+@media (max-width: 1099px) {
   :root {
     --header-h: calc(4.75rem + 10px);
   }
