@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import legacy from '@vitejs/plugin-legacy'
 import { loadInstagramPosts } from './server/loadInstagramPosts.ts'
 import { fetchInstagramMedia } from './server/instagramEmbed.ts'
 import { loadInstagramPermalinkPreview } from './server/instagramPreview.ts'
@@ -82,6 +83,13 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
+      legacy({
+        targets: ['android >= 4.4', 'chrome >= 49', 'samsung >= 4', 'ios >= 9'],
+        additionalLegacyPolyfills: [
+          'whatwg-fetch',
+          'core-js/proposals/global-this',
+        ],
+      }),
       {
         name: 'instagram-api',
         configureServer(server) {

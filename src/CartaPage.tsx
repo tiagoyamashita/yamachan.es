@@ -71,7 +71,7 @@ export function CartaPage({
                           <div>
                             <h3>{shown.name}</h3>
                             {showJapaneseCaption(locale) && item.name_ja ? (
-                              <p className="dish-ja">
+                              <p className={romaji ? 'dish-ja has-ruby' : 'dish-ja'}>
                                 {romaji ? (
                                   <ruby lang="ja">
                                     {item.name_ja}

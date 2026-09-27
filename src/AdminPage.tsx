@@ -722,7 +722,11 @@ function MenuGridRow({
           )}
         </button>
         <div className="admin-menu-grid-photo-actions">
-          <label className="admin-menu-grid-upload">
+          <label
+            className={
+              busy ? 'admin-menu-grid-upload is-disabled' : 'admin-menu-grid-upload'
+            }
+          >
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
