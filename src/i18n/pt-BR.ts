@@ -357,6 +357,8 @@ export const ptBR: Copy = {
   adminTablesStartOrder: 'Iniciar pedido',
   adminTablesAddItems: 'Adicionar itens',
   adminTablesOrderingLead: 'Adicione pratos para enviar à cozinha nesta mesa.',
+  adminTablesMenuSearch: 'Buscar no cardápio',
+  adminTablesMenuSearchEmpty: 'Nenhum prato corresponde à busca.',
   adminTablesNoMenu: 'Nenhum item de menu disponível no Globally Booked.',
   adminTablesAddDish: 'Adicionar',
   adminTablesCurrentOrder: 'Pedido atual',
