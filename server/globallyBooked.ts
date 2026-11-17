@@ -64,6 +64,10 @@ function restaurantPath(suffix: string): string {
   return `/api/user/restaurants/${encodeURIComponent(restaurantSlug())}${suffix}`
 }
 
+export function tableGuestOrderUrl(tableId: string): string {
+  return `/mesa/${encodeURIComponent(tableId)}`
+}
+
 export type RestaurantSettings = {
   id: string
   name: string
@@ -252,6 +256,7 @@ export type AdminRestaurantTable = {
   is_active: boolean
   kind: string
   sort_order: number
+  order_url: string
 }
 
 type RestaurantTable = AdminRestaurantTable
@@ -553,6 +558,7 @@ async function loadTables(): Promise<RestaurantTable[]> {
     is_active: row.is_active !== false,
     kind: row.kind === 'counter' ? 'counter' : 'table',
     sort_order: Number(row.sort_order) || 0,
+    order_url: tableGuestOrderUrl(String(row.id ?? '')),
   }))
 }
 
@@ -883,6 +889,37 @@ async function claimTableGuestSession(tableId: string): Promise<string> {
     throw new GloballyBookedError('session-claim-failed', 502)
   }
   return token
+}
+
+const TABLE_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+export async function loadTableGuestMenu(tableId: string): Promise<{
+  id: string
+  label: string
+  items: GloballyBookedMenuItem[]
+}> {
+  const id = tableId.trim()
+  if (!TABLE_ID_RE.test(id)) {
+    throw new GloballyBookedError('not-found', 404)
+  }
+  const tables = await loadRestaurantTables()
+  const table = tables.find((row) => row.id === id && row.is_active)
+  if (!table) {
+    throw new GloballyBookedError('not-found', 404)
+  }
+  const data = await gbPublicFetch<Array<Record<string, unknown>>>(
+    'GET',
+    `/api/public/tables/${encodeURIComponent(id)}/menu`,
+  )
+  const rows = Array.isArray(data) ? data : []
+  return {
+    id: table.id,
+    label: table.label,
+    items: rows
+      .map((row) => mapMenuRow(row))
+      .filter((item): item is GloballyBookedMenuItem => item !== null),
+  }
 }
 
 function normalizeSubmitItems(items: TableOrderSubmitItem[]): TableOrderSubmitItem[] {

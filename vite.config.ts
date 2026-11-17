@@ -9,6 +9,7 @@ import { loadGoogleReviews } from './server/loadGoogleReviews.ts'
 import { handleAdminRequest } from './server/adminHttp.ts'
 import { handleReservationsRequest } from './server/reservationsHttp.ts'
 import { handleTakeoutRequest } from './server/takeoutHttp.ts'
+import { handleTableOrderRequest } from './server/tableOrderHttp.ts'
 
 async function nodeToWebRequest(req: IncomingMessage): Promise<Request> {
   const host = req.headers.host ?? 'localhost'
@@ -206,7 +207,8 @@ export default defineConfig(({ mode }) => {
               if (
                 !path.startsWith('/api/admin') &&
                 !path.startsWith('/api/reservations') &&
-                !path.startsWith('/api/takeout')
+                !path.startsWith('/api/takeout') &&
+                !path.startsWith('/api/mesa')
               ) {
                 next()
                 return
@@ -217,6 +219,8 @@ export default defineConfig(({ mode }) => {
                 handle = handleReservationsRequest
               } else if (path.startsWith('/api/takeout')) {
                 handle = handleTakeoutRequest
+              } else if (path.startsWith('/api/mesa')) {
+                handle = handleTableOrderRequest
               }
 
               void nodeToWebRequest(req)

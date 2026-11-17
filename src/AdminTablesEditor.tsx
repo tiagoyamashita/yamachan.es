@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import QRCode from 'qrcode'
 import { WEEKDAY_LABELS_ES } from './companyInfo.ts'
 import { AdminTabBar } from './AdminTabBar.tsx'
 import type { Copy } from './i18n/index.ts'
@@ -11,6 +12,56 @@ import {
 
 const OPEN_TAB_STATUSES = ['open', 'submitted', 'preparing', 'served'] as const
 
+function guestOrderHref(value: string): string {
+  if (/^https?:\/\//i.test(value)) {
+    return value
+  }
+  return new URL(value, window.location.origin).href
+}
+
+function TableQr({ value, label }: { value: string; label: string }) {
+  const [markup, setMarkup] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    QRCode.toString(value, {
+      type: 'svg',
+      margin: 1,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#1c1917', light: '#ffffff' },
+    })
+      .then((svg) => {
+        if (!cancelled) {
+          setMarkup(svg)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMarkup('')
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [value])
+
+  return (
+    <span className="admin-table-qr-wrap">
+      {markup ? (
+        <span
+          className="admin-table-qr"
+          role="img"
+          aria-label={label}
+          dangerouslySetInnerHTML={{ __html: markup }}
+        />
+      ) : (
+        <span className="admin-table-qr" aria-hidden="true" />
+      )}
+      <span className="muted admin-table-qr-caption">{label}</span>
+    </span>
+  )
+}
+
 export type TablesSubtab = 'today' | 'history'
 
 export type AdminTableRow = {
@@ -19,6 +70,7 @@ export type AdminTableRow = {
   seat_count: number
   is_active: boolean
   kind: string
+  order_url: string
 }
 
 export type TableOrderRow = {
@@ -740,6 +792,12 @@ export function AdminTablesEditor({
                       resetOrdering()
                     }}
                   >
+                    {table.order_url ? (
+                      <TableQr
+                        value={guestOrderHref(table.order_url)}
+                        label={t.adminTablesScanToOrder}
+                      />
+                    ) : null}
                     <strong>{table.label}</strong>
                     <span className="muted">
                       {t.adminTablesSeats.replace('{count}', String(table.seat_count))}
@@ -784,6 +842,12 @@ export function AdminTablesEditor({
                     resetOrdering()
                   }}
                 >
+                  {table.order_url ? (
+                    <TableQr
+                      value={guestOrderHref(table.order_url)}
+                      label={t.adminTablesScanToOrder}
+                    />
+                  ) : null}
                   <strong>{table.label}</strong>
                   <span className="muted">
                     {t.adminTablesSeats.replace('{count}', String(table.seat_count))}
@@ -815,6 +879,19 @@ export function AdminTablesEditor({
           >
             {t.adminTablesBack}
           </button>
+          {selectedTable.order_url ? (
+            <a
+              className="admin-tables-detail-qr"
+              href={selectedTable.order_url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <TableQr
+                value={guestOrderHref(selectedTable.order_url)}
+                label={t.adminTablesScanToOrder}
+              />
+            </a>
+          ) : null}
 
           {editable && !ordering ? (
             <div className="admin-tables-actions">
