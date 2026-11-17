@@ -2244,6 +2244,28 @@ h3 {
   margin-bottom: 1rem;
 }
 
+.admin-tables-ordering-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 0 0.75rem;
+  padding-top: 0.15rem;
+  background: var(--paper, #f6f1e8);
+}
+
+.admin-tables-menu-search {
+  margin-bottom: 0.75rem;
+}
+
+.admin-tables-ordering-bar .admin-tables-menu-search:last-child {
+  margin-bottom: 0;
+}
+
+.admin-tables-ordering-bar .admin-tables-current {
+  position: static;
+  margin-bottom: 0;
+}
+
 .admin-tables-current {
   position: sticky;
   top: 0;

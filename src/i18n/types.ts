@@ -299,6 +299,8 @@ export type Copy = {
   adminTablesStartOrder: string
   adminTablesAddItems: string
   adminTablesOrderingLead: string
+  adminTablesMenuSearch: string
+  adminTablesMenuSearchEmpty: string
   adminTablesNoMenu: string
   adminTablesAddDish: string
   adminTablesCurrentOrder: string

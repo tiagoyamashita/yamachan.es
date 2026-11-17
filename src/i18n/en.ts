@@ -355,6 +355,8 @@ export const en: Copy = {
   adminTablesStartOrder: 'Start order',
   adminTablesAddItems: 'Add items',
   adminTablesOrderingLead: 'Add dishes to send to the kitchen for this table.',
+  adminTablesMenuSearch: 'Search the menu',
+  adminTablesMenuSearchEmpty: 'No dishes match that search.',
   adminTablesNoMenu: 'No menu items are available in Globally Booked.',
   adminTablesAddDish: 'Add',
   adminTablesCurrentOrder: 'Current order',

@@ -351,6 +351,8 @@ export const ja: Copy = {
   adminTablesStartOrder: '注文を開始',
   adminTablesAddItems: '料理を追加',
   adminTablesOrderingLead: 'このテーブル用の料理を追加して厨房へ送ります。',
+  adminTablesMenuSearch: 'メニューを検索',
+  adminTablesMenuSearchEmpty: '一致する料理がありません。',
   adminTablesNoMenu: 'Globally Booked に利用可能なメニューがありません。',
   adminTablesAddDish: '追加',
   adminTablesCurrentOrder: '現在の注文',

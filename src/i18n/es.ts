@@ -357,6 +357,8 @@ export const es: Copy = {
   adminTablesStartOrder: 'Empezar pedido',
   adminTablesAddItems: 'Añadir platos',
   adminTablesOrderingLead: 'Añade platos para enviar a cocina en esta mesa.',
+  adminTablesMenuSearch: 'Buscar en la carta',
+  adminTablesMenuSearchEmpty: 'Ningún plato coincide con la búsqueda.',
   adminTablesNoMenu: 'No hay platos disponibles en Globally Booked.',
   adminTablesAddDish: 'Añadir',
   adminTablesCurrentOrder: 'Pedido actual',

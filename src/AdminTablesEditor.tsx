@@ -226,6 +226,24 @@ function groupTableMenu(
   return groups
 }
 
+function normalizeMenuSearch(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+function menuItemMatchesQuery(name: string, groupLabel: string, query: string): boolean {
+  const needle = normalizeMenuSearch(query.trim())
+  if (!needle) {
+    return true
+  }
+  return (
+    normalizeMenuSearch(name).includes(needle) ||
+    normalizeMenuSearch(groupLabel).includes(needle)
+  )
+}
+
 function itemStatusLabel(t: Copy, status: string): string {
   switch (status) {
     case 'pending':
@@ -370,6 +388,7 @@ export function AdminTablesEditor({
   const [ordering, setOrdering] = useState(false)
   const [cart, setCart] = useState<CartLine[]>([])
   const [orderNotes, setOrderNotes] = useState('')
+  const [menuQuery, setMenuQuery] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'other'>('cash')
 
   const today = todayKeyInTimeZone(timeZone)
@@ -435,7 +454,15 @@ export function AdminTablesEditor({
     .filter((item) => item.is_available)
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
+  const menuQueryTrimmed = menuQuery.trim()
   const menuGroups = groupTableMenu(availableMenu, t)
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) =>
+        menuItemMatchesQuery(item.name, group.label, menuQueryTrimmed),
+      ),
+    }))
+    .filter((group) => group.items.length > 0)
   const cartQty = (menuItemId: string) =>
     cart.find((line) => line.menu_item_id === menuItemId)?.quantity ?? 0
 
@@ -457,6 +484,7 @@ export function AdminTablesEditor({
     setOrdering(false)
     setCart([])
     setOrderNotes('')
+    setMenuQuery('')
   }
 
   const setItemQty = (item: GbMenuItemRow, quantity: number) => {
@@ -737,48 +765,67 @@ export function AdminTablesEditor({
           {editable && ordering ? (
             <div className="admin-tables-ordering">
               <p className="muted">{t.adminTablesOrderingLead}</p>
-              {cart.length > 0 ? (
-                <div className="admin-tables-current">
-                  <h3>{t.adminTablesCurrentOrder}</h3>
-                  <ul className="admin-tables-cart">
-                    {cart.map((line) => {
-                      const menuItem =
-                        availableMenu.find((item) => item.id === line.menu_item_id) ?? {
-                          id: line.menu_item_id,
-                          name: line.name,
-                          price_cents: null,
-                          is_available: true,
-                          sort_order: 0,
-                          category: null,
-                        }
-                      return (
-                        <li key={line.menu_item_id} className="admin-tables-cart-line">
-                          <span>
-                            {line.name}
-                            {menuItem.price_cents ? (
-                              <span className="muted">
-                                {' '}
-                                {formatMoney(menuItem.price_cents)}
+              {availableMenu.length > 0 || cart.length > 0 ? (
+                <div className="admin-tables-ordering-bar">
+                  {availableMenu.length > 0 ? (
+                    <label className="takeout-field admin-tables-menu-search">
+                      <span className="visually-hidden">{t.adminTablesMenuSearch}</span>
+                      <input
+                        type="search"
+                        value={menuQuery}
+                        placeholder={t.adminTablesMenuSearch}
+                        aria-label={t.adminTablesMenuSearch}
+                        disabled={busy}
+                        onChange={(event) => setMenuQuery(event.target.value)}
+                      />
+                    </label>
+                  ) : null}
+                  {cart.length > 0 ? (
+                    <div className="admin-tables-current">
+                      <h3>{t.adminTablesCurrentOrder}</h3>
+                      <ul className="admin-tables-cart">
+                        {cart.map((line) => {
+                          const menuItem =
+                            availableMenu.find((item) => item.id === line.menu_item_id) ?? {
+                              id: line.menu_item_id,
+                              name: line.name,
+                              price_cents: null,
+                              is_available: true,
+                              sort_order: 0,
+                              category: null,
+                            }
+                          return (
+                            <li key={line.menu_item_id} className="admin-tables-cart-line">
+                              <span>
+                                {line.name}
+                                {menuItem.price_cents ? (
+                                  <span className="muted">
+                                    {' '}
+                                    {formatMoney(menuItem.price_cents)}
+                                  </span>
+                                ) : null}
                               </span>
-                            ) : null}
-                          </span>
-                          <DishQtyControl
-                            name={line.name}
-                            qty={line.quantity}
-                            busy={busy}
-                            addLabel={t.adminTablesAddDish}
-                            fewerLabel={t.adminTablesFewerDish}
-                            moreLabel={t.adminTablesMoreDish}
-                            onChange={(qty) => setItemQty(menuItem, qty)}
-                          />
-                        </li>
-                      )
-                    })}
-                  </ul>
+                              <DishQtyControl
+                                name={line.name}
+                                qty={line.quantity}
+                                busy={busy}
+                                addLabel={t.adminTablesAddDish}
+                                fewerLabel={t.adminTablesFewerDish}
+                                moreLabel={t.adminTablesMoreDish}
+                                onChange={(qty) => setItemQty(menuItem, qty)}
+                              />
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
               {availableMenu.length === 0 ? (
                 <p className="muted">{t.adminTablesNoMenu}</p>
+              ) : menuGroups.length === 0 ? (
+                <p className="muted">{t.adminTablesMenuSearchEmpty}</p>
               ) : (
                 <div className="admin-tables-menu-groups">
                   {menuGroups.map((group) => (
