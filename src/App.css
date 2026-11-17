@@ -2286,12 +2286,66 @@ h3 {
 
 .admin-tables-menu-groups {
   display: grid;
-  gap: 1rem;
+  gap: 0;
   margin: 0 0 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.75rem 0.7rem;
+  background: var(--white);
 }
 
 .admin-tables-menu-group {
   min-width: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-tables-menu-group:last-child {
+  border-bottom: 0;
+}
+
+.admin-tables-menu-group summary {
+  cursor: pointer;
+  list-style: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.25rem auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  padding: 0.6rem 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vermillion);
+}
+
+.admin-tables-menu-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-tables-menu-group summary::marker {
+  content: '';
+}
+
+.admin-tables-menu-group summary::after {
+  content: '▾';
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0;
+}
+
+.admin-tables-menu-group[open] summary::after {
+  content: '▴';
+}
+
+.admin-tables-menu-group-count {
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+  text-align: right;
+}
+
+.admin-tables-menu-group .admin-tables-menu {
+  padding-bottom: 0.35rem;
 }
 
 .admin-tables-menu {

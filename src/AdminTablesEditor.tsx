@@ -389,6 +389,7 @@ export function AdminTablesEditor({
   const [cart, setCart] = useState<CartLine[]>([])
   const [orderNotes, setOrderNotes] = useState('')
   const [menuQuery, setMenuQuery] = useState('')
+  const [openMenuGroupIds, setOpenMenuGroupIds] = useState<Set<string>>(() => new Set())
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'other'>('cash')
 
   const today = todayKeyInTimeZone(timeZone)
@@ -485,6 +486,7 @@ export function AdminTablesEditor({
     setCart([])
     setOrderNotes('')
     setMenuQuery('')
+    setOpenMenuGroupIds(new Set())
   }
 
   const setItemQty = (item: GbMenuItemRow, quantity: number) => {
@@ -828,34 +830,56 @@ export function AdminTablesEditor({
                 <p className="muted">{t.adminTablesMenuSearchEmpty}</p>
               ) : (
                 <div className="admin-tables-menu-groups">
-                  {menuGroups.map((group) => (
-                    <section
-                      key={group.id}
-                      className="admin-tables-menu-group"
-                      aria-labelledby={`table-menu-${group.id}`}
-                    >
-                      <h3 id={`table-menu-${group.id}`}>{group.label}</h3>
-                      <ul className="admin-tables-menu">
-                        {group.items.map((item) => (
-                          <li key={item.id} className="admin-tables-menu-item">
-                            <div>
-                              <strong>{item.name}</strong>
-                              <span className="muted">{formatMoney(item.price_cents)}</span>
-                            </div>
-                            <DishQtyControl
-                              name={item.name}
-                              qty={cartQty(item.id)}
-                              busy={busy}
-                              addLabel={t.adminTablesAddDish}
-                              fewerLabel={t.adminTablesFewerDish}
-                              moreLabel={t.adminTablesMoreDish}
-                              onChange={(qty) => setItemQty(item, qty)}
-                            />
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
-                  ))}
+                  {menuGroups.map((group) => {
+                    const groupOpen = menuQueryTrimmed.length > 0 || openMenuGroupIds.has(group.id)
+                    return (
+                      <details
+                        key={group.id}
+                        className="admin-tables-menu-group"
+                        open={groupOpen}
+                        onToggle={(event) => {
+                          if (menuQueryTrimmed) {
+                            event.currentTarget.open = true
+                            return
+                          }
+                          const isOpen = event.currentTarget.open
+                          setOpenMenuGroupIds((current) => {
+                            const next = new Set(current)
+                            if (isOpen) {
+                              next.add(group.id)
+                            } else {
+                              next.delete(group.id)
+                            }
+                            return next
+                          })
+                        }}
+                      >
+                        <summary>
+                          {group.label}
+                          <span className="admin-tables-menu-group-count">{group.items.length}</span>
+                        </summary>
+                        <ul className="admin-tables-menu">
+                          {group.items.map((item) => (
+                            <li key={item.id} className="admin-tables-menu-item">
+                              <div>
+                                <strong>{item.name}</strong>
+                                <span className="muted">{formatMoney(item.price_cents)}</span>
+                              </div>
+                              <DishQtyControl
+                                name={item.name}
+                                qty={cartQty(item.id)}
+                                busy={busy}
+                                addLabel={t.adminTablesAddDish}
+                                fewerLabel={t.adminTablesFewerDish}
+                                moreLabel={t.adminTablesMoreDish}
+                                onChange={(qty) => setItemQty(item, qty)}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )
+                  })}
                 </div>
               )}
               <label className="takeout-field">
