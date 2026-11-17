@@ -2265,9 +2265,6 @@ h3 {
 }
 
 .admin-tables-ordering-bar {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   margin: 0 0 0.75rem;
   padding-top: 0.15rem;
   background: var(--paper, #f6f1e8);
@@ -2282,14 +2279,10 @@ h3 {
 }
 
 .admin-tables-ordering-bar .admin-tables-current {
-  position: static;
   margin-bottom: 0;
 }
 
 .admin-tables-current {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   margin: 0 0 1rem;
   padding: 0.75rem 0.85rem;
   border: 1px solid rgba(22, 18, 14, 0.12);
