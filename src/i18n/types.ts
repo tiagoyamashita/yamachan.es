@@ -314,7 +314,11 @@ export type Copy = {
   adminTablesNoOrders: string
   adminTablesNoOpenOrders: string
   adminTablesCancelOrder: string
+  adminTablesCancelOrderTitle: string
+  adminTablesCancelOrderLead: string
   adminTablesRemoveItem: string
+  adminTablesRemoveItemTitle: string
+  adminTablesRemoveItemLead: string
   adminTablesCloseTab: string
   adminTablesCloseTabTitle: string
   adminTablesCloseTabLead: string

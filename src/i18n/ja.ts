@@ -366,7 +366,11 @@ export const ja: Copy = {
   adminTablesNoOrders: 'このテーブルにはまだ注文がありません。',
   adminTablesNoOpenOrders: 'このテーブルに進行中の注文はありません。',
   adminTablesCancelOrder: '注文をキャンセル',
+  adminTablesCancelOrderTitle: 'この注文をキャンセルしますか？',
+  adminTablesCancelOrderLead: '注文 #{number} をキャンセルします。',
   adminTablesRemoveItem: '削除',
+  adminTablesRemoveItemTitle: 'この料理を削除しますか？',
+  adminTablesRemoveItemLead: '{name} を注文から削除します。',
   adminTablesCloseTab: '会計を閉じる',
   adminTablesCloseTabTitle: 'この会計を閉じますか？',
   adminTablesCloseTabLead:

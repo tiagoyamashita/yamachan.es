@@ -54,6 +54,16 @@ type CartLine = {
   line_notes: string
 }
 
+type TableOrderConfirm =
+  | { kind: 'cancel-order'; orderId: string; orderNumber: string }
+  | {
+      kind: 'remove-item'
+      tableId: string
+      orderId: string
+      itemId: string
+      itemName: string
+    }
+
 function shiftMonth(year: number, month: number, delta: number) {
   const next = new Date(year, month + delta, 1)
   return { year: next.getFullYear(), month: next.getMonth() }
@@ -272,14 +282,34 @@ function itemStatusLabel(t: Copy, status: string): string {
   }
 }
 
+function confirmDialogCopy(t: Copy, pending: TableOrderConfirm) {
+  switch (pending.kind) {
+    case 'cancel-order':
+      return {
+        title: t.adminTablesCancelOrderTitle,
+        lead: t.adminTablesCancelOrderLead.replace('{number}', pending.orderNumber),
+        action: t.adminTablesCancelOrder,
+      }
+    case 'remove-item':
+      return {
+        title: t.adminTablesRemoveItemTitle,
+        lead: t.adminTablesRemoveItemLead.replace('{name}', pending.itemName),
+        action: t.adminTablesRemoveItem,
+      }
+    default: {
+      const exhaustive: never = pending
+      return exhaustive
+    }
+  }
+}
+
 function TableOrdersList({
   orders,
   tableId,
   busy,
   editable,
   t,
-  onCancelOrder,
-  onRemoveItem,
+  onAskConfirm,
   emptyLabel,
 }: {
   orders: TableOrderRow[]
@@ -287,8 +317,7 @@ function TableOrdersList({
   busy: boolean
   editable: boolean
   t: Copy
-  onCancelOrder: (orderId: string) => void
-  onRemoveItem: (tableId: string, orderId: string, itemId: string) => void
+  onAskConfirm: (pending: TableOrderConfirm) => void
   emptyLabel: string
 }) {
   if (orders.length === 0) {
@@ -314,7 +343,13 @@ function TableOrdersList({
                   type="button"
                   className="btn btn-outline btn-small"
                   disabled={busy}
-                  onClick={() => onCancelOrder(order.id)}
+                  onClick={() =>
+                    onAskConfirm({
+                      kind: 'cancel-order',
+                      orderId: order.id,
+                      orderNumber: order.orderNumber,
+                    })
+                  }
                 >
                   {t.adminTablesCancelOrder}
                 </button>
@@ -339,7 +374,15 @@ function TableOrdersList({
                       type="button"
                       className="btn btn-outline btn-small"
                       disabled={busy}
-                      onClick={() => onRemoveItem(tableId, order.id, item.id)}
+                      onClick={() =>
+                        onAskConfirm({
+                          kind: 'remove-item',
+                          tableId,
+                          orderId: order.id,
+                          itemId: item.id,
+                          itemName: item.item_name,
+                        })
+                      }
                     >
                       {t.adminTablesRemoveItem}
                     </button>
@@ -409,25 +452,29 @@ export function AdminTablesEditor({
   const [openMenuGroupIds, setOpenMenuGroupIds] = useState<Set<string>>(() => new Set())
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'other'>('cash')
   const [closeTabOpen, setCloseTabOpen] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<TableOrderConfirm | null>(null)
   const panelRef = useRef<HTMLElement>(null)
+  const dialogOpen = closeTabOpen || confirmAction !== null
 
   useEffect(() => {
     setCloseTabOpen(false)
+    setConfirmAction(null)
     panelRef.current?.scrollIntoView({ block: 'start' })
   }, [selectedTableId])
 
   useEffect(() => {
-    if (!closeTabOpen) {
+    if (!dialogOpen) {
       return
     }
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setCloseTabOpen(false)
+        setConfirmAction(null)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [closeTabOpen])
+  }, [dialogOpen])
 
   const today = todayKeyInTimeZone(timeZone)
   const editable = subtab === 'today'
@@ -525,6 +572,7 @@ export function AdminTablesEditor({
     setMenuQuery('')
     setOpenMenuGroupIds(new Set())
     setCloseTabOpen(false)
+    setConfirmAction(null)
   }
 
   const setItemQty = (item: GbMenuItemRow, quantity: number) => {
@@ -970,8 +1018,7 @@ export function AdminTablesEditor({
             editable={editable}
             t={t}
             emptyLabel={editable ? t.adminTablesNoOpenOrders : t.adminTablesNoOrders}
-            onCancelOrder={onCancelOrder}
-            onRemoveItem={onRemoveItem}
+            onAskConfirm={setConfirmAction}
           />
         </fieldset>
       )}
@@ -1026,6 +1073,88 @@ export function AdminTablesEditor({
           </div>
         </div>
       ) : null}
+      {confirmAction ? (
+        <OrderConfirmDialog
+          t={t}
+          busy={busy}
+          pending={confirmAction}
+          onDismiss={() => setConfirmAction(null)}
+          onConfirm={() => {
+            switch (confirmAction.kind) {
+              case 'cancel-order':
+                onCancelOrder(confirmAction.orderId)
+                break
+              case 'remove-item':
+                onRemoveItem(
+                  confirmAction.tableId,
+                  confirmAction.orderId,
+                  confirmAction.itemId,
+                )
+                break
+              default: {
+                const exhaustive: never = confirmAction
+                return exhaustive
+              }
+            }
+            setConfirmAction(null)
+          }}
+        />
+      ) : null}
     </section>
+  )
+}
+
+function OrderConfirmDialog({
+  t,
+  busy,
+  pending,
+  onDismiss,
+  onConfirm,
+}: {
+  t: Copy
+  busy: boolean
+  pending: TableOrderConfirm
+  onDismiss: () => void
+  onConfirm: () => void
+}) {
+  const copy = confirmDialogCopy(t, pending)
+  return (
+    <div
+      className="admin-modal-overlay"
+      role="presentation"
+      onClick={() => {
+        if (!busy) {
+          onDismiss()
+        }
+      }}
+    >
+      <div
+        className="admin-modal admin-tables-close-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-order-confirm-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="admin-modal-head">
+          <div>
+            <h2 id="admin-order-confirm-title">{copy.title}</h2>
+            <p className="muted">{copy.lead}</p>
+          </div>
+        </div>
+        <div className="admin-dish-actions">
+          <button type="button" className="btn" disabled={busy} onClick={onConfirm}>
+            {copy.action}
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline"
+            disabled={busy}
+            onClick={onDismiss}
+          >
+            {t.adminTablesCancelOrdering}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

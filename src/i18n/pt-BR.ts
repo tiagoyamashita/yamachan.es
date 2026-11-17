@@ -372,7 +372,11 @@ export const ptBR: Copy = {
   adminTablesNoOrders: 'Ainda não há pedidos nesta mesa.',
   adminTablesNoOpenOrders: 'Não há pedidos abertos nesta mesa.',
   adminTablesCancelOrder: 'Cancelar pedido',
+  adminTablesCancelOrderTitle: 'Cancelar este pedido?',
+  adminTablesCancelOrderLead: 'O pedido #{number} será cancelado.',
   adminTablesRemoveItem: 'Remover',
+  adminTablesRemoveItemTitle: 'Remover este prato?',
+  adminTablesRemoveItemLead: '{name} será removido do pedido.',
   adminTablesCloseTab: 'Fechar conta e pagar',
   adminTablesCloseTabTitle: 'Fechar esta conta?',
   adminTablesCloseTabLead:

@@ -372,7 +372,11 @@ export const es: Copy = {
   adminTablesNoOrders: 'Aún no hay pedidos en esta mesa.',
   adminTablesNoOpenOrders: 'No hay pedidos abiertos en esta mesa.',
   adminTablesCancelOrder: 'Cancelar pedido',
+  adminTablesCancelOrderTitle: '¿Cancelar este pedido?',
+  adminTablesCancelOrderLead: 'El pedido #{number} se cancelará.',
   adminTablesRemoveItem: 'Quitar',
+  adminTablesRemoveItemTitle: '¿Quitar este plato?',
+  adminTablesRemoveItemLead: '{name} se quitará del pedido.',
   adminTablesCloseTab: 'Cerrar cuenta y cobrar',
   adminTablesCloseTabTitle: '¿Cerrar esta cuenta?',
   adminTablesCloseTabLead:
