@@ -351,6 +351,7 @@ export const en: Copy = {
   adminTablesDetail: 'Table {label}',
   adminTablesBack: 'Back to tables',
   adminTablesSeats: '{count} seats',
+  adminTablesScanToOrder: 'Scan to order',
   adminTablesOpenOrders: '{count} open',
   adminTablesInactive: 'Inactive',
   adminTablesStartOrder: 'Start order',

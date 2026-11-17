@@ -353,6 +353,7 @@ export const es: Copy = {
   adminTablesDetail: 'Mesa {label}',
   adminTablesBack: 'Volver a mesas',
   adminTablesSeats: '{count} plazas',
+  adminTablesScanToOrder: 'Escanea para pedir',
   adminTablesOpenOrders: '{count} abiertos',
   adminTablesInactive: 'Inactiva',
   adminTablesStartOrder: 'Empezar pedido',

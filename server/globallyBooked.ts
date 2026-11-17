@@ -64,6 +64,10 @@ function restaurantPath(suffix: string): string {
   return `/api/user/restaurants/${encodeURIComponent(restaurantSlug())}${suffix}`
 }
 
+export function tableGuestOrderUrl(tableId: string): string {
+  return `${apiBase()}/order/restaurant/${encodeURIComponent(restaurantSlug())}/table/${encodeURIComponent(tableId)}`
+}
+
 export type RestaurantSettings = {
   id: string
   name: string
@@ -252,6 +256,7 @@ export type AdminRestaurantTable = {
   is_active: boolean
   kind: string
   sort_order: number
+  order_url: string
 }
 
 type RestaurantTable = AdminRestaurantTable
@@ -553,6 +558,7 @@ async function loadTables(): Promise<RestaurantTable[]> {
     is_active: row.is_active !== false,
     kind: row.kind === 'counter' ? 'counter' : 'table',
     sort_order: Number(row.sort_order) || 0,
+    order_url: tableGuestOrderUrl(String(row.id ?? '')),
   }))
 }
 

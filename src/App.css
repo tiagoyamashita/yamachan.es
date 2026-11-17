@@ -2174,9 +2174,51 @@ h3 {
 
 .admin-tables-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
   gap: 0.65rem;
   margin-top: 0.75rem;
+}
+
+.admin-table-qr-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: stretch;
+}
+
+.admin-table-qr {
+  display: block;
+  width: 6.5rem;
+  height: 6.5rem;
+  padding: 0.3rem;
+  border-radius: 0.35rem;
+  background: #fff;
+  line-height: 0;
+}
+
+.admin-table-qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.admin-table-qr-caption {
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.admin-tables-detail-qr {
+  display: flex;
+  width: fit-content;
+  margin: 0.85rem 0 1rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.admin-tables-detail-qr .admin-table-qr {
+  width: 10rem;
+  height: 10rem;
 }
 
 .admin-table-card {

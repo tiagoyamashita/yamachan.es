@@ -347,6 +347,7 @@ export const ja: Copy = {
   adminTablesDetail: 'テーブル {label}',
   adminTablesBack: 'テーブル一覧へ',
   adminTablesSeats: '{count} 席',
+  adminTablesScanToOrder: 'スキャンして注文',
   adminTablesOpenOrders: '{count} 件オープン',
   adminTablesInactive: '無効',
   adminTablesStartOrder: '注文を開始',

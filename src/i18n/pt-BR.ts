@@ -353,6 +353,7 @@ export const ptBR: Copy = {
   adminTablesDetail: 'Mesa {label}',
   adminTablesBack: 'Voltar às mesas',
   adminTablesSeats: '{count} lugares',
+  adminTablesScanToOrder: 'Escaneie para pedir',
   adminTablesOpenOrders: '{count} abertos',
   adminTablesInactive: 'Inativa',
   adminTablesStartOrder: 'Iniciar pedido',

@@ -295,6 +295,7 @@ export type Copy = {
   adminTablesDetail: string
   adminTablesBack: string
   adminTablesSeats: string
+  adminTablesScanToOrder: string
   adminTablesOpenOrders: string
   adminTablesInactive: string
   adminTablesStartOrder: string
