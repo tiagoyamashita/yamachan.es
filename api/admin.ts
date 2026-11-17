@@ -12,6 +12,10 @@ export async function PUT(request: Request) {
   return handleAdminRequest(request)
 }
 
+export async function PATCH(request: Request) {
+  return handleAdminRequest(request)
+}
+
 export async function DELETE(request: Request) {
   return handleAdminRequest(request)
 }
