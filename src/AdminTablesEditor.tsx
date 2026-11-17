@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { WEEKDAY_LABELS_ES } from './companyInfo.ts'
 import { AdminTabBar } from './AdminTabBar.tsx'
 import type { Copy } from './i18n/index.ts'
@@ -265,6 +265,7 @@ function TableOrdersList({
   t,
   onCancelOrder,
   onRemoveItem,
+  emptyLabel,
 }: {
   orders: TableOrderRow[]
   tableId: string
@@ -273,9 +274,10 @@ function TableOrdersList({
   t: Copy
   onCancelOrder: (orderId: string) => void
   onRemoveItem: (tableId: string, orderId: string, itemId: string) => void
+  emptyLabel: string
 }) {
   if (orders.length === 0) {
-    return <p className="muted">{t.adminTablesNoOrders}</p>
+    return <p className="muted">{emptyLabel}</p>
   }
 
   return (
@@ -391,6 +393,11 @@ export function AdminTablesEditor({
   const [menuQuery, setMenuQuery] = useState('')
   const [openMenuGroupIds, setOpenMenuGroupIds] = useState<Set<string>>(() => new Set())
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'other'>('cash')
+  const panelRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    panelRef.current?.scrollIntoView({ block: 'start' })
+  }, [selectedTableId])
 
   const today = todayKeyInTimeZone(timeZone)
   const editable = subtab === 'today'
@@ -529,7 +536,8 @@ export function AdminTablesEditor({
   }
 
   return (
-    <section className="admin-company takeout-form">
+    <section ref={panelRef} className="admin-company takeout-form">
+      {!selectedTable ? (
       <fieldset className="admin-company-block">
         <legend>{t.adminTablesHeading}</legend>
         <p className="muted">{t.adminTablesLead}</p>
@@ -653,14 +661,6 @@ export function AdminTablesEditor({
                     <span className="muted">
                       {t.adminTablesSeats.replace('{count}', String(table.seat_count))}
                     </span>
-                    {dayOrders.length > 0 ? (
-                      <span className="admin-table-badge">
-                        {t.adminTablesOrdersToday.replace(
-                          '{count}',
-                          String(dayOrders.length),
-                        )}
-                      </span>
-                    ) : null}
                     {tableOpen.length > 0 ? (
                       <span className="admin-table-badge">
                         {t.adminTablesOpenOrders.replace(
@@ -714,14 +714,24 @@ export function AdminTablesEditor({
           </div>
         )}
       </fieldset>
-
-      {selectedTable ? (
+      ) : (
         <fieldset className="admin-company-block">
           <legend>
             {subtab === 'history' && historyDateLabel
               ? `${t.adminTablesForDate} ${historyDateLabel} · ${selectedTable.label}`
               : t.adminTablesDetail.replace('{label}', selectedTable.label)}
           </legend>
+          <button
+            type="button"
+            className="btn btn-outline btn-small admin-tables-back"
+            disabled={busy}
+            onClick={() => {
+              onSelectTable(null)
+              resetOrdering()
+            }}
+          >
+            {t.adminTablesBack}
+          </button>
 
           {editable && !ordering ? (
             <div className="admin-tables-actions">
@@ -923,30 +933,17 @@ export function AdminTablesEditor({
           ) : null}
 
           <TableOrdersList
-            orders={tableOrders}
+            orders={editable ? openOrders : tableOrders}
             tableId={selectedTable.id}
             busy={busy}
             editable={editable}
             t={t}
+            emptyLabel={editable ? t.adminTablesNoOpenOrders : t.adminTablesNoOrders}
             onCancelOrder={onCancelOrder}
             onRemoveItem={onRemoveItem}
           />
         </fieldset>
-      ) : subtab === 'today' ? (
-        <fieldset className="admin-company-block">
-          <legend>{t.adminTablesPickTable}</legend>
-          <p className="muted">{t.adminTablesPickTable}</p>
-        </fieldset>
-      ) : historySelectedDate ? (
-        <fieldset className="admin-company-block">
-          <legend>
-            {historyDateLabel
-              ? `${t.adminTablesForDate} ${historyDateLabel}`
-              : t.adminTablesPickDate}
-          </legend>
-          <p className="muted">{t.adminTablesPickTable}</p>
-        </fieldset>
-      ) : null}
+      )}
     </section>
   )
 }

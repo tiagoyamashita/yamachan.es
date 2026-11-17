@@ -2221,6 +2221,10 @@ h3 {
   color: var(--muted, #6b6358);
 }
 
+.admin-tables-back {
+  justify-self: start;
+}
+
 .admin-tables-actions {
   display: flex;
   flex-wrap: wrap;

@@ -293,6 +293,7 @@ export type Copy = {
   adminTablesPickTable: string
   adminTablesPickDate: string
   adminTablesDetail: string
+  adminTablesBack: string
   adminTablesSeats: string
   adminTablesOpenOrders: string
   adminTablesInactive: string
@@ -311,6 +312,7 @@ export type Copy = {
   adminTablesSendOrder: string
   adminTablesCancelOrdering: string
   adminTablesNoOrders: string
+  adminTablesNoOpenOrders: string
   adminTablesCancelOrder: string
   adminTablesRemoveItem: string
   adminTablesCloseTab: string
