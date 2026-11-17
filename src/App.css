@@ -2225,6 +2225,10 @@ h3 {
   justify-self: start;
 }
 
+.admin-tables-close-modal {
+  width: min(28rem, 100%);
+}
+
 .admin-tables-actions {
   display: flex;
   flex-wrap: wrap;

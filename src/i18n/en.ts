@@ -372,6 +372,9 @@ export const en: Copy = {
   adminTablesCancelOrder: 'Cancel order',
   adminTablesRemoveItem: 'Remove',
   adminTablesCloseTab: 'Close tab & pay',
+  adminTablesCloseTabTitle: 'Close this tab?',
+  adminTablesCloseTabLead:
+    'Open orders on table {label} will be marked paid with {method}.',
   adminTablesPaymentMethod: 'Payment',
   adminTablesPayCash: 'Cash',
   adminTablesPayCard: 'Card',

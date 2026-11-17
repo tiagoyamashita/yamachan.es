@@ -374,6 +374,9 @@ export const es: Copy = {
   adminTablesCancelOrder: 'Cancelar pedido',
   adminTablesRemoveItem: 'Quitar',
   adminTablesCloseTab: 'Cerrar cuenta y cobrar',
+  adminTablesCloseTabTitle: '¿Cerrar esta cuenta?',
+  adminTablesCloseTabLead:
+    'Los pedidos abiertos de la mesa {label} se marcarán como pagados con {method}.',
   adminTablesPaymentMethod: 'Pago',
   adminTablesPayCash: 'Efectivo',
   adminTablesPayCard: 'Tarjeta',

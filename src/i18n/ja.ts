@@ -368,6 +368,9 @@ export const ja: Copy = {
   adminTablesCancelOrder: '注文をキャンセル',
   adminTablesRemoveItem: '削除',
   adminTablesCloseTab: '会計を閉じる',
+  adminTablesCloseTabTitle: 'この会計を閉じますか？',
+  adminTablesCloseTabLead:
+    'テーブル {label} の進行中の注文を{method}で支払い済みにします。',
   adminTablesPaymentMethod: '支払い',
   adminTablesPayCash: '現金',
   adminTablesPayCard: 'カード',

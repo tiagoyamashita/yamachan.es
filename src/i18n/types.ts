@@ -316,6 +316,8 @@ export type Copy = {
   adminTablesCancelOrder: string
   adminTablesRemoveItem: string
   adminTablesCloseTab: string
+  adminTablesCloseTabTitle: string
+  adminTablesCloseTabLead: string
   adminTablesPaymentMethod: string
   adminTablesPayCash: string
   adminTablesPayCard: string

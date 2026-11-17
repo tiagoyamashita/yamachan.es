@@ -374,6 +374,9 @@ export const ptBR: Copy = {
   adminTablesCancelOrder: 'Cancelar pedido',
   adminTablesRemoveItem: 'Remover',
   adminTablesCloseTab: 'Fechar conta e pagar',
+  adminTablesCloseTabTitle: 'Fechar esta conta?',
+  adminTablesCloseTabLead:
+    'Os pedidos abertos da mesa {label} serão marcados como pagos em {method}.',
   adminTablesPaymentMethod: 'Pagamento',
   adminTablesPayCash: 'Dinheiro',
   adminTablesPayCard: 'Cartão',

@@ -244,6 +244,21 @@ function menuItemMatchesQuery(name: string, groupLabel: string, query: string): 
   )
 }
 
+function paymentMethodLabel(t: Copy, method: 'cash' | 'card' | 'other'): string {
+  switch (method) {
+    case 'cash':
+      return t.adminTablesPayCash
+    case 'card':
+      return t.adminTablesPayCard
+    case 'other':
+      return t.adminTablesPayOther
+    default: {
+      const exhaustive: never = method
+      return exhaustive
+    }
+  }
+}
+
 function itemStatusLabel(t: Copy, status: string): string {
   switch (status) {
     case 'pending':
@@ -393,11 +408,26 @@ export function AdminTablesEditor({
   const [menuQuery, setMenuQuery] = useState('')
   const [openMenuGroupIds, setOpenMenuGroupIds] = useState<Set<string>>(() => new Set())
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'other'>('cash')
+  const [closeTabOpen, setCloseTabOpen] = useState(false)
   const panelRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
+    setCloseTabOpen(false)
     panelRef.current?.scrollIntoView({ block: 'start' })
   }, [selectedTableId])
+
+  useEffect(() => {
+    if (!closeTabOpen) {
+      return
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setCloseTabOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [closeTabOpen])
 
   const today = todayKeyInTimeZone(timeZone)
   const editable = subtab === 'today'
@@ -494,6 +524,7 @@ export function AdminTablesEditor({
     setOrderNotes('')
     setMenuQuery('')
     setOpenMenuGroupIds(new Set())
+    setCloseTabOpen(false)
   }
 
   const setItemQty = (item: GbMenuItemRow, quantity: number) => {
@@ -765,7 +796,7 @@ export function AdminTablesEditor({
                     type="button"
                     className="btn btn-outline btn-small"
                     disabled={busy}
-                    onClick={() => onCloseTab(selectedTable.id, paymentMethod)}
+                    onClick={() => setCloseTabOpen(true)}
                   >
                     {t.adminTablesCloseTab}
                   </button>
@@ -944,6 +975,57 @@ export function AdminTablesEditor({
           />
         </fieldset>
       )}
+      {closeTabOpen && selectedTable ? (
+        <div
+          className="admin-modal-overlay"
+          role="presentation"
+          onClick={() => {
+            if (!busy) {
+              setCloseTabOpen(false)
+            }
+          }}
+        >
+          <div
+            className="admin-modal admin-tables-close-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-close-tab-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="admin-modal-head">
+              <div>
+                <h2 id="admin-close-tab-title">{t.adminTablesCloseTabTitle}</h2>
+                <p className="muted">
+                  {t.adminTablesCloseTabLead
+                    .replace('{label}', selectedTable.label)
+                    .replace('{method}', paymentMethodLabel(t, paymentMethod))}
+                </p>
+              </div>
+            </div>
+            <div className="admin-dish-actions">
+              <button
+                type="button"
+                className="btn"
+                disabled={busy}
+                onClick={() => {
+                  onCloseTab(selectedTable.id, paymentMethod)
+                  setCloseTabOpen(false)
+                }}
+              >
+                {t.adminTablesCloseTab}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={busy}
+                onClick={() => setCloseTabOpen(false)}
+              >
+                {t.adminTablesCancelOrdering}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }
