@@ -908,17 +908,11 @@ export async function loadTableGuestMenu(tableId: string): Promise<{
   if (!table) {
     throw new GloballyBookedError('not-found', 404)
   }
-  const data = await gbPublicFetch<Array<Record<string, unknown>>>(
-    'GET',
-    `/api/public/tables/${encodeURIComponent(id)}/menu`,
-  )
-  const rows = Array.isArray(data) ? data : []
+  const items = (await loadGloballyBookedMenu()).filter((item) => item.is_available)
   return {
     id: table.id,
     label: table.label,
-    items: rows
-      .map((row) => mapMenuRow(row))
-      .filter((item): item is GloballyBookedMenuItem => item !== null),
+    items,
   }
 }
 

@@ -1,4 +1,11 @@
-import { GloballyBookedError, loadTableGuestMenu, submitTableOrderForTable } from './globallyBooked.ts'
+import { dishNamesMatch } from '../src/menu.ts'
+import {
+  GloballyBookedError,
+  loadTableGuestMenu,
+  submitTableOrderForTable,
+  type GloballyBookedMenuItem,
+} from './globallyBooked.ts'
+import { listPublishedMenu } from './publishedMenu.ts'
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -15,6 +22,37 @@ function fail(error: unknown): Response {
   return json({ error: message }, 502)
 }
 
+function publicImageUrl(url: string): string | null {
+  const trimmed = url.trim()
+  if (!trimmed) {
+    return null
+  }
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed
+  }
+  const origin = (process.env.PUBLIC_SITE_URL || 'https://yamachan.es').replace(/\/+$/, '')
+  return trimmed.startsWith('/') ? `${origin}${trimmed}` : `${origin}/${trimmed}`
+}
+
+function platePhoto(
+  item: GloballyBookedMenuItem,
+  published: Awaited<ReturnType<typeof listPublishedMenu>>,
+): string | null {
+  const own = item.image_url?.trim() ?? ''
+  if (/^https?:\/\//i.test(own)) {
+    return own
+  }
+  const match = published.find((dish) =>
+    [dish.name_es, dish.name_en, dish.name_ja, dish.slug].some((name) =>
+      dishNamesMatch(item.name, name),
+    ),
+  )
+  if (match?.image_url) {
+    return publicImageUrl(match.image_url)
+  }
+  return own.startsWith('/') ? publicImageUrl(own) : null
+}
+
 export async function handleTableOrderRequest(request: Request): Promise<Response> {
   const url = new URL(request.url)
   const path = url.pathname.replace(/\/+$/, '') || '/'
@@ -25,7 +63,19 @@ export async function handleTableOrderRequest(request: Request): Promise<Respons
     if (menuMatch && request.method === 'GET') {
       const tableId = decodeURIComponent(menuMatch[1] ?? '')
       const menu = await loadTableGuestMenu(tableId)
-      return json(menu)
+      let published: Awaited<ReturnType<typeof listPublishedMenu>> = []
+      try {
+        published = await listPublishedMenu()
+      } catch {
+        published = []
+      }
+      return json({
+        ...menu,
+        items: menu.items.map((item) => ({
+          ...item,
+          image_url: platePhoto(item, published),
+        })),
+      })
     }
 
     if (orderMatch && request.method === 'POST') {

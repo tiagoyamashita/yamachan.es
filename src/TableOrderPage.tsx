@@ -7,6 +7,7 @@ type MenuItem = {
   description: string | null
   price_cents: number | null
   category: string | null
+  image_url: string | null
 }
 
 type CartLine = {
@@ -87,6 +88,7 @@ export function TableOrderPage({
               description?: unknown
               price_cents?: unknown
               category?: unknown
+              image_url?: unknown
             }
             if (typeof menuItem.id !== 'string' || typeof menuItem.name !== 'string') {
               return []
@@ -101,6 +103,10 @@ export function TableOrderPage({
                   typeof menuItem.description === 'string' ? menuItem.description : null,
                 price_cents: price,
                 category: typeof menuItem.category === 'string' ? menuItem.category : null,
+                image_url:
+                  typeof menuItem.image_url === 'string' && menuItem.image_url.trim()
+                    ? menuItem.image_url.trim()
+                    : null,
               },
             ]
           })
@@ -191,36 +197,51 @@ export function TableOrderPage({
           <h1>{t.tableOrderHeading.replace('{label}', label)}</h1>
           <p className="muted">{t.tableOrderLead}</p>
           {groups.length === 0 ? <p className="muted">{t.tableOrderEmpty}</p> : null}
-          {groups.map((group) => (
-            <section key={group.label} className="table-order-group">
-              <h2>{group.label}</h2>
-              <ul className="table-order-menu">
-                {group.items.map((item) => {
-                  const qty = cart.find((line) => line.id === item.id)?.quantity ?? 0
-                  return (
-                    <li key={item.id} className="table-order-item">
-                      <div>
-                        <strong>{item.name}</strong>
-                        {item.description ? <p className="muted">{item.description}</p> : null}
-                        {item.price_cents !== null ? (
-                          <span className="muted">{formatEuros(item.price_cents, locale)}</span>
-                        ) : null}
-                      </div>
-                      <QtyControl
-                        name={item.name}
-                        qty={qty}
-                        busy={busy}
-                        addLabel={t.tableOrderAdd}
-                        fewerLabel={t.tableOrderFewer}
-                        moreLabel={t.tableOrderMore}
-                        onChange={(next) => setQty(item, next)}
-                      />
-                    </li>
-                  )
-                })}
-              </ul>
-            </section>
-          ))}
+          {groups.length > 0 ? (
+            <div className="table-order-groups">
+              {groups.map((group) => (
+                <details key={group.label} className="table-order-group">
+                  <summary>
+                    {group.label}
+                    <span className="table-order-group-count">{group.items.length}</span>
+                  </summary>
+                  <ul className="table-order-menu">
+                    {group.items.map((item) => {
+                      const qty = cart.find((line) => line.id === item.id)?.quantity ?? 0
+                      return (
+                        <li key={item.id} className="table-order-item">
+                          {item.image_url ? (
+                            <img
+                              className="table-order-photo"
+                              src={item.image_url}
+                              alt=""
+                              loading="lazy"
+                            />
+                          ) : null}
+                          <div className="table-order-copy">
+                            <strong>{item.name}</strong>
+                            {item.description ? <p className="muted">{item.description}</p> : null}
+                            {item.price_cents !== null ? (
+                              <span className="muted">{formatEuros(item.price_cents, locale)}</span>
+                            ) : null}
+                          </div>
+                          <QtyControl
+                            name={item.name}
+                            qty={qty}
+                            busy={busy}
+                            addLabel={t.tableOrderAdd}
+                            fewerLabel={t.tableOrderFewer}
+                            moreLabel={t.tableOrderMore}
+                            onChange={(next) => setQty(item, next)}
+                          />
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </details>
+              ))}
+            </div>
+          ) : null}
           <label className="takeout-field">
             <span>{t.tableOrderNotes}</span>
             <textarea
