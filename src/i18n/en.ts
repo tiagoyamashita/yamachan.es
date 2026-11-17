@@ -366,6 +366,8 @@ export const en: Copy = {
   adminTablesOtherCategory: 'Other',
   adminTablesOrderNotes: 'Notes for the kitchen (optional)',
   adminTablesSendOrder: 'Send to kitchen',
+  adminTablesSendOrderTitle: 'Send this order to the kitchen?',
+  adminTablesSendOrderLead: '{summary} will be sent for table {label}.',
   adminTablesCancelOrdering: 'Cancel',
   adminTablesNoOrders: 'No orders on this table yet.',
   adminTablesNoOpenOrders: 'No open orders on this table.',

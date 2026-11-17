@@ -368,6 +368,8 @@ export const es: Copy = {
   adminTablesOtherCategory: 'Otros',
   adminTablesOrderNotes: 'Notas para cocina (opcional)',
   adminTablesSendOrder: 'Enviar a cocina',
+  adminTablesSendOrderTitle: '¿Enviar este pedido a cocina?',
+  adminTablesSendOrderLead: 'Se enviará {summary} para la mesa {label}.',
   adminTablesCancelOrdering: 'Cancelar',
   adminTablesNoOrders: 'Aún no hay pedidos en esta mesa.',
   adminTablesNoOpenOrders: 'No hay pedidos abiertos en esta mesa.',

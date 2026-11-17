@@ -310,6 +310,8 @@ export type Copy = {
   adminTablesOtherCategory: string
   adminTablesOrderNotes: string
   adminTablesSendOrder: string
+  adminTablesSendOrderTitle: string
+  adminTablesSendOrderLead: string
   adminTablesCancelOrdering: string
   adminTablesNoOrders: string
   adminTablesNoOpenOrders: string

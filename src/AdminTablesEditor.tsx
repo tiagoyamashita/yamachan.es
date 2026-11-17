@@ -452,12 +452,14 @@ export function AdminTablesEditor({
   const [openMenuGroupIds, setOpenMenuGroupIds] = useState<Set<string>>(() => new Set())
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'other'>('cash')
   const [closeTabOpen, setCloseTabOpen] = useState(false)
+  const [sendOrderOpen, setSendOrderOpen] = useState(false)
   const [confirmAction, setConfirmAction] = useState<TableOrderConfirm | null>(null)
   const panelRef = useRef<HTMLElement>(null)
-  const dialogOpen = closeTabOpen || confirmAction !== null
+  const dialogOpen = closeTabOpen || sendOrderOpen || confirmAction !== null
 
   useEffect(() => {
     setCloseTabOpen(false)
+    setSendOrderOpen(false)
     setConfirmAction(null)
     panelRef.current?.scrollIntoView({ block: 'start' })
   }, [selectedTableId])
@@ -469,6 +471,7 @@ export function AdminTablesEditor({
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setCloseTabOpen(false)
+        setSendOrderOpen(false)
         setConfirmAction(null)
       }
     }
@@ -572,6 +575,7 @@ export function AdminTablesEditor({
     setMenuQuery('')
     setOpenMenuGroupIds(new Set())
     setCloseTabOpen(false)
+    setSendOrderOpen(false)
     setConfirmAction(null)
   }
 
@@ -985,17 +989,7 @@ export function AdminTablesEditor({
                   type="button"
                   className="btn"
                   disabled={busy || cart.length === 0}
-                  onClick={() => {
-                    onSubmitOrder(
-                      selectedTable.id,
-                      cart.map((line) => ({
-                        menu_item_id: line.menu_item_id,
-                        quantity: line.quantity,
-                        line_notes: orderNotes.trim() || undefined,
-                      })),
-                    )
-                    resetOrdering()
-                  }}
+                  onClick={() => setSendOrderOpen(true)}
                 >
                   {t.adminTablesSendOrder}
                 </button>
@@ -1066,6 +1060,70 @@ export function AdminTablesEditor({
                 className="btn btn-outline"
                 disabled={busy}
                 onClick={() => setCloseTabOpen(false)}
+              >
+                {t.adminTablesCancelOrdering}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {sendOrderOpen && selectedTable ? (
+        <div
+          className="admin-modal-overlay"
+          role="presentation"
+          onClick={() => {
+            if (!busy) {
+              setSendOrderOpen(false)
+            }
+          }}
+        >
+          <div
+            className="admin-modal admin-tables-close-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-send-order-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="admin-modal-head">
+              <div>
+                <h2 id="admin-send-order-title">{t.adminTablesSendOrderTitle}</h2>
+                <p className="muted">
+                  {t.adminTablesSendOrderLead
+                    .replace(
+                      '{summary}',
+                      cart
+                        .map((line) => `${line.quantity}× ${line.name}`)
+                        .join(', '),
+                    )
+                    .replace('{label}', selectedTable.label)}
+                </p>
+                {orderNotes.trim() ? <p className="muted">{orderNotes.trim()}</p> : null}
+              </div>
+            </div>
+            <div className="admin-dish-actions">
+              <button
+                type="button"
+                className="btn"
+                disabled={busy || cart.length === 0}
+                onClick={() => {
+                  onSubmitOrder(
+                    selectedTable.id,
+                    cart.map((line) => ({
+                      menu_item_id: line.menu_item_id,
+                      quantity: line.quantity,
+                      line_notes: orderNotes.trim() || undefined,
+                    })),
+                  )
+                  resetOrdering()
+                }}
+              >
+                {t.adminTablesSendOrder}
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={busy}
+                onClick={() => setSendOrderOpen(false)}
               >
                 {t.adminTablesCancelOrdering}
               </button>

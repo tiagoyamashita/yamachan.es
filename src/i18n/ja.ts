@@ -362,6 +362,8 @@ export const ja: Copy = {
   adminTablesOtherCategory: 'その他',
   adminTablesOrderNotes: '厨房へのメモ（任意）',
   adminTablesSendOrder: '厨房へ送る',
+  adminTablesSendOrderTitle: 'この注文を厨房へ送りますか？',
+  adminTablesSendOrderLead: '{summary} をテーブル {label} の厨房へ送ります。',
   adminTablesCancelOrdering: 'キャンセル',
   adminTablesNoOrders: 'このテーブルにはまだ注文がありません。',
   adminTablesNoOpenOrders: 'このテーブルに進行中の注文はありません。',

@@ -368,6 +368,8 @@ export const ptBR: Copy = {
   adminTablesOtherCategory: 'Outros',
   adminTablesOrderNotes: 'Notas para a cozinha (opcional)',
   adminTablesSendOrder: 'Enviar à cozinha',
+  adminTablesSendOrderTitle: 'Enviar este pedido à cozinha?',
+  adminTablesSendOrderLead: '{summary} será enviado para a mesa {label}.',
   adminTablesCancelOrdering: 'Cancelar',
   adminTablesNoOrders: 'Ainda não há pedidos nesta mesa.',
   adminTablesNoOpenOrders: 'Não há pedidos abertos nesta mesa.',
