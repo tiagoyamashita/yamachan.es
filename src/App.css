@@ -2242,6 +2242,18 @@ h3 {
 
 .admin-tables-payment {
   min-width: 8rem;
+  margin-bottom: 0;
+}
+
+.admin-tables-actions .btn,
+.admin-tables-payment select {
+  box-sizing: border-box;
+  min-height: calc(1.65em + 1.1rem + 2px);
+}
+
+.admin-tables-payment select {
+  padding: 0.55rem 0.75rem;
+  line-height: 1.65;
 }
 
 .admin-tables-ordering {
