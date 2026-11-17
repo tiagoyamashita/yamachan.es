@@ -26,6 +26,11 @@ const TakeoutPage = lazy(() =>
     default: module.TakeoutPage,
   })),
 )
+const TableOrderPage = lazy(() =>
+  import('./TableOrderPage.tsx').then((module) => ({
+    default: module.TableOrderPage,
+  })),
+)
 const ReservasPage = lazy(() =>
   import('./ReservasPage.tsx').then((module) => ({
     default: module.ReservasPage,
@@ -47,12 +52,17 @@ import { GoogleReviews } from './GoogleReviews.tsx'
 import { ChefAboutMedia } from './ChefAboutMedia.tsx'
 import './App.css'
 
-type Route = '/' | '/carta' | '/para-llevar' | '/reservas' | '/admin'
+type Route = '/' | '/carta' | '/para-llevar' | '/reservas' | '/admin' | '/mesa'
+
+const MESA_PATH = /^\/mesa\/([^/]+)$/
 
 function routeFromLocation(): Route {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
   if (path === '/admin' || path.startsWith('/admin/')) {
     return '/admin'
+  }
+  if (MESA_PATH.test(path)) {
+    return '/mesa'
   }
   switch (path) {
     case '/carta':
@@ -64,6 +74,12 @@ function routeFromLocation(): Route {
     default:
       return '/'
   }
+}
+
+function tableIdFromLocation(): string | null {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  const match = MESA_PATH.exec(path)
+  return match ? decodeURIComponent(match[1] ?? '') : null
 }
 
 function isModifiedClick(event: MouseEvent<HTMLElement>): boolean {
@@ -152,6 +168,7 @@ function NavLogo() {
 export default function App() {
   const [locale, setLocale] = useState<Locale>(detectLocale)
   const [route, setRoute] = useState<Route>(routeFromLocation)
+  const [tableId, setTableId] = useState<string | null>(tableIdFromLocation)
   const [hash, setHash] = useState(() => window.location.hash)
   const [navOpen, setNavOpen] = useState(false)
   const companyInfo = useCompanyInfo()
@@ -162,6 +179,7 @@ export default function App() {
   const onTakeout = route === '/para-llevar'
   const onReserve = route === '/reservas'
   const onAdmin = route === '/admin'
+  const onMesa = route === '/mesa' && Boolean(tableId)
 
   useEffect(() => {
     const syncRoute = () => {
@@ -169,6 +187,7 @@ export default function App() {
         window.history.replaceState({}, '', '/carta')
       }
       setRoute(routeFromLocation())
+      setTableId(tableIdFromLocation())
       setHash(window.location.hash)
     }
 
@@ -180,7 +199,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (onCarta || onTakeout || onReserve || onAdmin) {
+    if (onCarta || onTakeout || onReserve || onAdmin || onMesa) {
       window.scrollTo(0, 0)
       return
     }
@@ -192,7 +211,7 @@ export default function App() {
     }
 
     document.getElementById(id)?.scrollIntoView()
-  }, [onAdmin, onCarta, onReserve, onTakeout, route, hash])
+  }, [onAdmin, onCarta, onMesa, onReserve, onTakeout, route, hash])
 
   useEffect(() => {
     persistLocale(locale)
@@ -218,6 +237,11 @@ export default function App() {
           return {
             title: t.adminPageTitle,
             description: t.adminLead,
+          }
+        case '/mesa':
+          return {
+            title: t.tableOrderPageTitle,
+            description: t.tableOrderPageDescription,
           }
         case '/':
           return { title: t.metaTitle, description: t.metaDescription }
@@ -252,7 +276,13 @@ export default function App() {
     if (twitterDescription) {
       twitterDescription.setAttribute('content', meta.description)
     }
-    const canonicalUrl = `https://yamachan.es${route === '/' ? '' : route}`
+    const canonicalPath =
+      route === '/'
+        ? ''
+        : route === '/mesa' && tableId
+          ? `/mesa/${encodeURIComponent(tableId)}`
+          : route
+    const canonicalUrl = `https://yamachan.es${canonicalPath}`
     const canonical = document.querySelector('link[rel="canonical"]')
     if (canonical) {
       canonical.setAttribute('href', canonicalUrl)
@@ -262,7 +292,7 @@ export default function App() {
       ogUrl.setAttribute('content', canonicalUrl)
     }
     let robotsMeta = document.querySelector('meta[name="robots"]')
-    if (route === '/admin') {
+    if (route === '/admin' || route === '/mesa') {
       if (!robotsMeta) {
         robotsMeta = document.createElement('meta')
         robotsMeta.setAttribute('name', 'robots')
@@ -285,6 +315,9 @@ export default function App() {
     t.reservePageTitle,
     t.adminPageTitle,
     t.adminLead,
+    t.tableOrderPageTitle,
+    t.tableOrderPageDescription,
+    tableId,
   ])
 
   useEffect(() => {
@@ -404,7 +437,11 @@ export default function App() {
       </header>
 
       <main id="contenido">
-        {onCarta ? (
+        {onMesa && tableId ? (
+          <Suspense fallback={<PageLoading />}>
+            <TableOrderPage tableId={tableId} t={t} locale={locale} />
+          </Suspense>
+        ) : onCarta ? (
           <Suspense fallback={<PageLoading />}>
             <CartaPage
               t={t}

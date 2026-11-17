@@ -334,6 +334,26 @@ export type Copy = {
   adminTablesUpdateError: string
   adminTablesCloseTabError: string
   adminTablesNotConfigured: string
+  tableOrderPageTitle: string
+  tableOrderPageDescription: string
+  tableOrderHeading: string
+  tableOrderLead: string
+  tableOrderLoading: string
+  tableOrderMissing: string
+  tableOrderEmpty: string
+  tableOrderSendError: string
+  tableOrderAdd: string
+  tableOrderFewer: string
+  tableOrderMore: string
+  tableOrderNotes: string
+  tableOrderSend: string
+  tableOrderConfirmTitle: string
+  tableOrderConfirmLead: string
+  tableOrderCancel: string
+  tableOrderSentTitle: string
+  tableOrderSentLead: string
+  tableOrderOrderMore: string
+  tableOrderOther: string
   adminAvailabilityHeading: string
   adminAvailabilityLead: string
   adminAvailabilitySubtabDefaults: string

@@ -3644,3 +3644,52 @@ h3 {
     grid-template-columns: repeat(5, 1fr);
   }
 }
+
+.table-order {
+  padding-top: 1.5rem;
+  padding-bottom: 5rem;
+}
+
+.table-order h1 {
+  margin-bottom: 0.35rem;
+}
+
+.table-order-group {
+  margin-top: 1.25rem;
+}
+
+.table-order-group h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.table-order-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.table-order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.table-order-item p {
+  margin: 0.2rem 0;
+}
+
+.table-order-send {
+  margin-top: 1rem;
+}
+
+.table-order-sent {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}

@@ -12,6 +12,13 @@ import {
 
 const OPEN_TAB_STATUSES = ['open', 'submitted', 'preparing', 'served'] as const
 
+function guestOrderHref(value: string): string {
+  if (/^https?:\/\//i.test(value)) {
+    return value
+  }
+  return new URL(value, window.location.origin).href
+}
+
 function TableQr({ value, label }: { value: string; label: string }) {
   const [markup, setMarkup] = useState('')
 
@@ -786,7 +793,10 @@ export function AdminTablesEditor({
                     }}
                   >
                     {table.order_url ? (
-                      <TableQr value={table.order_url} label={t.adminTablesScanToOrder} />
+                      <TableQr
+                        value={guestOrderHref(table.order_url)}
+                        label={t.adminTablesScanToOrder}
+                      />
                     ) : null}
                     <strong>{table.label}</strong>
                     <span className="muted">
@@ -833,7 +843,10 @@ export function AdminTablesEditor({
                   }}
                 >
                   {table.order_url ? (
-                    <TableQr value={table.order_url} label={t.adminTablesScanToOrder} />
+                    <TableQr
+                      value={guestOrderHref(table.order_url)}
+                      label={t.adminTablesScanToOrder}
+                    />
                   ) : null}
                   <strong>{table.label}</strong>
                   <span className="muted">
@@ -873,7 +886,10 @@ export function AdminTablesEditor({
               target="_blank"
               rel="noopener noreferrer"
             >
-              <TableQr value={selectedTable.order_url} label={t.adminTablesScanToOrder} />
+              <TableQr
+                value={guestOrderHref(selectedTable.order_url)}
+                label={t.adminTablesScanToOrder}
+              />
             </a>
           ) : null}
 
