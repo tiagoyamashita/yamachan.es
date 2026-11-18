@@ -273,6 +273,7 @@ export const es: Copy = {
   adminOrderHistoryEmpty: 'Todavía no hay pedidos.',
   adminOrderHistoryNoMatches: 'Ningún pedido coincide con esa búsqueda.',
   adminOrderHistoryTotal: 'Total',
+  adminOrderHistoryBack: 'Volver a las fechas',
   adminTabTables: 'Mesas',
   adminTabTakeout: 'Para llevar',
   adminTabInstagram: 'Instagram',

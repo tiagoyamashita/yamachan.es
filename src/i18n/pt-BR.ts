@@ -273,6 +273,7 @@ export const ptBR: Copy = {
   adminOrderHistoryEmpty: 'Ainda não há pedidos.',
   adminOrderHistoryNoMatches: 'Nenhum pedido corresponde a essa busca.',
   adminOrderHistoryTotal: 'Total',
+  adminOrderHistoryBack: 'Voltar às datas',
   adminTabTables: 'Mesas',
   adminTabTakeout: 'Para viagem',
   adminTabInstagram: 'Instagram',

@@ -271,6 +271,7 @@ export const en: Copy = {
   adminOrderHistoryEmpty: 'No orders yet.',
   adminOrderHistoryNoMatches: 'No orders match that search.',
   adminOrderHistoryTotal: 'Total',
+  adminOrderHistoryBack: 'Back to dates',
   adminTabTables: 'Tables',
   adminTabTakeout: 'Takeaway',
   adminTabInstagram: 'Instagram',

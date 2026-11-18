@@ -221,6 +221,7 @@ export type Copy = {
   adminOrderHistoryEmpty: string
   adminOrderHistoryNoMatches: string
   adminOrderHistoryTotal: string
+  adminOrderHistoryBack: string
   adminTabTakeout: string
   adminTabInstagram: string
   adminTabAllergens: string

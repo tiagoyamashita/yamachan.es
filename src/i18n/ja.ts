@@ -271,6 +271,7 @@ export const ja: Copy = {
   adminOrderHistoryEmpty: 'まだ注文はありません。',
   adminOrderHistoryNoMatches: '一致する注文がありません。',
   adminOrderHistoryTotal: '合計',
+  adminOrderHistoryBack: '日付選択に戻る',
   adminTabTables: 'テーブル',
   adminTabTakeout: 'テイクアウト',
   adminTabInstagram: 'Instagram',
