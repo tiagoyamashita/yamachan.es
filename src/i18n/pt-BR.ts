@@ -268,7 +268,7 @@ export const ptBR: Copy = {
   adminTabOrderHistory: 'Histórico',
   adminOrderHistoryHeading: 'Histórico de pedidos',
   adminOrderHistoryLead:
-    'Todos os pedidos de mesa, os mais recentes primeiro. Busque por mesa, prato ou número do pedido.',
+    'Escolha um dia para ver os pedidos de mesa dessa data. Busque por mesa, prato ou número do pedido.',
   adminOrderHistorySearch: 'Buscar no histórico',
   adminOrderHistoryEmpty: 'Ainda não há pedidos.',
   adminOrderHistoryNoMatches: 'Nenhum pedido corresponde a essa busca.',

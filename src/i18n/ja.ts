@@ -266,7 +266,7 @@ export const ja: Copy = {
   adminTabOrderHistory: '注文履歴',
   adminOrderHistoryHeading: '注文履歴',
   adminOrderHistoryLead:
-    'これまでのテーブル注文です。新しい順に並びます。テーブル、料理、注文番号で検索できます。',
+    '日付を選ぶとその日のテーブル注文を表示します。テーブル、料理、注文番号で検索できます。',
   adminOrderHistorySearch: '履歴を検索',
   adminOrderHistoryEmpty: 'まだ注文はありません。',
   adminOrderHistoryNoMatches: '一致する注文がありません。',

@@ -266,7 +266,7 @@ export const en: Copy = {
   adminTabOrderHistory: 'Order history',
   adminOrderHistoryHeading: 'Order history',
   adminOrderHistoryLead:
-    'Every table order, newest first. Search by table, dish, or order number.',
+    'Pick a day to see that day’s table orders. Search by table, dish, or order number.',
   adminOrderHistorySearch: 'Search history',
   adminOrderHistoryEmpty: 'No orders yet.',
   adminOrderHistoryNoMatches: 'No orders match that search.',

@@ -268,7 +268,7 @@ export const es: Copy = {
   adminTabOrderHistory: 'Historial',
   adminOrderHistoryHeading: 'Historial de pedidos',
   adminOrderHistoryLead:
-    'Todos los pedidos de mesa, los más recientes primero. Busca por mesa, plato o número de pedido.',
+    'Elige un día para ver los pedidos de mesa de esa fecha. Busca por mesa, plato o número de pedido.',
   adminOrderHistorySearch: 'Buscar en el historial',
   adminOrderHistoryEmpty: 'Todavía no hay pedidos.',
   adminOrderHistoryNoMatches: 'Ningún pedido coincide con esa búsqueda.',
