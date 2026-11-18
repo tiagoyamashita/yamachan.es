@@ -331,7 +331,6 @@ export const ja: Copy = {
   adminOrdersStartPreparing: '調理開始',
   adminOrdersMarkItemServed: '提供済み',
   adminOrdersReopenItem: '調理に戻す',
-  adminOrdersMarkServed: '注文を提供済みにする',
   adminOrdersClose: '注文を閉じる',
   adminOrdersCloseBlocked: '注文を閉じる前に、すべての料理を提供済みにしてください。',
   adminOrdersStatusOpen: 'オープン',

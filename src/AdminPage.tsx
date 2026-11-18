@@ -1487,16 +1487,6 @@ function KitchenOrderCards({
               </div>
               {editable ? (
                 <div className="admin-order-actions">
-                  {order.status !== 'served' && order.status !== 'closed' ? (
-                    <button
-                      type="button"
-                      className="btn btn-outline btn-small"
-                      disabled={busy}
-                      onClick={() => onOrderStatus(order.id, 'served')}
-                    >
-                      {t.adminOrdersMarkServed}
-                    </button>
-                  ) : null}
                   <button
                     type="button"
                     className="btn btn-outline btn-small"

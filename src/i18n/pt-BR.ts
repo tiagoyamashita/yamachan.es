@@ -336,7 +336,6 @@ export const ptBR: Copy = {
   adminOrdersStartPreparing: 'Começar a preparar',
   adminOrdersMarkItemServed: 'Servido',
   adminOrdersReopenItem: 'Voltar a preparar',
-  adminOrdersMarkServed: 'Marcar pedido servido',
   adminOrdersClose: 'Fechar pedido',
   adminOrdersCloseBlocked: 'Marque todos os pratos como servidos antes de fechar o pedido.',
   adminOrdersStatusOpen: 'Aberto',
