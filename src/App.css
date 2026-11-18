@@ -2132,6 +2132,12 @@ h3 {
   gap: 0.4rem;
 }
 
+.admin-order-close-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.8rem;
+}
+
 .admin-order-items {
   list-style: none;
   margin: 0;

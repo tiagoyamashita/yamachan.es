@@ -338,6 +338,7 @@ export const es: Copy = {
   adminOrdersReopenItem: 'Volver a preparar',
   adminOrdersMarkServed: 'Marcar pedido servido',
   adminOrdersClose: 'Cerrar pedido',
+  adminOrdersCloseBlocked: 'Marca todos los platos como servidos antes de cerrar el pedido.',
   adminOrdersStatusOpen: 'Abierto',
   adminOrdersStatusSubmitted: 'Enviado',
   adminOrdersStatusPreparing: 'Preparando',

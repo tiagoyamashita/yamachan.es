@@ -336,6 +336,7 @@ export const en: Copy = {
   adminOrdersReopenItem: 'Back to preparing',
   adminOrdersMarkServed: 'Mark order served',
   adminOrdersClose: 'Close order',
+  adminOrdersCloseBlocked: 'Mark every dish served before closing this order.',
   adminOrdersStatusOpen: 'Open',
   adminOrdersStatusSubmitted: 'Submitted',
   adminOrdersStatusPreparing: 'Preparing',

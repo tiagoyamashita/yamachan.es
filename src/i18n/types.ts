@@ -279,6 +279,7 @@ export type Copy = {
   adminOrdersReopenItem: string
   adminOrdersMarkServed: string
   adminOrdersClose: string
+  adminOrdersCloseBlocked: string
   adminOrdersStatusOpen: string
   adminOrdersStatusSubmitted: string
   adminOrdersStatusPreparing: string

@@ -1454,6 +1454,15 @@ export async function updateTableOrderStatus(
   if (!orderId.trim()) {
     throw new GloballyBookedError('invalid-order-id', 400)
   }
+  if (status === 'closed') {
+    const current = (await loadTableOrders(true)).find((order) => order.id === orderId)
+    const stillOpen = current?.items.some(
+      (item) => item.status === 'pending' || item.status === 'preparing',
+    )
+    if (stillOpen) {
+      throw new GloballyBookedError('items-still-open', 409)
+    }
+  }
   const data = await gbFetch<RawTableOrder>(
     'PATCH',
     restaurantPath(`/orders/${encodeURIComponent(orderId)}`),
