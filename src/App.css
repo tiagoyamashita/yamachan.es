@@ -3731,6 +3731,7 @@ h3 {
 }
 
 .table-order-photo {
+  order: 1;
   width: 4.5rem;
   height: 4.5rem;
   object-fit: cover;
@@ -3740,12 +3741,60 @@ h3 {
 }
 
 .table-order-copy {
+  order: 2;
   min-width: 0;
   flex: 1;
 }
 
+.table-order-copy strong {
+  display: block;
+}
+
+.table-order-buy {
+  order: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: none;
+}
+
+.table-order-price {
+  white-space: nowrap;
+}
+
 .table-order-item p {
-  margin: 0.2rem 0;
+  margin: 0.2rem 0 0;
+}
+
+@media (max-width: 640px) {
+  .table-order-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 0.45rem;
+  }
+
+  .table-order-copy,
+  .table-order-photo,
+  .table-order-buy {
+    order: 0;
+  }
+
+  .table-order-copy {
+    grid-column: 1 / -1;
+  }
+
+  .table-order-photo {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .table-order-buy {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+  }
 }
 
 .table-order-send {

@@ -210,6 +210,10 @@ export function TableOrderPage({
                       const qty = cart.find((line) => line.id === item.id)?.quantity ?? 0
                       return (
                         <li key={item.id} className="table-order-item">
+                          <div className="table-order-copy">
+                            <strong>{item.name}</strong>
+                            {item.description ? <p className="muted">{item.description}</p> : null}
+                          </div>
                           {item.image_url ? (
                             <img
                               className="table-order-photo"
@@ -218,22 +222,22 @@ export function TableOrderPage({
                               loading="lazy"
                             />
                           ) : null}
-                          <div className="table-order-copy">
-                            <strong>{item.name}</strong>
-                            {item.description ? <p className="muted">{item.description}</p> : null}
+                          <div className="table-order-buy">
                             {item.price_cents !== null ? (
-                              <span className="muted">{formatEuros(item.price_cents, locale)}</span>
+                              <span className="table-order-price muted">
+                                {formatEuros(item.price_cents, locale)}
+                              </span>
                             ) : null}
+                            <QtyControl
+                              name={item.name}
+                              qty={qty}
+                              busy={busy}
+                              addLabel={t.tableOrderAdd}
+                              fewerLabel={t.tableOrderFewer}
+                              moreLabel={t.tableOrderMore}
+                              onChange={(next) => setQty(item, next)}
+                            />
                           </div>
-                          <QtyControl
-                            name={item.name}
-                            qty={qty}
-                            busy={busy}
-                            addLabel={t.tableOrderAdd}
-                            fewerLabel={t.tableOrderFewer}
-                            moreLabel={t.tableOrderMore}
-                            onChange={(next) => setQty(item, next)}
-                          />
                         </li>
                       )
                     })}
