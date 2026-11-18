@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { WEEKDAY_LABELS_ES } from './companyInfo.ts'
 import { type Copy, formatEuros, type Locale } from './i18n/index.ts'
 
 type OrderHistoryItemStatus = 'pending' | 'preparing' | 'served'
@@ -40,6 +41,23 @@ function dateKeyFromIso(iso: string, timeZone: string): string {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date(iso))
+}
+
+function shiftMonth(year: number, month: number, delta: number) {
+  const next = new Date(year, month + delta, 1)
+  return { year: next.getFullYear(), month: next.getMonth() }
+}
+
+function todayParts(timeZone: string): { year: number; month: number } {
+  const key = new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date())
+  const [yearText, monthText] = key.split('-')
+  const year = Number(yearText)
+  const month = Number(monthText)
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    const now = new Date()
+    return { year: now.getFullYear(), month: now.getMonth() }
+  }
+  return { year, month: month - 1 }
 }
 
 function formatDayLabel(dateKey: string): string {
@@ -121,20 +139,6 @@ function orderMatches(order: OrderHistoryOrder, query: string, t: Copy): boolean
   return haystack.includes(query)
 }
 
-function groupByDay(orders: OrderHistoryOrder[], timeZone: string) {
-  const sorted = orders.slice().sort((left, right) => {
-    return new Date(orderMadeAtIso(right)).getTime() - new Date(orderMadeAtIso(left)).getTime()
-  })
-  const groups = new Map<string, OrderHistoryOrder[]>()
-  for (const order of sorted) {
-    const key = dateKeyFromIso(orderMadeAtIso(order), timeZone)
-    const list = groups.get(key) ?? []
-    list.push(order)
-    groups.set(key, list)
-  }
-  return [...groups.entries()].map(([date, items]) => ({ date, items }))
-}
-
 export function AdminOrderHistory({
   orders,
   timeZone,
@@ -153,12 +157,30 @@ export function AdminOrderHistory({
   onRefresh: () => void
 }) {
   const [search, setSearch] = useState('')
+  const [visibleMonth, setVisibleMonth] = useState(() => todayParts(timeZone))
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
   const query = search.trim().toLocaleLowerCase()
-  const groups = useMemo(
-    () => groupByDay(orders.filter((order) => orderMatches(order, query, t)), timeZone),
-    [orders, query, t, timeZone],
-  )
+  const orderCountByDate = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const order of orders) {
+      const key = dateKeyFromIso(orderMadeAtIso(order), timeZone)
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+    }
+    return counts
+  }, [orders, timeZone])
+  const dayOrders = useMemo(() => {
+    if (!selectedDate) {
+      return []
+    }
+    return orders
+      .filter((order) => dateKeyFromIso(orderMadeAtIso(order), timeZone) === selectedDate)
+      .filter((order) => orderMatches(order, query, t))
+      .sort(
+        (left, right) =>
+          new Date(orderMadeAtIso(right)).getTime() - new Date(orderMadeAtIso(left)).getTime(),
+      )
+  }, [orders, query, selectedDate, t, timeZone])
 
   if (loadError === 'not-configured') {
     return (
@@ -176,86 +198,160 @@ export function AdminOrderHistory({
     )
   }
 
+  const { year, month } = visibleMonth
+  const firstWeekday = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const calendarCells: Array<number | null> = [
+    ...Array.from({ length: firstWeekday }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+  ]
+  const monthLabel = new Intl.DateTimeFormat(undefined, {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(year, month, 1))
+  const selectedLabel = selectedDate ? formatDayLabel(selectedDate) : null
+
   return (
     <section className="admin-company takeout-form">
-      <fieldset className="admin-company-block">
-        <legend>{t.adminOrderHistoryHeading}</legend>
-        <p className="muted">{t.adminOrderHistoryLead}</p>
-        <div className="admin-order-history-toolbar">
-          <label className="takeout-field admin-order-history-search">
-            <span>{t.adminOrderHistorySearch}</span>
-            <input
-              type="search"
-              value={search}
-              disabled={busy}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </label>
+      {selectedDate ? (
+        <fieldset className="admin-company-block">
+          <legend>
+            {selectedLabel ? `${t.adminOrdersForDate} ${selectedLabel}` : t.adminOrdersForDate}
+          </legend>
           <button
             type="button"
-            className="btn btn-outline btn-small"
+            className="btn btn-outline btn-small admin-tables-back"
             disabled={busy}
-            onClick={onRefresh}
+            onClick={() => {
+              setSelectedDate(null)
+              setSearch('')
+            }}
           >
-            {t.adminOrdersRefresh}
+            {t.adminOrderHistoryBack}
           </button>
-        </div>
-        {orders.length === 0 ? (
-          <p className="muted">{t.adminOrderHistoryEmpty}</p>
-        ) : groups.length === 0 ? (
-          <p className="muted">{t.adminOrderHistoryNoMatches}</p>
-        ) : (
-          groups.map((group) => (
-            <div key={group.date}>
-              <h2 className="admin-order-history-day">{formatDayLabel(group.date)}</h2>
-              <ul className="admin-orders-list">
-                {group.items.map((order) => (
-                  <li key={order.id} className="admin-order-card">
-                    <header className="admin-order-head">
-                      <div>
-                        <p className="admin-order-number">
-                          {t.adminOrdersNumberLabel} #{order.orderNumber}
-                        </p>
-                        <p className="admin-order-meta">
-                          {formatOrderTime(orderMadeAtIso(order), timeZone)}
-                          {' · '}
-                          {order.tableLabel
-                            ? `${t.adminOrdersTableLabel} ${order.tableLabel}`
-                            : t.adminOrdersNoTable}
-                          {' · '}
-                          {orderStatusLabel(t, order.status)}
-                        </p>
-                      </div>
-                    </header>
-                    <ul className="admin-order-items">
-                      {order.items.map((item) => (
-                        <li key={item.id} className="admin-order-item">
-                          <div className="admin-order-item-copy">
-                            <strong>
-                              {item.quantity}× {item.item_name}
-                            </strong>
-                            <span className={`admin-order-item-status is-${item.status}`}>
-                              {itemStatusLabel(t, item.status)}
-                            </span>
-                            {item.line_notes ? <p className="muted">{item.line_notes}</p> : null}
-                          </div>
-                          <span className="muted">
-                            {formatEuros(item.quantity * item.unit_price_cents, locale)}
+          <div className="admin-order-history-toolbar">
+            <label className="takeout-field admin-order-history-search">
+              <span>{t.adminOrderHistorySearch}</span>
+              <input
+                type="search"
+                value={search}
+                disabled={busy}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              className="btn btn-outline btn-small"
+              disabled={busy}
+              onClick={onRefresh}
+            >
+              {t.adminOrdersRefresh}
+            </button>
+          </div>
+          {orders.every((order) => dateKeyFromIso(orderMadeAtIso(order), timeZone) !== selectedDate) ? (
+            <p className="muted">{t.adminOrdersEmptyHistory}</p>
+          ) : dayOrders.length === 0 ? (
+            <p className="muted">{t.adminOrderHistoryNoMatches}</p>
+          ) : (
+            <ul className="admin-orders-list admin-tables-orders">
+              {dayOrders.map((order) => (
+                <li key={order.id} className="admin-order-card">
+                  <header className="admin-order-head">
+                    <div>
+                      <p className="admin-order-number">
+                        {t.adminOrdersNumberLabel} #{order.orderNumber}
+                      </p>
+                      <p className="admin-order-meta">
+                        {formatOrderTime(orderMadeAtIso(order), timeZone)}
+                        {' · '}
+                        {order.tableLabel
+                          ? `${t.adminOrdersTableLabel} ${order.tableLabel}`
+                          : t.adminOrdersNoTable}
+                        {' · '}
+                        {orderStatusLabel(t, order.status)}
+                      </p>
+                    </div>
+                  </header>
+                  <ul className="admin-order-items">
+                    {order.items.map((item) => (
+                      <li key={item.id} className="admin-order-item">
+                        <div className="admin-order-item-copy">
+                          <strong>
+                            {item.quantity}× {item.item_name}
+                          </strong>
+                          <span className={`admin-order-item-status is-${item.status}`}>
+                            {itemStatusLabel(t, item.status)}
                           </span>
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="admin-order-total">
-                      {t.adminOrderHistoryTotal}{' '}
-                      {formatEuros(orderTotalCents(order), locale)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))
-        )}
-      </fieldset>
+                          {item.line_notes ? <p className="muted">{item.line_notes}</p> : null}
+                        </div>
+                        <span className="muted">
+                          {formatEuros(item.quantity * item.unit_price_cents, locale)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="admin-order-total">
+                    {t.adminOrderHistoryTotal} {formatEuros(orderTotalCents(order), locale)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </fieldset>
+      ) : (
+        <fieldset className="admin-company-block">
+          <legend>{t.adminOrderHistoryHeading}</legend>
+          <p className="muted">{t.adminOrderHistoryLead}</p>
+          <div className="admin-availability-cal-head">
+            <button
+              type="button"
+              className="btn btn-outline btn-small"
+              aria-label={t.adminCalendarPrevMonth}
+              disabled={busy}
+              onClick={() => setVisibleMonth((current) => shiftMonth(current.year, current.month, -1))}
+            >
+              ‹
+            </button>
+            <p>{monthLabel}</p>
+            <button
+              type="button"
+              className="btn btn-outline btn-small"
+              aria-label={t.adminCalendarNextMonth}
+              disabled={busy}
+              onClick={() => setVisibleMonth((current) => shiftMonth(current.year, current.month, 1))}
+            >
+              ›
+            </button>
+          </div>
+          <div className="admin-availability-grid admin-bookings-grid" role="grid">
+            {WEEKDAY_LABELS_ES.map((label) => (
+              <div className="admin-availability-dow" key={`history-${label}`}>
+                {label.slice(0, 2)}
+              </div>
+            ))}
+            {calendarCells.map((day, index) => {
+              if (day === null) {
+                return <div className="admin-availability-cell is-empty" key={`history-empty-${index}`} />
+              }
+              const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+              const count = orderCountByDate.get(key) ?? 0
+              const hasOrders = count > 0
+              return (
+                <button
+                  type="button"
+                  className={`admin-availability-cell${hasOrders ? ' is-booked' : ''}`}
+                  key={key}
+                  disabled={busy}
+                  onClick={() => setSelectedDate(key)}
+                >
+                  <span>{day}</span>
+                  <small>{hasOrders ? String(count) : '·'}</small>
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
+      )}
     </section>
   )
 }

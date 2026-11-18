@@ -1467,6 +1467,9 @@ function KitchenOrderCards({
     <ul className="admin-orders-list">
       {orders.map((order) => {
         const editable = isKitchenOrderActive(order)
+        const unfinished = order.items.some(
+          (item) => item.status === 'pending' || item.status === 'preparing',
+        )
         return (
           <li key={order.id} className="admin-order-card">
             <header className="admin-order-head">
@@ -1497,11 +1500,14 @@ function KitchenOrderCards({
                   <button
                     type="button"
                     className="btn btn-outline btn-small"
-                    disabled={busy}
+                    disabled={busy || unfinished}
                     onClick={() => onOrderStatus(order.id, 'closed')}
                   >
                     {t.adminOrdersClose}
                   </button>
+                  {unfinished ? (
+                    <p className="muted admin-order-close-note">{t.adminOrdersCloseBlocked}</p>
+                  ) : null}
                 </div>
               ) : null}
             </header>
@@ -3709,8 +3715,9 @@ export function AdminPage({
         body: JSON.stringify({ status }),
       })
       await loadOrders()
-    } catch {
-      setMessage(t.adminOrdersUpdateError)
+    } catch (error) {
+      const code = error instanceof Error ? error.message : ''
+      setMessage(code === 'items-still-open' ? t.adminOrdersCloseBlocked : t.adminOrdersUpdateError)
     } finally {
       setOrdersBusy(false)
     }
