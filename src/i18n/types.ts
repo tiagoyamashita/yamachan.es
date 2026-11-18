@@ -214,6 +214,13 @@ export type Copy = {
   adminTabAvailability: string
   adminTabCalendar: string
   adminTabOrders: string
+  adminTabOrderHistory: string
+  adminOrderHistoryHeading: string
+  adminOrderHistoryLead: string
+  adminOrderHistorySearch: string
+  adminOrderHistoryEmpty: string
+  adminOrderHistoryNoMatches: string
+  adminOrderHistoryTotal: string
   adminTabTakeout: string
   adminTabInstagram: string
   adminTabAllergens: string

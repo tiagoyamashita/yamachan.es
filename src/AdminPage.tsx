@@ -43,6 +43,7 @@ import {
   type TableOrderRow,
   type TablesSubtab,
 } from './AdminTablesEditor.tsx'
+import { AdminOrderHistory } from './AdminOrderHistory.tsx'
 
 type AdminStatus = 'loading' | 'login' | 'ready'
 type AdminTab =
@@ -52,6 +53,7 @@ type AdminTab =
   | 'availability'
   | 'calendar'
   | 'orders'
+  | 'order-history'
   | 'tables'
   | 'takeout'
   | 'instagram'
@@ -65,6 +67,7 @@ const ADMIN_TABS: readonly AdminTab[] = [
   'availability',
   'calendar',
   'orders',
+  'order-history',
   'tables',
   'takeout',
   'instagram',
@@ -177,6 +180,8 @@ function adminHeading(t: Copy, tab: AdminTab): string {
       return t.adminCalendarHeading
     case 'orders':
       return t.adminOrdersHeading
+    case 'order-history':
+      return t.adminOrderHistoryHeading
     case 'tables':
       return t.adminTablesHeading
     case 'takeout':
@@ -208,6 +213,8 @@ function adminLead(t: Copy, tab: AdminTab): string {
       return t.adminCalendarLead
     case 'orders':
       return t.adminOrdersLead
+    case 'order-history':
+      return t.adminOrderHistoryLead
     case 'tables':
       return t.adminTablesLead
     case 'takeout':
@@ -239,6 +246,8 @@ function adminTabLabel(t: Copy, tab: AdminTab): string {
       return t.adminTabCalendar
     case 'orders':
       return t.adminTabOrders
+    case 'order-history':
+      return t.adminTabOrderHistory
     case 'tables':
       return t.adminTabTables
     case 'takeout':
@@ -3959,6 +3968,7 @@ export function AdminPage({
         void loadBookings(bookingsYear, bookingsMonth)
         return
       case 'orders':
+      case 'order-history':
         void loadOrders()
         return
       case 'tables':
@@ -4924,6 +4934,17 @@ export function AdminPage({
                     onOrderStatus={(orderId, status) =>
                       void patchOrderStatus(orderId, status)
                     }
+                  />
+                ) : null}
+                {tab === 'order-history' ? (
+                  <AdminOrderHistory
+                    orders={kitchenOrders}
+                    timeZone={ordersTimezone}
+                    locale={locale}
+                    busy={ordersBusy}
+                    loadError={ordersError}
+                    t={t}
+                    onRefresh={() => void loadOrders()}
                   />
                 ) : null}
                 {tab === 'tables' ? (
