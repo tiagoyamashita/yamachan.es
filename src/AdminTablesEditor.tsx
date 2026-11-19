@@ -97,6 +97,7 @@ export type GbMenuItemRow = {
   is_available: boolean
   sort_order: number
   category?: string | null
+  image_url?: string | null
 }
 
 type CartLine = {
@@ -1031,7 +1032,15 @@ export function AdminTablesEditor({
                         <ul className="admin-tables-menu">
                           {group.items.map((item) => (
                             <li key={item.id} className="admin-tables-menu-item">
-                              <div>
+                              {item.image_url ? (
+                                <img
+                                  className="admin-tables-menu-photo"
+                                  src={item.image_url}
+                                  alt=""
+                                  loading="lazy"
+                                />
+                              ) : null}
+                              <div className="admin-tables-menu-copy">
                                 <strong>{item.name}</strong>
                                 <span className="muted">{formatMoney(item.price_cents)}</span>
                               </div>
