@@ -53,6 +53,21 @@ function platePhoto(
   return own.startsWith('/') ? publicImageUrl(own) : null
 }
 
+export async function withPublishedMenuPhotos<T extends GloballyBookedMenuItem>(
+  items: T[],
+): Promise<T[]> {
+  let published: Awaited<ReturnType<typeof listPublishedMenu>> = []
+  try {
+    published = await listPublishedMenu()
+  } catch {
+    published = []
+  }
+  return items.map((item) => ({
+    ...item,
+    image_url: platePhoto(item, published),
+  }))
+}
+
 export async function handleTableOrderRequest(request: Request): Promise<Response> {
   const url = new URL(request.url)
   const path = url.pathname.replace(/\/+$/, '') || '/'
@@ -63,18 +78,9 @@ export async function handleTableOrderRequest(request: Request): Promise<Respons
     if (menuMatch && request.method === 'GET') {
       const tableId = decodeURIComponent(menuMatch[1] ?? '')
       const menu = await loadTableGuestMenu(tableId)
-      let published: Awaited<ReturnType<typeof listPublishedMenu>> = []
-      try {
-        published = await listPublishedMenu()
-      } catch {
-        published = []
-      }
       return json({
         ...menu,
-        items: menu.items.map((item) => ({
-          ...item,
-          image_url: platePhoto(item, published),
-        })),
+        items: await withPublishedMenuPhotos(menu.items),
       })
     }
 

@@ -74,6 +74,7 @@ import {
   loadClosedBookingDates,
   setBookingDayOpen,
 } from './closedBookingDates.ts'
+import { withPublishedMenuPhotos } from './tableOrderHttp.ts'
 import {
   getStoredCarouselPhotos,
   padCarouselPhotoSlots,
@@ -514,7 +515,7 @@ export async function handleAdminRequest(request: Request): Promise<Response> {
 
     if (path === '/api/admin/tables/menu' && request.method === 'GET') {
       try {
-        return json({ items: await loadGloballyBookedMenu() })
+        return json({ items: await withPublishedMenuPhotos(await loadGloballyBookedMenu()) })
       } catch (error) {
         if (error instanceof GloballyBookedError) {
           return json({ error: error.message }, error.status)
